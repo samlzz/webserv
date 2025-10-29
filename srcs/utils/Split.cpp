@@ -1,19 +1,19 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_split.cpp                                       :+:      :+:    :+:   */
+/*   Split.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/28 21:57:29 by achu              #+#    #+#             */
-/*   Updated: 2025/10/29 01:51:48 by achu             ###   ########.fr       */
+/*   Updated: 2025/10/29 15:03:38 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <string>
 #include <vector>
 
-std::vector<std::string>	ft_split(const std::string& pStr, const std::string& pDelims)
+std::vector<std::string>	Split(const std::string& pStr, const std::string& pDelims)
 {
 	std::vector<std::string>	tokens;
 
