@@ -13,45 +13,72 @@
 #ifndef __HTTP_REQUEST_H__
 #define __HTTP_REQUEST_H__
 
-#include <string>
+#include "HttpCommon.h"
 #include <unordered_map>
+#include <string>
 
-class HttpRequest
-{
-	private:
+class HttpRequest {
 
-		enum	e_method
-		{
-			MT_GET,
-			MT_PUT,
-			MT_POST,
-			MT_DELETE,
-			MT_HEAD,
-		};
+private:
 
-		e_method		_method;
-		std::string		_target;
-		std::string		_version;
+	http::e_method									_method;
+	std::string										_path;
+	std::string										_query;
+	std::string										_version;
+	std::unordered_map<std::string, std::string>	_headers;
+	std::string										_body;
 
-		std::string										_line;
-		std::unordered_map<std::string, std::string>	_headers;
-		std::string										_body;
+	enum	e_parse_state
+		{ REQ_START
+		, REQ_METHOD
+		, REQ_SPACE_BEFORE_URL
+		, REQ_URI_SLASH
+		, REQ_URI_PATH
+		, REQ_URI_QUERY
+		, REQ_SPACE_BEFORE_VER
+		, REQ_HTTP_H
+		, REQ_HTTP_HT
+		, REQ_HTTP_HTT
+		, REQ_HTTP_HTTP
+		, REQ_HTTP_SLASH
+		, REQ_HTTP_MAJOR_VER
+		, REQ_HTTP_DOT
+		, REQ_HTTP_MINOR_VER
+		, REQ_HTTP_END
 
-		enum e_status_code
-		{
-			SC_OK = 200,
-		};
+		, HEADER_FIELD_NAME_START
+		, HEADER_FIELD_NAME
+		, HEADER_FIELD_NAME_END
+		, HEADER_FIELD_VALUE_START
+		, HEADER_FIELD_VALUE
+		, HEADER_FIELD_VALUE_END
 
-	public:
+		, HEADER_ALMOST_DONE
+		, HEADER_DONE
 
-		HttpRequest(void);
-		~HttpRequest(void);
+		, BODY_MESSAGE
 
-		e_method			getMethod(void);
-		std::string			getTarget(void);
-		std::string			getVersion(void);
+		, PARSING_DONE
+	};
 
-		std::unordered_map<std::string, std::string>	parseHeaders(void);
+public:
+
+	HttpRequest(void);
+	~HttpRequest(void);
+
+	http::e_method		getMethod(void) const;
+	std::string			getPath(void) const;
+	std::string			getQuery(void) const;
+	std::string			getVersion(void) const;
+	std::string			getHeaders(const std::string& pKey) const;
+	std::string			getBody(void) const;
+
+	void			setMethod(const http::e_method& pMethod);
+	void			setPath(const std::string& pPath);
+	void			setQuery(const std::string& pQuery);
+	void			setVersion(const std::string& pVersion);
+	void			addHeaders(const std::string& pKey, const std::string& pValue);
+	void			setBody(const std::string& pBody);
 };
 
 #endif
