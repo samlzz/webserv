@@ -11,6 +11,10 @@
 /* ************************************************************************** */
 
 #include "HttpRequest.h"
+#include <iostream>
+
+#define CURRENT_STATE() _state
+#define UPDATE_STATE(S) _state = S
 
 //#****************************************************************************#
 //#                        CONSTRUCTOR & DESTRUCTOR                            #
@@ -30,6 +34,36 @@ HttpRequest::~HttpRequest(void)
 //#                             MEMBER FUNCTION                                #
 //#****************************************************************************#
 
+void HttpRequest::feed(char *pBuffer, size_t pSize)
+{
+	char	ch;
+
+	for (size_t i = 0; i < pSize; i++)
+	{
+		ch = pBuffer[i];
+		switch (CURRENT_STATE()) {
+			case REQ_START:
+			{
+				UPDATE_STATE(REQ_METHOD);
+				break;
+			}
+			case REQ_METHOD:
+			{
+				std::cout << "method GET" << std::endl;
+				UPDATE_STATE(REQ_SPACE_BEFORE_URI);
+				break;
+			}
+			default:
+				break;
+		}
+	}
+}
+
+//#****************************************************************************#
+//#                              GETTER SETTER                                 #
+//#****************************************************************************#
+
+
 //#****************************************************************************#
 //#                            OPERATOR OVERLOAD                               #
 //#****************************************************************************#
@@ -37,3 +71,5 @@ HttpRequest::~HttpRequest(void)
 //#****************************************************************************#
 //#                                EXCEPTION                                   #
 //#****************************************************************************#
+
+
