@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 15:07:50 by achu              #+#    #+#             */
-/*   Updated: 2025/10/30 19:41:36 by achu             ###   ########.fr       */
+/*   Updated: 2025/10/31 19:43:01 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ int main()
 
 	HttpRequest		clientRequest;
 	clientRequest.feed(buffer, sizeof(buffer));
+	std::cout << clientRequest << std::endl;
 
 	send(clientSocket, "Va niquer ta mere", 18, 0);
 
