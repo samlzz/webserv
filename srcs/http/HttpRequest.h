@@ -49,7 +49,8 @@ class HttpRequest {
 
 private:
 
-	e_parse_state		_state;
+	std::string					_buffer;
+	e_parse_state				_state;
 
 	http::e_method											_method;
 	std::string												_path;
@@ -57,6 +58,7 @@ private:
 	std::string												_version;
 	std::vector<std::pair<std::string, std::string>>		_headers;
 	std::string												_body;
+	http::e_status_code										_status;
 	size_t													_contentLength;
 
 public:
@@ -72,6 +74,7 @@ public:
 	std::string				getVersion(void) const;
 	std::string				getHeaders(const std::string& pKey) const;
 	std::string				getBody(void) const;
+	http::e_status_code		getStatusCode(void) const;
 
 	void			setMethod(const http::e_method& pMethod);
 	void			setPath(const std::string& pPath);
@@ -79,6 +82,7 @@ public:
 	void			setVersion(const std::string& pVersion);
 	void			addHeaders(const std::string& pKey, const std::string& pValue);
 	void			setBody(const std::string& pBody);
+	void			setStatusCode(const http::e_status_code& pCode); 
 };
 
 std::ostream&		operator<<(std::ostream& pOut, const HttpRequest& pRequest);

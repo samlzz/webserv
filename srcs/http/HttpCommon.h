@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 22:31:56 by achu              #+#    #+#             */
-/*   Updated: 2025/10/30 23:38:42 by achu             ###   ########.fr       */
+/*   Updated: 2025/10/31 03:02:43 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ namespace http
 		, MTH_POST
 		, MTH_PUT		
 		, MTH_DELETE
-		, MTH_NONE
+		, MTH_UNKNOWN
 	};
 
 	enum	e_status_code

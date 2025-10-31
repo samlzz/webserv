@@ -22,12 +22,12 @@
 
 HttpRequest::HttpRequest(void)
 {
-	
+	UPDATE_STATE(REQ_METHOD);
 }
 
 HttpRequest::~HttpRequest(void)
 {
-	
+	_buffer.clear();
 }
 
 //#****************************************************************************#
@@ -37,29 +37,34 @@ HttpRequest::~HttpRequest(void)
 void HttpRequest::feed(char *pBuffer, size_t pSize)
 {
 	char	ch;
+	
 
 	for (size_t i = 0; i < pSize; i++)
 	{
 		ch = pBuffer[i];
 		switch (CURRENT_STATE()) {
-		case REQ_START:
-		{
-			UPDATE_STATE(REQ_METHOD);
-			break;
-		}
 		case REQ_METHOD:
 		{
-
-			switch (expression)
-			{
-			case constant expression:
-				/* code */
-				break;
-			
-			default:
+			if (ch != ' ') {
+				_buffer += ch;
 				break;
 			}
+
+			if (_buffer == "GET")			setMethod(http::MTH_GET);
+			else if (_buffer == "HEAD")		setMethod(http::MTH_HEAD);
+			else if (_buffer == "POST")		setMethod(http::MTH_POST);
+			else if (_buffer == "PUT")		setMethod(http::MTH_PUT);
+			else if (_buffer == "DELETE")	setMethod(http::MTH_DELETE);
+			else ; //throw 400 or 501
+
 			UPDATE_STATE(REQ_SPACE_BEFORE_URI);
+			_buffer.clear();
+			break;
+		}
+		case REQ_SPACE_BEFORE_URI:
+		{
+			if (ch != ' ') //throw 400 or 501
+			UPDATE_STATE(REQ_URI_SLASH);
 			break;
 		}
 		default:
@@ -69,7 +74,7 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 }
 
 //#****************************************************************************#
-//#                              GETTER SETTER                                 #
+//#                             GETTER & SETTER                                #
 //#****************************************************************************#
 
 http::e_method			HttpRequest::getMethod(void) const { return (_method); }
@@ -85,6 +90,7 @@ std::string				HttpRequest::getHeaders(const std::string& pKey) const {
 	return ("");
 };
 std::string				HttpRequest::getBody(void) const { return (_body); };
+http::e_status_code		HttpRequest::getStatusCode(void) const { return (_status); }
 
 void			HttpRequest::setMethod(const http::e_method& pMethod) { _method = pMethod; }
 void			HttpRequest::setPath(const std::string& pPath) { _path = pPath; }
@@ -94,10 +100,17 @@ void			HttpRequest::addHeaders(const std::string& pKey, const std::string& pValu
 	_headers.push_back(std::make_pair(pKey, pValue));
 }
 void			HttpRequest::setBody(const std::string& pBody) { _body = pBody; }
+void			HttpRequest::setStatusCode(const http::e_status_code& pCode) { _status = pCode; }
 
 //#****************************************************************************#
 //#                            OPERATOR OVERLOAD                               #
 //#****************************************************************************#
+
+std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
+{
+	pOut << "test";
+	return (pOut);
+}
 
 //#****************************************************************************#
 //#                                EXCEPTION                                   #
