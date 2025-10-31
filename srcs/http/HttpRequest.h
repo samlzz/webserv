@@ -14,8 +14,8 @@
 #define __HTTP_REQUEST_H__
 
 #include "HttpCommon.h"
-#include <unordered_map>
 #include <string>
+#include <vector>
 
 enum	e_parse_state
 	{ REQ_START
@@ -51,27 +51,27 @@ private:
 
 	e_parse_state		_state;
 
-	http::e_method									_method;
-	std::string										_path;
-	std::string										_query;
-	std::string										_version;
-	std::unordered_map<std::string, std::string>	_headers;
-	std::string										_body;
-	size_t											_contentLength;
+	http::e_method											_method;
+	std::string												_path;
+	std::string												_query;
+	std::string												_version;
+	std::vector<std::pair<std::string, std::string>>		_headers;
+	std::string												_body;
+	size_t													_contentLength;
 
 public:
 
-	HttpRequest(void);
+	HttpRequest(void);	
 	~HttpRequest(void);
 
 	void	feed(char *pBuffer, size_t pSize);
 
-	http::e_method		getMethod(void) const;
-	std::string			getPath(void) const;
-	std::string			getQuery(void) const;
-	std::string			getVersion(void) const;
-	std::string			getHeaders(const std::string& pKey) const;
-	std::string			getBody(void) const;
+	http::e_method			getMethod(void) const;
+	std::string				getPath(void) const;
+	std::string				getQuery(void) const;
+	std::string				getVersion(void) const;
+	std::string				getHeaders(const std::string& pKey) const;
+	std::string				getBody(void) const;
 
 	void			setMethod(const http::e_method& pMethod);
 	void			setPath(const std::string& pPath);
