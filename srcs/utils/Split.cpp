@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-std::vector<std::string>	Split(const std::string& pStr, const std::string& pDelims)
+std::vector<std::string>	split(const std::string& pStr, const std::string& pDelims)
 {
 	std::vector<std::string>	tokens;
 

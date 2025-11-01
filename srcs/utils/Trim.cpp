@@ -12,7 +12,7 @@
 
 #include <string>
 
-std::string		Trim(const std::string& pStr, const std::string& pDelims)
+std::string		trim(const std::string& pStr, const std::string& pDelims)
 {
 	size_t	start = pStr.find_first_not_of(pDelims);
 	if (start == std::string::npos)
