@@ -57,11 +57,11 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 				break;
 			}
 
-			if (_buffer == "GET")			setMethod(http::MTH_GET);
-			else if (_buffer == "HEAD")		setMethod(http::MTH_HEAD);
-			else if (_buffer == "POST")		setMethod(http::MTH_POST);
-			else if (_buffer == "PUT")		setMethod(http::MTH_PUT);
-			else if (_buffer == "DELETE")	setMethod(http::MTH_DELETE);
+			if (_buffer == "GET")			_method = http::MTH_GET;
+			else if (_buffer == "HEAD")		_method = http::MTH_HEAD;
+			else if (_buffer == "POST")		_method = http::MTH_POST;
+			else if (_buffer == "PUT")		_method = http::MTH_PUT;
+			else if (_buffer == "DELETE")	_method = http::MTH_DELETE;
 			else return; // throw (_buffer.empty() ? 404 : 501);
 
 			UPDATE_STATE(REQ_SPACE_BEFORE_URI);
@@ -82,13 +82,13 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case REQ_URI_PATH: {
 			if (ch == ' ') {
-				setPath(_buffer);
+				_path = _buffer;
 				UPDATE_STATE(REQ_SPACE_BEFORE_VER);
 				_buffer.clear();
 				// fallthrough
 			}
 			else if (ch == '?' || ch == '#') {
-				setPath(_buffer);
+				_path = _buffer;
 				UPDATE_STATE(ch == '?' ? REQ_URI_QUERY : REQ_URI_FRAGMENT);
 				_buffer.clear();
 				break;
@@ -103,13 +103,13 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case REQ_URI_QUERY: {
 			if (ch == ' ') {
-				setQuery(_buffer);
+			 	_query = _buffer;
 				UPDATE_STATE(REQ_SPACE_BEFORE_VER);
 				_buffer.clear();
 				// fallthrough
 			}
 			else if (ch == '#') {
-				setQuery(_buffer);
+				_query = _buffer;
 				UPDATE_STATE(REQ_URI_FRAGMENT);
 				_buffer.clear();
 				break;
@@ -124,7 +124,7 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case REQ_URI_FRAGMENT: {
 			if (ch == ' ') {
-				setFragment(_buffer);
+				_fragment = _buffer;
 				UPDATE_STATE(REQ_SPACE_BEFORE_VER);
 				_buffer.clear();
 				// fallthrough
@@ -187,7 +187,7 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 		case REQ_HTTP_MINOR_VER:
 			if (!std::isdigit(ch)) return ; //thorw 400
 			_buffer += ch;
-			setVersion(_buffer);
+			_version = _buffer;
 			UPDATE_STATE(REQ_ALMOST_DONE);
 			_buffer.clear();
 			break;
@@ -266,14 +266,43 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 			break;
 		}
 
-		case BODY_MESSAGE_START:
+		case BODY_MESSAGE_START: {
 			if (getMethod() == http::MTH_GET || getMethod() == http::MTH_HEAD) {
 				UPDATE_STATE(PARSING_DONE);
 				break;
 			}
 
+			if (hasHeaderName("Transfer-Encoding")) {
+				if (hasHeaderName("Content-Length"))
+					return ; // throw 400
+				_transferEncoding = getHeaderValue("Transfer-Encoding");
+				if (_transferEncoding != "chunked")
+					return ; // throw 501
+				UPDATE_STATE(BODY_CHUNKED);
+				break;
+			}
+
+			if (hasHeaderName("Content-Length")) {
+				getHeaderValue("Content-Length").c_str();
+				_contentLength = std::atoi();
+				UPDATE_STATE(BODY_MESSAGE);
+				break;
+			}
+
+ 			return; // throw 400
+		}
+
+		case BODY_CHUNKED: {
+
+			break;
+		}
+
+		case BODY_MESSAGE: {
+			
+			break;
+		}
+
 		case PARSING_DONE:
-			std::cout << *this;
 			break;
 
 		default:
@@ -291,8 +320,16 @@ std::string												HttpRequest::getPath(void) const { return (_path); };
 std::string												HttpRequest::getQuery(void) const { return (_query); };
 std::string												HttpRequest::getFragment(void) const { return (_fragment); };
 std::string												HttpRequest::getVersion(void) const { return (_version); }
-std::vector<std::pair<std::string, std::string>>		HttpRequest::getHeaders(void) const { return (_headers); };
-std::string												HttpRequest::getHeader(const std::string& pKey) const {
+std::vector<std::pair<std::string, std::string>>		HttpRequest::getHeaders(void) const { return (_headers); }
+bool													HttpRequest::hasHeaderName(const std::string &pKey) const {
+	for (size_t i = 0; i < _headers.size(); ++i)
+	{
+		if (_headers[i].first == pKey)
+			return (true);
+	}
+	return (false);
+};
+std::string												HttpRequest::getHeaderValue(const std::string& pKey) const {
 	for (size_t i = 0; i < _headers.size(); ++i)
 	{
 		if (_headers[i].first == pKey)
@@ -300,7 +337,7 @@ std::string												HttpRequest::getHeader(const std::string& pKey) const {
 	}
 	return ("");
 };
-std::string												HttpRequest::getHeaderAt(int pIdx) const {
+std::string												HttpRequest::getHeaderValueAt(int pIdx) const {
 	if (_headers.size() < pIdx)
 		return ("");
 	return (_headers[pIdx].second);
@@ -308,17 +345,11 @@ std::string												HttpRequest::getHeaderAt(int pIdx) const {
 std::string												HttpRequest::getBody(void) const { return (_body); };
 http::e_status_code										HttpRequest::getStatusCode(void) const { return (_status); }
 
-void		HttpRequest::setMethod(const http::e_method& pMethod) { _method = pMethod; }
-void		HttpRequest::setPath(const std::string& pPath) { _path = pPath; }
-void		HttpRequest::setQuery(const std::string& pQuery) { _query = pQuery; }
-void		HttpRequest::setFragment(const std::string& pFragment) { _fragment = pFragment; }
-void		HttpRequest::setVersion(const std::string& pVersion) { _version = pVersion; }
+
 void		HttpRequest::addHeader(const std::string& pKey, const std::string& pValue) {
 	_headers.push_back(std::make_pair(pKey, pValue));
 }
 void		HttpRequest::setLastHeader(const std::string& pValue) { _headers.back().second = pValue; }
-void		HttpRequest::setBody(const std::string& pBody) { _body = pBody; }
-void		HttpRequest::setStatusCode(const http::e_status_code& pCode) { _status = pCode; }
 
 //#****************************************************************************#
 //#                            OPERATOR OVERLOAD                               #
@@ -345,6 +376,14 @@ std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 
 const char*		HttpRequest::BadRequestException::what() const throw() {
 	return ("400 Bad request");
+}
+
+const char*		HttpRequest::LengthRequiredException::what() const throw() {
+	return ("411 Length Required");
+}
+
+const char		*HttpRequest::ContentTooLargeException::what() const throw() {
+	return ("413 Content Too Large");
 }
 
 const char*		HttpRequest::URITooLongException::what() const throw() {

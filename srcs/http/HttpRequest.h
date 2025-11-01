@@ -19,8 +19,9 @@
 #include <exception>
 
 #define MAX_METHOD_LENGTH		8
-#define MAX_URI_LENGTH			4096
-#define MAX_HEADER_LENGTH			2048
+#define MAX_URI_LENGTH			2048
+#define MAX_HEADER_LENGTH		2048
+#define MAX_BODY_LENGTH			1048576
 
 enum	e_parse_state
 	{ REQ_METHOD
@@ -50,6 +51,7 @@ enum	e_parse_state
 	, HEADER_FIELD_DONE
 	, HEADER_END
 	, BODY_MESSAGE_START
+	, BODY_CHUNKED
 	, BODY_MESSAGE
 	, PARSING_ALMOST_DONE
 	, PARSING_DONE
@@ -59,8 +61,8 @@ class HttpRequest {
 
 private:
 
-	std::string			_buffer;
 	e_parse_state		_state;
+	std::string			_buffer;
 
 	http::e_method		_method;
 	std::string			_path;
@@ -71,10 +73,15 @@ private:
 	std::vector<std::pair<std::string, std::string>>		_headers;
 
 	std::string			_body;
-	bool				_transferEncoding;
+	std::string			_transferEncoding;
 	size_t				_contentLength;
 
 	http::e_status_code										_status;
+
+private:
+
+	void		addHeader(const std::string& pKey, const std::string& pValue);
+	void		setLastHeader(const std::string& pValue);
 
 public:
 
@@ -83,28 +90,26 @@ public:
 
 	void	feed(char *pBuffer, size_t pSize);
 
-	http::e_method											getMethod(void) const;
-	std::string												getPath(void) const;
-	std::string												getQuery(void) const;
-	std::string												getFragment(void) const;
-	std::string												getVersion(void) const;
-	std::vector<std::pair<std::string, std::string>>		getHeaders(void) const;
-	std::string												getHeader(const std::string& pKey) const;
-	std::string												getHeaderAt(int pIdx) const;
-	std::string												getBody(void) const;
-	http::e_status_code										getStatusCode(void) const;
+	http::e_method		getMethod(void) const;
+	std::string			getPath(void) const;
+	std::string			getQuery(void) const;
+	std::string			getFragment(void) const;
+	std::string			getVersion(void) const;
 
-	void			setMethod(const http::e_method& pMethod);
-	void			setPath(const std::string& pPath);
-	void			setQuery(const std::string& pQuery);
-	void			setFragment(const std::string& pFragment);
-	void			setVersion(const std::string& pVersion);
-	void			addHeader(const std::string& pKey, const std::string& pValue);
-	void			setLastHeader(const std::string& pValue);
-	void			setBody(const std::string& pBody);
-	void			setStatusCode(const http::e_status_code& pCode);
+	std::vector<std::pair<std::string, std::string>>		getHeaders(void) const;
+	bool													hasHeaderName(const std::string& pKey) const;
+	std::string												getHeaderValue(const std::string& pKey) const;
+	std::string												getHeaderValueAt(int pIdx) const;
+
+	std::string					getBody(void) const;
+	http::e_status_code			getStatusCode(void) const;
 
 	class BadRequestException : public std::exception {
+	public:
+		const char*	what() const throw();
+	};
+
+	class LengthRequiredException : public std::exception {
 	public:
 		const char*	what() const throw();
 	};
@@ -115,6 +120,11 @@ public:
 	};
 
 	class HeaderFieldsTooLargeException : public std::exception {
+	public:
+		const char*	what() const throw();
+	};
+
+	class  ContentTooLargeException : public std::exception {
 	public:
 		const char*	what() const throw();
 	};
