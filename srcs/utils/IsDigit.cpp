@@ -1,23 +1,23 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Trim.cpp                                           :+:      :+:    :+:   */
+/*   IsDigit.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/10/29 01:05:25 by achu              #+#    #+#             */
-/*   Updated: 2025/10/29 15:03:37 by achu             ###   ########.fr       */
+/*   Created: 2025/11/02 00:38:33 by achu              #+#    #+#             */
+/*   Updated: 2025/11/02 00:44:15 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <string>
 
-std::string		trim(const std::string& pStr, const std::string& pDelims)
+bool	isDigit(const std::string& pStr)
 {
-	size_t	start = pStr.find_first_not_of(pDelims);
-	if (start == std::string::npos)
-		return ("");
+	if (pStr.empty())
+		return (false);
 
-	size_t	end = pStr.find_last_not_of(pDelims);
-	return (pStr.substr(start, end - start + 1));
+	size_t	pos = (pStr[0] == '-' || pStr[0] == '+') ? 1 : 0;
+
+	return (pStr.find_first_not_of("0123456789", pos) == std::string::npos);
 }
