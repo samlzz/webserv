@@ -6,14 +6,14 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2025/10/29 18:43:25 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/02 04:39:48 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_REQUEST_H__
 #define __HTTP_REQUEST_H__
 
-#include "HttpCommon.h"
+#include "HttpSession.h"
 #include <string>
 #include <vector>
 #include <exception>
@@ -52,7 +52,7 @@ enum	e_parse_state
 	, HEADER_END
 	, BODY_MESSAGE_START
 	, BODY_CHUNKED
-	, BODY_MESSAGE
+	, BODY_CONTENT
 	, PARSING_ALMOST_DONE
 	, PARSING_DONE
 };
@@ -74,7 +74,7 @@ private:
 
 	std::string			_body;
 	std::string			_transferEncoding;
-	size_t				_contentLength;
+	int					_contentLength;
 
 	http::e_status_code										_status;
 

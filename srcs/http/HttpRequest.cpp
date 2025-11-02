@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2025/10/29 16:15:35 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/02 04:44:53 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,21 @@ HttpRequest::~HttpRequest(void)
 //#                             STATIC FUNCTION                                #
 //#****************************************************************************#
 
+bool	isDecimal(const std::string& pStr)
+{
+	if (pStr.empty())
+		return (false);
 
+	return (pStr.find_first_not_of("0123456789") == std::string::npos);
+}
+
+bool	isHexadecimal(const std::string& pStr)
+{
+	if (pStr.empty())
+		return (false);
+
+	return (pStr.find_first_not_of("0123456789ABCDEF") == std::string::npos);
+}
 
 //#****************************************************************************#
 //#                             MEMBER FUNCTION                                #
@@ -262,7 +276,7 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case HEADER_END: {
 			if (ch != '\n') return; // throw 400
-			UPDATE_STATE(BODY_MESSAGE);
+			UPDATE_STATE(BODY_MESSAGE_START);
 			break;
 		}
 
@@ -283,22 +297,38 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 
 			if (hasHeaderName("Content-Length")) {
-				getHeaderValue("Content-Length").c_str();
-				_contentLength = std::atoi();
-				UPDATE_STATE(BODY_MESSAGE);
+				_buffer = getHeaderValue("Content-Length");
+				if (!isDecimal(_buffer))
+					return ; // 400
+				_contentLength = std::atoi(_buffer.c_str());
+				UPDATE_STATE(BODY_CONTENT);
+				_buffer.clear();
 				break;
 			}
 
- 			return; // throw 400
+ 			return ; // throw 411
 		}
 
 		case BODY_CHUNKED: {
+			size_t		remaining = _contentLength;
+			size_t		available = pSize - i;
+			size_t		readbytes = std::min(remaining, available);
 
+			
 			break;
 		}
 
-		case BODY_MESSAGE: {
-			
+		case BODY_CONTENT: {
+			size_t		remaining = _contentLength;
+			size_t		available = pSize - i;
+			size_t		readbytes = std::min(remaining, available);
+
+			_body.append(pBuffer + i, readbytes);
+			_contentLength -= readbytes;
+			i += remaining - 1;
+
+			if (_contentLength == 0)
+				UPDATE_STATE(PARSING_DONE);
 			break;
 		}
 

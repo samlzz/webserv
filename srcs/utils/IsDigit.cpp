@@ -6,13 +6,13 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 00:38:33 by achu              #+#    #+#             */
-/*   Updated: 2025/11/02 00:44:15 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/02 04:44:37 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <string>
 
-bool	isDigit(const std::string& pStr)
+bool	isDecimal(const std::string& pStr)
 {
 	if (pStr.empty())
 		return (false);

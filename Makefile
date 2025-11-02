@@ -15,9 +15,11 @@ BIN_DIR   =
 ### UFILES_START ###
 FILES =	a.c \
 		main.cpp \
-		 \
-		 \
-		a/b/c/teeeest.c
+		HttpCommon.cpp \
+		HttpRequest.cpp \
+		IsDigit.cpp \
+		Split.cpp \
+		Trim.cpp
 ### END ###
 ifeq ($(FILES),)
     $(error FILES is empty: please define source files)
