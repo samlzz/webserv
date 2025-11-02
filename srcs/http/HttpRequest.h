@@ -51,9 +51,15 @@ enum	e_parse_state
 	, HEADER_FIELD_DONE
 	, HEADER_END
 	, BODY_MESSAGE_START
-	, BODY_CHUNKED
+	, BODY_CHUNKED_SIZE
+	, BODY_CHUNKED_SIZE_ALMOST_DONE
+	, BODY_CHUNKED_SIZE_DONE
+	, BODY_CHUNKED_DATA
+	, BODY_CHUNKED_DATA_ALMOST_DONE
+	, BODY_CHUNKED_DATA_DONE
+	, BODY_CHUNKED_ALMOST_DONE
+	, BODY_CHUNKED_DONE
 	, BODY_CONTENT
-	, PARSING_ALMOST_DONE
 	, PARSING_DONE
 };
 
@@ -74,6 +80,7 @@ private:
 
 	std::string			_body;
 	std::string			_transferEncoding;
+	int					_transferLength;
 	int					_contentLength;
 
 	http::e_status_code										_status;

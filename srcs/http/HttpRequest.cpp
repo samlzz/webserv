@@ -12,6 +12,7 @@
 
 #include "HttpRequest.h"
 #include <iostream>
+#include <cmath>
 
 #define CURRENT_STATE() _state
 #define UPDATE_STATE(S) _state = S
@@ -23,6 +24,7 @@
 HttpRequest::HttpRequest(void)
 {
 	UPDATE_STATE(REQ_METHOD);
+	_transferLength = 0;
 	_contentLength = 0;
 }
 
@@ -35,7 +37,7 @@ HttpRequest::~HttpRequest(void)
 //#                             STATIC FUNCTION                                #
 //#****************************************************************************#
 
-bool	isDecimal(const std::string& pStr)
+static bool		isDec(const std::string& pStr)
 {
 	if (pStr.empty())
 		return (false);
@@ -43,12 +45,37 @@ bool	isDecimal(const std::string& pStr)
 	return (pStr.find_first_not_of("0123456789") == std::string::npos);
 }
 
-bool	isHexadecimal(const std::string& pStr)
+static bool		isHex(const std::string& pStr)
 {
 	if (pStr.empty())
 		return (false);
 
-	return (pStr.find_first_not_of("0123456789ABCDEF") == std::string::npos);
+	return (pStr.find_first_not_of("0123456789ABCDEFabcdef") == std::string::npos);
+}
+
+static int		htod(const std::string& pHex)
+{
+	if (pHex.empty())
+		return (-1);
+
+	int		result = 0;
+	int		base = 1;
+	
+	for (size_t i = pHex.size(); i > 0; i--)
+	{
+		int val;
+
+		if ('0' <= pHex[i] && pHex[i] <= '9')
+			val = static_cast<int>(pHex[i] - '0');
+		else if ('A' <= pHex[i] && pHex[i] <= 'F')
+			val = static_cast<int>(pHex[i] - 'A') + 10;
+		else if ('a' <= pHex[i] && pHex[i] <= 'f')
+			val = static_cast<int>(pHex[i] - 'a') + 10;
+
+		result += val * base;
+		base *= 16;
+	}
+	return (result);
 }
 
 //#****************************************************************************#
@@ -62,6 +89,7 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 	for (size_t i = 0; i < pSize; i++)
 	{
 		ch = pBuffer[i];
+		std::cout << ch;
 		switch (CURRENT_STATE()) {
 		case REQ_METHOD: {
 			if (ch != ' ') {
@@ -222,7 +250,7 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 				break;
 			}
 			UPDATE_STATE(HEADER_FIELD_NAME_START);
-			break;
+			// fallthrow
 		}
 
 		case HEADER_FIELD_NAME_START: {
@@ -285,20 +313,20 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 				UPDATE_STATE(PARSING_DONE);
 				break;
 			}
-
+			
 			if (hasHeaderName("Transfer-Encoding")) {
 				if (hasHeaderName("Content-Length"))
 					return ; // throw 400
 				_transferEncoding = getHeaderValue("Transfer-Encoding");
 				if (_transferEncoding != "chunked")
 					return ; // throw 501
-				UPDATE_STATE(BODY_CHUNKED);
+				UPDATE_STATE(BODY_CHUNKED_SIZE);
 				break;
 			}
 
 			if (hasHeaderName("Content-Length")) {
 				_buffer = getHeaderValue("Content-Length");
-				if (!isDecimal(_buffer))
+				if (!isDec(_buffer))
 					return ; // 400
 				_contentLength = std::atoi(_buffer.c_str());
 				UPDATE_STATE(BODY_CONTENT);
@@ -309,14 +337,70 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
  			return ; // throw 411
 		}
 
-		case BODY_CHUNKED: {
-			size_t		remaining = _contentLength;
+		case BODY_CHUNKED_SIZE: {
+			if (ch != '\r') {
+				_buffer += ch;
+				break;
+			}
+
+			if (!isHex(_buffer))
+				return ; // throw 400
+
+			_transferLength = htod(_buffer);
+			UPDATE_STATE(BODY_CHUNKED_SIZE_ALMOST_DONE);
+			_buffer.clear();
+			// fallthrough
+		}
+
+		case BODY_CHUNKED_SIZE_ALMOST_DONE:
+			if (ch != '\r') return ; //400
+			UPDATE_STATE(BODY_CHUNKED_SIZE_DONE);
+			break;
+
+		case BODY_CHUNKED_SIZE_DONE:
+			if (ch != '\n') return ; //400
+			UPDATE_STATE(BODY_CHUNKED_DATA);
+			break;
+
+		case BODY_CHUNKED_DATA: {
+			size_t		remaining = _transferLength;
 			size_t		available = pSize - i;
 			size_t		readbytes = std::min(remaining, available);
 
-			
+			if (_transferLength == 0) {
+				UPDATE_STATE(BODY_CHUNKED_ALMOST_DONE);
+				break;
+			}
+
+			_body.append(pBuffer + i, readbytes);
+			_transferLength -= readbytes;
+			i += readbytes - 1;
+
+			if (_transferLength == 0)
+				UPDATE_STATE(BODY_CHUNKED_DATA_ALMOST_DONE);
+
 			break;
 		}
+
+		case BODY_CHUNKED_DATA_ALMOST_DONE:
+			if (ch != '\r') return ; //400
+			UPDATE_STATE(BODY_CHUNKED_DATA_DONE);
+			break;
+
+		case BODY_CHUNKED_DATA_DONE:
+			if (ch != '\n') return ; //400
+			UPDATE_STATE(BODY_CHUNKED_SIZE);
+			break;
+			
+		case BODY_CHUNKED_ALMOST_DONE:
+			if (ch != '\r') return ; //400
+			UPDATE_STATE(BODY_CHUNKED_DONE);
+			break;
+
+		case BODY_CHUNKED_DONE:
+			if (ch != '\n') return ; //400
+			UPDATE_STATE(PARSING_DONE);
+			break;
 
 		case BODY_CONTENT: {
 			size_t		remaining = _contentLength;
@@ -325,7 +409,7 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 
 			_body.append(pBuffer + i, readbytes);
 			_contentLength -= readbytes;
-			i += remaining - 1;
+			i += readbytes - 1;
 
 			if (_contentLength == 0)
 				UPDATE_STATE(PARSING_DONE);
@@ -389,13 +473,15 @@ std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 {
 	pOut << pRequest.getMethod() << " ";
 	pOut << pRequest.getPath() << pRequest.getQuery() << pRequest.getFragment() << " ";
-	pOut << pRequest.getVersion();
+	pOut << pRequest.getVersion() << std::endl;
 
 	for (size_t i = 0; i < pRequest.getHeaders().size(); i++)
 	{
 		std::cout << pRequest.getHeaders()[i].first << ": ";
 		std::cout << pRequest.getHeaders()[i].second << std::endl;
 	}
+
+	std::cout << pRequest.getBody();
 	
 	return (pOut);
 }
