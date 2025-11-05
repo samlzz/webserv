@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 22:31:56 by achu              #+#    #+#             */
-/*   Updated: 2025/11/02 04:19:13 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/05 14:34:06 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@ namespace http
 		, SC_MOVED_PERMANENTLY = 301
 		, SC_FOUND = 302
 		, SC_BAD_REQUEST = 400
-		, SC_UNAUTHORIZED = 401
 		, SC_FORBIDDEN = 403
 		, SC_NOT_FOUND = 404
 		, SC_METHOD_NOT_ALLOWED = 405

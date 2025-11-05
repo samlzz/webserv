@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:03 by achu              #+#    #+#             */
-/*   Updated: 2025/11/04 02:56:24 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/05 17:44:33 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,11 +18,27 @@
 #include <vector>
 #include <exception>
 
+enum	e_response_state
+	{ RES_START
+	, RES_METHOD
+	, RES_BUILD_HEADER
+	, RES_BUILD_BODY
+	, RES_SEND_HEADER
+	, RES_SEND_BODY
+};
+
 class HttpResponse {
 
 private:
 
-	std::string		_version;
+	e_response_state		_state;
+
+	std::string		_responseLine;
+	std::string		_headers;
+	std::string		_body;
+
+	std::string		_verMajor;
+	std::string		_verMinor;
 	std::string		_statusCode;
 	std::string		_statusMessage;
 
@@ -42,11 +58,26 @@ private:
 	std::string		_tranferEncoding;
 	std::string		_vary;
 
-	std::string		_body;
+private:
 
+	void		handleGET(void);
+	void		handleHEAD(void);
+	void		handlePOST(void);
+	void		handlePUT(void);
+	void		handleDELETE(void);
+	
 public:
+
 	HttpResponse(void);
 	~HttpResponse(void);
+
+	void		build(const http::e_method& pMethod, const std::string& pPath);
+
+	std::string		getVersion(void) const;
+	std::string		getStatusCode(void) const;
+	std::string		getStatusMessage(void) const;
+
+	
 };
 
 #endif

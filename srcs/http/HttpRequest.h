@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2025/11/02 04:39:48 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/05 16:20:56 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@
 #define MAX_HEADER_LENGTH		2048
 #define MAX_BODY_LENGTH			1048576
 
-enum	e_parse_state
+enum	e_request_state
 	{ REQ_METHOD
 	, REQ_SPACE_BEFORE_URI
 	, REQ_URI_SLASH
@@ -67,7 +67,7 @@ class HttpRequest {
 
 private:
 
-	e_parse_state		_state;
+	e_request_state		_state;
 	std::string			_buffer;
 
 	http::e_method		_method;
