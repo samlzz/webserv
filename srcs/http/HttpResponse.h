@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:03 by achu              #+#    #+#             */
-/*   Updated: 2025/11/05 17:44:33 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/14 16:25:33 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,11 +19,7 @@
 #include <exception>
 
 enum	e_response_state
-	{ RES_START
-	, RES_METHOD
-	, RES_BUILD_HEADER
-	, RES_BUILD_BODY
-	, RES_SEND_HEADER
+	{ RES_SEND_HEADER
 	, RES_SEND_BODY
 };
 
@@ -37,6 +33,8 @@ private:
 	std::string		_headers;
 	std::string		_body;
 
+	http::e_method	_method;
+	std::string		_path;
 	std::string		_verMajor;
 	std::string		_verMinor;
 	std::string		_statusCode;
@@ -65,6 +63,10 @@ private:
 	void		handlePOST(void);
 	void		handlePUT(void);
 	void		handleDELETE(void);
+
+	void		buildResponseLine(void);
+	void		buildHeaders(void);
+	void		buildBody(void);
 	
 public:
 
@@ -77,7 +79,6 @@ public:
 	std::string		getStatusCode(void) const;
 	std::string		getStatusMessage(void) const;
 
-	
 };
 
 #endif

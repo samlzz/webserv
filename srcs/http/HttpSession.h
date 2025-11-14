@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 22:31:56 by achu              #+#    #+#             */
-/*   Updated: 2025/11/05 14:34:06 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/14 18:42:14 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,9 @@ namespace http
 		, SC_FORBIDDEN = 403
 		, SC_NOT_FOUND = 404
 		, SC_METHOD_NOT_ALLOWED = 405
-		, SC_CONTENT_TO_LARGE = 413
+		, SC_LENGTH_REQUIRED = 411
+		, SC_CONTENT_TOO_LARGE = 413
+		, SC_URI_TOO_LONG = 414
 		, SC_INTERNAL_SERVER_ERROR = 500
 		, SC_NOT_IMPLEMENTED = 501
 	};
