@@ -6,11 +6,11 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2025/11/02 04:44:53 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/24 15:59:33 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "HttpRequest.h"
+#include "HttpRequest.hpp"
 #include <iostream>
 #include <cmath>
 

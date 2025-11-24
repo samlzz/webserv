@@ -1,19 +1,19 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HttpResponse.h                                     :+:      :+:    :+:   */
+/*   HttpResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:03 by achu              #+#    #+#             */
-/*   Updated: 2025/11/14 16:25:33 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/24 15:57:43 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __HTTP_RESPONSE_H__
-#define __HTTP_RESPONSE_H__
+#ifndef __HTTP_RESPONSE_HPP__
+#define __HTTP_RESPONSE_HPP__
 
-#include "HttpSession.h"
+#include "../HttpConnection.hpp"
 #include <string>
 #include <vector>
 #include <exception>
@@ -57,6 +57,9 @@ private:
 	std::string		_vary;
 
 private:
+
+	void		sendFile();
+	void		sendAutoIndex();
 
 	void		handleGET(void);
 	void		handleHEAD(void);

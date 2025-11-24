@@ -1,17 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HttpSession.h                                      :+:      :+:    :+:   */
+/*   HttpConnection.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 22:31:56 by achu              #+#    #+#             */
-/*   Updated: 2025/11/14 18:42:14 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/24 16:01:26 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __HTTP_SESSION_H__
-#define __HTTP_SESSION_H__
+#ifndef __HTTP_CONNECTION_HPP__
+#define __HTTP_CONNECTION_HPP__
 
 namespace http
 {
@@ -40,6 +40,16 @@ namespace http
 		, SC_INTERNAL_SERVER_ERROR = 500
 		, SC_NOT_IMPLEMENTED = 501
 	};
+};
+
+class HttpConnection {
+
+private:
+	
+
+public:
+	
+	
 };
 
 #endif
