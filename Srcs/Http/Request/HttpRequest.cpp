@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2025/11/24 15:59:33 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/24 16:40:26 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,7 @@ static bool		isHex(const std::string& pStr)
 	return (pStr.find_first_not_of("0123456789ABCDEFabcdef") == std::string::npos);
 }
 
+/// (string) Hexadecimal to (int) Decimal 
 static int		htod(const std::string& pHex)
 {
 	if (pHex.empty())
@@ -216,20 +217,18 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case REQ_HTTP_MAJOR_VER:
 			if (!std::isdigit(ch)) return ; //thorw 400
-			_buffer += ch;
+			_verMaj = ch;
 			UPDATE_STATE(REQ_HTTP_DOT);
 			break;
 
 		case REQ_HTTP_DOT:
 			if (ch != '.') return ; //thorw 400
-			_buffer += ch;
 			UPDATE_STATE(REQ_HTTP_MINOR_VER);
 			break;
 
 		case REQ_HTTP_MINOR_VER:
 			if (!std::isdigit(ch)) return ; //thorw 400
-			_buffer += ch;
-			_version = _buffer;
+			_verMin = ch;
 			UPDATE_STATE(REQ_ALMOST_DONE);
 			_buffer.clear();
 			break;
@@ -429,13 +428,7 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 //#                             GETTER & SETTER                                #
 //#****************************************************************************#
 
-http::e_method											HttpRequest::getMethod(void) const { return (_method); }
-std::string												HttpRequest::getPath(void) const { return (_path); };
-std::string												HttpRequest::getQuery(void) const { return (_query); };
-std::string												HttpRequest::getFragment(void) const { return (_fragment); };
-std::string												HttpRequest::getVersion(void) const { return (_version); }
-std::vector<std::pair<std::string, std::string>>		HttpRequest::getHeaders(void) const { return (_headers); }
-bool													HttpRequest::hasHeaderName(const std::string &pKey) const {
+bool			HttpRequest::hasHeaderName(const std::string &pKey) const {
 	for (size_t i = 0; i < _headers.size(); ++i)
 	{
 		if (_headers[i].first == pKey)
@@ -443,7 +436,7 @@ bool													HttpRequest::hasHeaderName(const std::string &pKey) const {
 	}
 	return (false);
 };
-std::string												HttpRequest::getHeaderValue(const std::string& pKey) const {
+std::string		HttpRequest::getHeaderValue(const std::string& pKey) const {
 	for (size_t i = 0; i < _headers.size(); ++i)
 	{
 		if (_headers[i].first == pKey)
@@ -451,14 +444,11 @@ std::string												HttpRequest::getHeaderValue(const std::string& pKey) cons
 	}
 	return ("");
 };
-std::string												HttpRequest::getHeaderValueAt(int pIdx) const {
+std::string		HttpRequest::getHeaderValueAt(int pIdx) const {
 	if (_headers.size() < pIdx)
 		return ("");
 	return (_headers[pIdx].second);
 }
-std::string												HttpRequest::getBody(void) const { return (_body); };
-http::e_status_code										HttpRequest::getStatusCode(void) const { return (_status); }
-
 
 void		HttpRequest::addHeader(const std::string& pKey, const std::string& pValue) {
 	_headers.push_back(std::make_pair(pKey, pValue));
@@ -473,7 +463,7 @@ std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 {
 	pOut << pRequest.getMethod() << " ";
 	pOut << pRequest.getPath() << pRequest.getQuery() << pRequest.getFragment() << " ";
-	pOut << pRequest.getVersion() << std::endl;
+	pOut << pRequest.getVerMaj() << "." << pRequest.getVerMin() << std::endl;
 
 	for (size_t i = 0; i < pRequest.getHeaders().size(); i++)
 	{

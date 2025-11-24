@@ -6,12 +6,15 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 22:31:56 by achu              #+#    #+#             */
-/*   Updated: 2025/11/24 16:01:26 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/24 16:43:00 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_CONNECTION_HPP__
 #define __HTTP_CONNECTION_HPP__
+
+#include "Request/HttpRequest.hpp"
+#include "Response/HttpResponse.hpp"
 
 namespace http
 {
@@ -45,10 +48,21 @@ namespace http
 class HttpConnection {
 
 private:
-	
+
+	HttpRequest			_request;
+	HttpResponse		_response;
+
+private:
+
+	void		handleGET(void);
+	void		handleHEAD(void);
+	void		handlePOST(void);
+	void		handlePUT(void);
+	void		handleDELETE(void);
 
 public:
-	
+
+
 	
 };
 

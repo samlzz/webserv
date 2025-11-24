@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2025/11/24 15:57:48 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/24 16:38:01 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,8 @@ private:
 	std::string			_path;
 	std::string			_query;
 	std::string			_fragment;
-	std::string			_version;
+	std::string			_verMaj;
+	std::string			_verMin;
 
 	std::vector<std::pair<std::string, std::string>>		_headers;
 
@@ -97,19 +98,21 @@ public:
 
 	void	feed(char *pBuffer, size_t pSize);
 
-	http::e_method		getMethod(void) const;
-	std::string			getPath(void) const;
-	std::string			getQuery(void) const;
-	std::string			getFragment(void) const;
-	std::string			getVersion(void) const;
+	http::e_method		getMethod(void) const		{ return (_method);   };
+	std::string			getPath(void) const  		{ return (_path);     };
+	std::string			getQuery(void) const		{ return (_query);    };
+	std::string			getFragment(void) const		{ return (_fragment); };
+	std::string			getVerMaj(void) const		{ return (_verMaj);   };
+	std::string			getVerMin(void) const		{ return (_verMin);   };
 
-	std::vector<std::pair<std::string, std::string>>		getHeaders(void) const;
-	bool													hasHeaderName(const std::string& pKey) const;
-	std::string												getHeaderValue(const std::string& pKey) const;
-	std::string												getHeaderValueAt(int pIdx) const;
+	std::vector<std::pair<std::string, std::string>>		getHeaders(void) const { return (_headers); };
 
-	std::string					getBody(void) const;
-	http::e_status_code			getStatusCode(void) const;
+	bool				hasHeaderName(const std::string& pKey) const;
+	std::string			getHeaderValue(const std::string& pKey) const;
+	std::string			getHeaderValueAt(int pIdx) const;
+
+	std::string					getBody(void) const			{ return (_body);   };
+	http::e_status_code			getStatusCode(void) const	{ return (_status); };
 
 	class BadRequestException : public std::exception {
 	public:

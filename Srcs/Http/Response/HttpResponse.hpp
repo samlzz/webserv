@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:03 by achu              #+#    #+#             */
-/*   Updated: 2025/11/24 15:57:43 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/24 16:41:54 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,8 +35,8 @@ private:
 
 	http::e_method	_method;
 	std::string		_path;
-	std::string		_verMajor;
-	std::string		_verMinor;
+	std::string		_verMaj;
+	std::string		_verMin;
 	std::string		_statusCode;
 	std::string		_statusMessage;
 
@@ -57,15 +57,6 @@ private:
 	std::string		_vary;
 
 private:
-
-	void		sendFile();
-	void		sendAutoIndex();
-
-	void		handleGET(void);
-	void		handleHEAD(void);
-	void		handlePOST(void);
-	void		handlePUT(void);
-	void		handleDELETE(void);
 
 	void		buildResponseLine(void);
 	void		buildHeaders(void);

@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 15:07:50 by achu              #+#    #+#             */
-/*   Updated: 2025/10/31 19:43:01 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/24 16:48:08 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "HttpRequest.h"
+#include "HttpConnection.hpp"
 
 int main()
 {
