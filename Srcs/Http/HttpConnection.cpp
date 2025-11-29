@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 15:59:57 by achu              #+#    #+#             */
-/*   Updated: 2025/11/24 16:48:25 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/29 18:33:41 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,37 @@ void		HttpConnection::handlePOST(void)
 
 void		HttpConnection::handlePUT(void)
 {
-	
+	bool			exist = false;
+	std::string		path = _request.getPath();
+
+	struct stat	st;
+	exist = stat(path.c_str(), &st);
+
+	if (exist && isDirectory(path))
+		return ; //403
+
+	if (exist && access(path.c_str(), W_OK) < 0)
+		return ; //403
+
+	if (!exist) {
+		std::string		parpath = path.substr(0, path.find_last_of('/'));
+		if (access(parpath.c_str(), W_OK) < 0)
+			return ; // 403
+		if (!isDirectory(parpath))
+			return ; // 04
+	}
+
+	int		fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+
+	if (fd < 0)
+		return ; // 500
+	size_t	written = write(fd, _request.getBody().c_str(), atoi(_request.getHeaderValue("Content-Length").c_str()));
+	close(fd);
+
+	if (written < 0)
+		return ; // error
+
+	return ;//(exist ? 201 : 200)
 }
 
 void		HttpConnection::handleDELETE(void)

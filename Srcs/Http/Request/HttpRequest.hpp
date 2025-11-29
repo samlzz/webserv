@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2025/11/24 16:38:01 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/29 16:50:50 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ private:
 	std::string			_verMaj;
 	std::string			_verMin;
 
-	std::vector<std::pair<std::string, std::string>>		_headers;
+	std::vector<std::pair<std::string, std::string> >		_headers;
 
 	std::string			_body;
 	std::string			_transferEncoding;
@@ -105,7 +105,7 @@ public:
 	std::string			getVerMaj(void) const		{ return (_verMaj);   };
 	std::string			getVerMin(void) const		{ return (_verMin);   };
 
-	std::vector<std::pair<std::string, std::string>>		getHeaders(void) const { return (_headers); };
+	std::vector<std::pair<std::string, std::string> >		getHeaders(void) const { return (_headers); };
 
 	bool				hasHeaderName(const std::string& pKey) const;
 	std::string			getHeaderValue(const std::string& pKey) const;
