@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 15:59:57 by achu              #+#    #+#             */
-/*   Updated: 2025/12/03 15:48:20 by achu             ###   ########.fr       */
+/*   Updated: 2025/12/03 18:06:05 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,36 @@
 //#****************************************************************************#
 //#                             STATIC FUNCTION                                #
 //#****************************************************************************#
+
+std::string		getextension(const std::string& pPath)
+{
+	std::string		result;
+	ssize_t			start;
+
+	if (start = pPath.find_last_of('.') == std::string::npos)
+		return ("");
+
+	result = pPath.substr(start, pPath.length() - start);
+	if (result.empty())
+		return ("");
+
+	return (result);
+}
+
+std::string		getCgiDir(const std::string& pPath)
+{
+	std::string		result;
+	ssize_t			end;
+
+	if (end = pPath.find_first_of('/', 1) == std::string::npos)
+		return ("");
+
+	result = pPath.substr(0, end);
+	if (result.empty())
+		return ("");
+
+	return (result);
+}
 
 bool	isRegFile(const std::string& pPath)
 {
@@ -44,8 +74,31 @@ bool	isDirectory(const std::string& pPath)
 //#                             MEMBER FUNCTION                                #
 //#****************************************************************************#
 
+// this functoin need the config file for cgi_pass
+bool		HttpConnection::isCGI(void)
+{
+	std::string		extension = getextension(_request.getPath());
+	std::string		cgiPath = getCgiDir(_request.getPath());
+
+	if (extension.empty() || cgiPath.empty())
+		return (false);
+
+	// compare extension with config allowed extension
+	// compare cgiPath with config supposed directory for cgi
+
+	return (true);
+
+	// find script cgi
+	// is executable access ?
+	// what interpreter extension ?
+}
+
 void		HttpConnection::handleGET(void)
 {
+	if (isCGI()) {
+		return ; //run CGI
+	}
+
 	if (isDirectory(_request.getPath())) {
 		if (_request.getPath().back() != '/')
 			return ; // 301 redirect by adding the missing '/'
@@ -88,8 +141,13 @@ void		HttpConnection::handleHEAD(void)
 	return ; // throw 404
 }
 
+// Best to create a non overriding PUT method
 void		HttpConnection::handlePOST(void)
 {
+	if (isCGI()) {
+		return ; //run CGI
+	}
+
 	return ; // thorw 405 method not allowed
 }
 
