@@ -1,17 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HttpSession.h                                      :+:      :+:    :+:   */
+/*   HttpConnection.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 22:31:56 by achu              #+#    #+#             */
-/*   Updated: 2025/11/02 04:19:13 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/29 16:36:56 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __HTTP_SESSION_H__
-#define __HTTP_SESSION_H__
+#ifndef __HTTP_CONNECTION_HPP__
+#define __HTTP_CONNECTION_HPP__
+
+#include "Request/HttpRequest.hpp"
+#include "Response/HttpResponse.hpp"
 
 namespace http
 {
@@ -31,14 +34,36 @@ namespace http
 		, SC_MOVED_PERMANENTLY = 301
 		, SC_FOUND = 302
 		, SC_BAD_REQUEST = 400
-		, SC_UNAUTHORIZED = 401
 		, SC_FORBIDDEN = 403
 		, SC_NOT_FOUND = 404
 		, SC_METHOD_NOT_ALLOWED = 405
-		, SC_CONTENT_TO_LARGE = 413
+		, SC_LENGTH_REQUIRED = 411
+		, SC_CONTENT_TOO_LARGE = 413
+		, SC_URI_TOO_LONG = 414
 		, SC_INTERNAL_SERVER_ERROR = 500
 		, SC_NOT_IMPLEMENTED = 501
 	};
+};
+
+class HttpConnection {
+
+private:
+
+	HttpRequest			_request;
+	HttpResponse		_response;
+
+private:
+
+	void		handleGET(void);
+	void		handleHEAD(void);
+	void		handlePOST(void);
+	void		handlePUT(void);
+	void		handleDELETE(void);
+
+public:
+
+
+	
 };
 
 #endif

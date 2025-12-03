@@ -1,19 +1,19 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HttpRequest.h                                      :+:      :+:    :+:   */
+/*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2025/11/02 04:39:48 by achu             ###   ########.fr       */
+/*   Updated: 2025/11/29 16:50:50 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __HTTP_REQUEST_H__
-#define __HTTP_REQUEST_H__
+#ifndef __HTTP_REQUEST_HPP__
+#define __HTTP_REQUEST_HPP__
 
-#include "HttpSession.h"
+#include "../HttpConnection.hpp"
 #include <string>
 #include <vector>
 #include <exception>
@@ -23,7 +23,7 @@
 #define MAX_HEADER_LENGTH		2048
 #define MAX_BODY_LENGTH			1048576
 
-enum	e_parse_state
+enum	e_request_state
 	{ REQ_METHOD
 	, REQ_SPACE_BEFORE_URI
 	, REQ_URI_SLASH
@@ -67,16 +67,17 @@ class HttpRequest {
 
 private:
 
-	e_parse_state		_state;
+	e_request_state		_state;
 	std::string			_buffer;
 
 	http::e_method		_method;
 	std::string			_path;
 	std::string			_query;
 	std::string			_fragment;
-	std::string			_version;
+	std::string			_verMaj;
+	std::string			_verMin;
 
-	std::vector<std::pair<std::string, std::string>>		_headers;
+	std::vector<std::pair<std::string, std::string> >		_headers;
 
 	std::string			_body;
 	std::string			_transferEncoding;
@@ -97,19 +98,21 @@ public:
 
 	void	feed(char *pBuffer, size_t pSize);
 
-	http::e_method		getMethod(void) const;
-	std::string			getPath(void) const;
-	std::string			getQuery(void) const;
-	std::string			getFragment(void) const;
-	std::string			getVersion(void) const;
+	http::e_method		getMethod(void) const		{ return (_method);   };
+	std::string			getPath(void) const  		{ return (_path);     };
+	std::string			getQuery(void) const		{ return (_query);    };
+	std::string			getFragment(void) const		{ return (_fragment); };
+	std::string			getVerMaj(void) const		{ return (_verMaj);   };
+	std::string			getVerMin(void) const		{ return (_verMin);   };
 
-	std::vector<std::pair<std::string, std::string>>		getHeaders(void) const;
-	bool													hasHeaderName(const std::string& pKey) const;
-	std::string												getHeaderValue(const std::string& pKey) const;
-	std::string												getHeaderValueAt(int pIdx) const;
+	std::vector<std::pair<std::string, std::string> >		getHeaders(void) const { return (_headers); };
 
-	std::string					getBody(void) const;
-	http::e_status_code			getStatusCode(void) const;
+	bool				hasHeaderName(const std::string& pKey) const;
+	std::string			getHeaderValue(const std::string& pKey) const;
+	std::string			getHeaderValueAt(int pIdx) const;
+
+	std::string					getBody(void) const			{ return (_body);   };
+	http::e_status_code			getStatusCode(void) const	{ return (_status); };
 
 	class BadRequestException : public std::exception {
 	public:
