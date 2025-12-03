@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 15:59:57 by achu              #+#    #+#             */
-/*   Updated: 2025/11/29 18:33:41 by achu             ###   ########.fr       */
+/*   Updated: 2025/12/03 15:48:20 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,16 +90,15 @@ void		HttpConnection::handleHEAD(void)
 
 void		HttpConnection::handlePOST(void)
 {
-	
+	return ; // thorw 405 method not allowed
 }
 
 void		HttpConnection::handlePUT(void)
 {
-	bool			exist = false;
-	std::string		path = _request.getPath();
+	struct stat		st;
 
-	struct stat	st;
-	exist = stat(path.c_str(), &st);
+	std::string		path = _request.getPath();
+	bool			exist = stat(path.c_str(), &st);
 
 	if (exist && isDirectory(path))
 		return ; //403
@@ -111,8 +110,6 @@ void		HttpConnection::handlePUT(void)
 		std::string		parpath = path.substr(0, path.find_last_of('/'));
 		if (access(parpath.c_str(), W_OK) < 0)
 			return ; // 403
-		if (!isDirectory(parpath))
-			return ; // 04
 	}
 
 	int		fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -123,7 +120,7 @@ void		HttpConnection::handlePUT(void)
 	close(fd);
 
 	if (written < 0)
-		return ; // error
+		return ; // 500
 
 	return ;//(exist ? 201 : 200)
 }
