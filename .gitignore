@@ -1,5 +1,6 @@
 **/**.swp
 .vscode/*
+.cache
 
 **/ign_*
 
@@ -14,3 +15,4 @@ build/*
 compile_commands.json
 
 *.todo
+webserv
