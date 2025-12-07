@@ -8,18 +8,12 @@ ifeq ($(NAME),)
 endif
 
 # ? Directory (end with /)
-SRC_DIR   = src/
+SRC_DIR   = Srcs/
 OBJ_DIR   = build/
 BIN_DIR   =
 
 ### UFILES_START ###
-FILES =	a.c \
-		main.cpp \
-		HttpCommon.cpp \
-		HttpRequest.cpp \
-		IsDigit.cpp \
-		Split.cpp \
-		Trim.cpp
+FILES =	main.cpp
 ### END ###
 ifeq ($(FILES),)
     $(error FILES is empty: please define source files)
@@ -37,7 +31,7 @@ CFLAGS    = -Wall -Wextra -Werror
 CXX       = c++
 CXXFLAGS  = -Wall -Wextra -Werror -std=c++98
 
-INCL_DIRS =
+INCL_DIRS = lib/ft_log/include lib/ftpp/include
 # ? Directories & Libraries to link against
 LIB_DIRS  =
 LIB_FILES =
