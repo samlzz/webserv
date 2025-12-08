@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 21:09:01 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/08 17:23:36 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/08 18:06:32 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,13 +53,13 @@ Config::Server::findLocation(const std::string &path) const
 
 std::string	Config::Server::Location::getErrorPage(
 	const Server &parent,
-	e_status_code code
+	http::e_status_code code
 ) const
 {
-	const std::map<e_status_code, std::string>	&some = errorPages.getOr(
+	const t_errPages			&some = errorPages.getOr(
 		parent.d_errorPages
 	);
-	std::map<e_status_code, std::string>::const_iterator it = some.find(code);
+	t_errPages::const_iterator	it = some.find(code);
 
 	if (it != some.end())
 		return it->second;
@@ -68,13 +68,13 @@ std::string	Config::Server::Location::getErrorPage(
 
 bool	Config::Server::Location::isAllowed(
 	const Server &parent,
-	e_method method
+	http::e_method method
 ) const
 {
-	const std::vector<e_method>				&some = methods.getOr(
+	const std::vector<http::e_method>			&some = methods.getOr(
 		parent.d_methods
 	);
-	std::vector<e_method>::const_iterator	it = std::find(
+	std::vector<http::e_method>::const_iterator	it = std::find(
 		some.begin(), some.end(), method
 	);
 
