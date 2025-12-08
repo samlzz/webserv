@@ -31,7 +31,7 @@ CFLAGS    = -Wall -Wextra -Werror
 CXX       = c++
 CXXFLAGS  = -Wall -Wextra -Werror -std=c++98
 
-INCL_DIRS = lib/ft_log/include lib/ftpp/include
+INCL_DIRS = lib/ft_log/include lib/ftpp/include $(SRC_DIR)
 # ? Directories & Libraries to link against
 LIB_DIRS  =
 LIB_FILES =
