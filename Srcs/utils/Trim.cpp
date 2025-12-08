@@ -3,13 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Trim.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 01:05:25 by achu              #+#    #+#             */
-/*   Updated: 2025/10/29 15:03:37 by achu             ###   ########.fr       */
+/*   Updated: 2025/12/08 18:26:53 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <cstddef>
 #include <string>
 
 std::string		trim(const std::string& pStr, const std::string& pDelims)
