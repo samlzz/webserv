@@ -16,9 +16,9 @@ server_directive <- listen / methods / root / index / autoindex / error_page
 # ===========================
 # Bloc location
 # ===========================
-@location <- 'location' __ path:(path) _ '{' _ location_body _ '}' _
+@location          <- 'location' __ path:(path) _ '{' _ location_body _ '}' _
 
-location_body <- location_directive*
+location_body      <- location_directive*
 
 location_directive <- methods / root / index / autoindex / error_page 
                    / cgi_extension / cgi_path / upload_store / return_redirect
@@ -53,17 +53,16 @@ method            <- 'GET' / 'POST' / 'DELETE' / 'PUT' / 'HEAD' / 'OPTIONS'
 
 path              <- [^;\n\r\t {}]+
 
-bool_value        <- 'on' / 'off' / 'true' / 'false' / '1' / '0'
+bool_value        <- 'on' / 'off'
 
-error_page_value  <- error_codes _ path
-error_codes       <- [0-9]+ (__ [0-9]+)*
+error_page_value  <- (( [0-9]+ __ )* path)+
 
 size_value        <- [0-9]+ size_unit?
 size_unit         <- 'K' / 'M' / 'G' / 'k' / 'm' / 'g'
 
 extension         <- '.' [a-zA-Z0-9]+
 
-redirect_value    <- [0-9]+ __ path
+redirect_value    <- ( [0-9]+ __ )? path
 
 # ===========================
 # Whitespaces and comments
