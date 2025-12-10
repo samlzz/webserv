@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/08 18:29:07 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 02:31:08 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 03:04:27 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,10 +133,7 @@ http::e_status_code	parseStatusCode(const std::string &s)
 		case 500: return http::SC_INTERNAL_SERVER_ERROR;
 		case 501: return http::SC_NOT_IMPLEMENTED;
 		default:
-			throw ValueError("status code",
-						static_cast<std::ostringstream&>(
-							std::ostringstream() << code).str()
-			);
+			throw ValueError("status code", s);
 	}
 }
 
