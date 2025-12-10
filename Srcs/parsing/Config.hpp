@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/05 21:08:53 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/08 18:05:01 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 02:14:42 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,17 @@ public:
 	Config(const std::string &configPath);
 	~Config();
 
+	// ============================================================================
+	// Configuration types
+	// ============================================================================
+	struct StatusPath
+	{
+		http::e_status_code	code;
+		std::string			path;
+	};
 	typedef std::map<http::e_status_code, std::string>	t_errPages;
 	typedef std::map<std::string, std::string>			t_dict;
+
 
 	// ============================================================================
 	// Server configuration
@@ -47,26 +56,24 @@ public:
 		// ============================================================================
 		struct Location
 		{
-			std::string											path;
+			std::string					path;
 
 			/* Optionnal configuration */
-			Optionnal<std::vector<http::e_method> >	methods;
-			Optionnal<std::string>					root;
-			Optionnal<std::string>					index;
-			Optionnal<bool>							autoindex;
-			Optionnal<t_errPages>					errorPages;
-			Optionnal<t_dict>						cgiExts;
+			std::vector<http::e_method>	methods;
+			Optionnal<std::string>		root;
+			Optionnal<std::string>		index;
+			Optionnal<bool>				autoindex;
+			t_errPages					errorPages;
+			Optionnal<std::string>		defaultErrPage;
+			t_dict						cgiExts;
 
-			Optionnal<std::string>					cgiPath;
-			Optionnal<std::string>					uploadPath;
-			Optionnal<std::string>					redirectPath;
-			Optionnal<http::e_status_code>			redirectStatus;
+			Optionnal<std::string>		uploadPath;
+			Optionnal<StatusPath>		redirect;
 
 			Location();
 			bool operator<(const Location &other) const;
 
-			std::string	getErrorPage(const Server &parent, http::e_status_code code) const;
-			bool		isAllowed(const Server &parent, http::e_method method) const;
+			Location	resolve(const Server &parent); // TODO: not implemented
 		};
 
 	// ============================================================================
@@ -83,6 +90,7 @@ public:
 		std::string					d_index;
 		bool						d_autoindex;
 		t_errPages					d_errorPages;
+		std::string					d_defaultErrPage;
 		t_dict						d_cgiExts;
 
 		/* Location blocks */
@@ -93,7 +101,7 @@ public:
 	// ============================================================================
 		Server();
 
-		const Location				*findLocation(const std::string &path) const;
+		const Location	*findLocation(const std::string &path) const;
 	};
 
 	// ============================================================================
