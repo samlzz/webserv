@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 22:31:56 by achu              #+#    #+#             */
-/*   Updated: 2025/12/08 17:39:47 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 02:56:21 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,16 +16,19 @@
 namespace http
 {
 	enum	e_method
-		{ MTH_GET
+	{
+		MTH_UNKNOWN = 0
+		, MTH_GET
 		, MTH_HEAD
 		, MTH_POST
-		, MTH_PUT		
+		, MTH_PUT
 		, MTH_DELETE
-		, MTH_UNKNOWN
 	};
 
 	enum	e_status_code
-		{ SC_OK = 200
+	{
+		SC_NONE = 0
+		, SC_OK = 200
 		, SC_CREATED = 201
 		, SC_NO_CONTENT = 204
 		, SC_MOVED_PERMANENTLY = 301
