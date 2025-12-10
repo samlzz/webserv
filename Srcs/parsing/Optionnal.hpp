@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/08 16:05:45 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/08 16:37:21 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 01:02:19 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,9 +66,15 @@ public:
 	}
 
 	operator bool() const			{ return !_none; }
-	const T&	operator*() const
+
+	const T& operator*() const
 	{
-		assert(_none && "Deferencing a None Optionnal"); // ? disabled with -DNDEBUG
+		assert(!_none && "Deferencing a None Optionnal"); // ? disabled with -DNDEBUG
+		return _some;
+	}
+	T& operator*()
+	{
+		assert(!_none && "Deferencing a None Optionnal"); // ? disabled with -DNDEBUG
 		return _some;
 	}
 
