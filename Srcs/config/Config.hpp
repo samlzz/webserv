@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/05 21:08:53 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 02:14:42 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 03:02:58 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,8 @@ public:
 	{
 		http::e_status_code	code;
 		std::string			path;
+
+		StatusPath(): code(http::SC_NONE), path() {}
 	};
 	typedef std::map<http::e_status_code, std::string>	t_errPages;
 	typedef std::map<std::string, std::string>			t_dict;
