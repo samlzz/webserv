@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 21:09:01 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 03:09:29 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 16:34:00 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,20 +17,19 @@
 #include "Config.hpp"
 
 // ============================================================================
-// Construction
+// Server defaults values
 // ============================================================================
+const char				*Config::ServerDefaults::host = "0.0.0.0";
+const uint16_t			Config::ServerDefaults::port = 80;
+const size_t			Config::ServerDefaults::maxBodySize = 1 << 20; // 1MB
 
-Config::Server::Server()
-	: host("0.0.0.0"), port(80)
-	, maxBodySize(1 << 20) // 1MB
-	, d_methods(1, http::MTH_GET)
-	, d_root("html")
-	, d_index("index.html")
-	, d_autoindex(false)
-{}
+const http::e_method	Config::ServerDefaults::methods[3] = 
+	{ http::MTH_GET, http::MTH_POST, http::MTH_DELETE };
 
-Config::Server::Location::Location()
-{}
+const char				*Config::ServerDefaults::root = "html";
+const char				*Config::ServerDefaults::index = "index.html";
+const bool				Config::ServerDefaults::autoindex = false;
+const char				*Config::ServerDefaults::defaultErrPage = "/errors/default.html";
 
 // ============================================================================
 // Operator

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/05 21:08:53 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 03:02:58 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 16:33:23 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,6 @@
 class Config {
 
 public:
-	Config();
 	Config(const std::string &configPath);
 	~Config();
 
@@ -60,50 +59,50 @@ public:
 		{
 			std::string					path;
 
-			/* Optionnal configuration */
 			std::vector<http::e_method>	methods;
-			Optionnal<std::string>		root;
-			Optionnal<std::string>		index;
-			Optionnal<bool>				autoindex;
+			std::string					root;
+			std::string					index;
+			bool						autoindex;
 			t_errPages					errorPages;
-			Optionnal<std::string>		defaultErrPage;
+			std::string					defaultErrPage;
 			t_dict						cgiExts;
 
 			Optionnal<std::string>		uploadPath;
 			Optionnal<StatusPath>		redirect;
 
-			Location();
 			bool operator<(const Location &other) const;
-
-			Location	resolve(const Server &parent); // TODO: not implemented
 		};
 
 	// ============================================================================
 	// Server properties
 	// ============================================================================
 
-		std::string					host;
-		uint16_t					port; // According to RFC 793, the port is a 16 bit unsigned int.
-		size_t						maxBodySize;
-
-		/* Default values for location blocks */
-		std::vector<http::e_method>	d_methods;
-		std::string					d_root;
-		std::string					d_index;
-		bool						d_autoindex;
-		t_errPages					d_errorPages;
-		std::string					d_defaultErrPage;
-		t_dict						d_cgiExts;
+		std::string				host;
+		uint16_t				port; // According to RFC 793, the port is a 16 bit unsigned int.
+		size_t					maxBodySize;
 
 		/* Location blocks */
-		std::vector<Location>		locations;
+		std::vector<Location>	locations;
 
 	// ============================================================================
 	// Server methods
 	// ============================================================================
-		Server();
-
 		const Location	*findLocation(const std::string &path) const;
+	};
+	// ============================================================================
+	// Default Server values
+	// ============================================================================
+	struct ServerDefaults
+	{
+		static const char 			*host;
+		static const uint16_t		port;
+		static const size_t			maxBodySize;
+
+		static const http::e_method	methods[3];
+		static const char			*root;
+		static const char			*index;
+		static const bool			autoindex;
+		static const char			*defaultErrPage;
 	};
 
 	// ============================================================================
@@ -129,7 +128,8 @@ private:
 	// ============================================================================
 	// Internal data
 	// ============================================================================
-	std::vector<Server>	_servs;
+	std::vector<Server>			_servs;
+	static const ServerDefaults	_def;
 
 	// ========================================================================
 	// Internal parsing steps
@@ -138,7 +138,8 @@ private:
 	void	parseConfigFile(const AstNode *root);
 	void	validateConfig(const AstNode *root);
 
-	// forbiden copy
+	// forbiden
+	Config();
 	Config& operator=(const Config &other);
 	Config(const Config &other);
 };

@@ -6,12 +6,13 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 21:09:10 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 02:19:53 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 16:26:35 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
 
+#include "parsing/RawConfig.hpp"
 #include "ftpp/AstNode.hpp"
 #include "ftpp/Grammar.hpp"
 #include "parsing/configParse.hpp"
@@ -20,10 +21,6 @@
 // ============================================================================
 // Construction / Destruction
 // ============================================================================
-
-Config::Config(): _servs()
-{}
-
 
 Config::Config(const std::string &configPath): _servs()
 {
@@ -125,7 +122,8 @@ void	Config::parseConfigFile(const AstNode *root)
 			continue;
 		assertNode(child, "server", "config");
 
-		_servs.push_back(config_parse::extractServer(child));
+		config_parse::RawServer	raw = config_parse::extractServer(child);
+		_servs.push_back(raw.normalize(_def));
 	}
 	validateConfig(root);
 }
