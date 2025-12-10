@@ -129,7 +129,6 @@ private:
 	// Internal data
 	// ============================================================================
 	std::vector<Server>			_servs;
-	static const ServerDefaults	_def;
 
 	// ========================================================================
 	// Internal parsing steps

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:10 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 17:01:47 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 17:29:45 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,7 @@ std::map<K, V>	concatMap(const std::map<K, V> &first, const std::map<K, V> &seco
 {
 	std::map<K, V> dest = first;
 	dest.insert(second.begin(), second.end());
+	return dest;
 }
 
 }

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 21:09:10 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 16:26:35 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 17:41:37 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,7 @@ void	Config::parseConfigFile(const AstNode *root)
 		assertNode(child, "server", "config");
 
 		config_parse::RawServer	raw = config_parse::extractServer(child);
-		_servs.push_back(raw.normalize(_def));
+		_servs.push_back(raw.normalize(ServerDefaults()));
 	}
 	validateConfig(root);
 }
