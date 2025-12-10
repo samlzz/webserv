@@ -6,11 +6,10 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:36:59 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 16:16:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 17:00:06 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <algorithm>
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -160,7 +159,6 @@ RawServer	extractServer(const AstNode *serverNode)
 
 	_extractServDirectives(srv, serverNode);
 	_extractServChildren(srv, serverNode);
-	std::sort(srv.locations.begin(), srv.locations.end());
 	return srv;
 }
 

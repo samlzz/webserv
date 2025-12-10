@@ -6,13 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:10 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 16:35:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 17:01:47 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __RAWCONFIG_HPP__
 # define __RAWCONFIG_HPP__
 
+# include <map>
 # include <stdint.h>
 
 # include "config/Config.hpp"
@@ -71,6 +72,17 @@ struct RawServer
 
 	Config::Server	normalize(const Config::ServerDefaults &def); // TODO: not implemented
 };
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+template<typename K, typename V>
+std::map<K, V>	concatMap(const std::map<K, V> &first, const std::map<K, V> &second)
+{
+	std::map<K, V> dest = first;
+	dest.insert(second.begin(), second.end());
+}
 
 }
 
