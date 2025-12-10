@@ -13,7 +13,12 @@ OBJ_DIR   = build/
 BIN_DIR   =
 
 ### UFILES_START ###
-FILES =	main.cpp
+FILES =	main.cpp \
+		config/Config.cpp \
+		config/ServerConfig.cpp \
+		config/parsing/RawConfig.cpp \
+		config/parsing/configParse.cpp \
+		config/parsing/parseUtils.cpp \
 ### END ###
 ifeq ($(FILES),)
     $(error FILES is empty: please define source files)
@@ -31,10 +36,12 @@ CFLAGS    = -Wall -Wextra -Werror
 CXX       = c++
 CXXFLAGS  = -Wall -Wextra -Werror -std=c++98
 
+FTPP_DIR = lib/ftpp
+
 INCL_DIRS = lib/ft_log/include lib/ftpp/include $(SRC_DIR)
 # ? Directories & Libraries to link against
-LIB_DIRS  =
-LIB_FILES =
+LIB_DIRS  = $(FTPP_DIR) lib/ft_log
+LIB_FILES = ftpp ftlog
 
 RM = rm -f
 MD = mkdir -p
@@ -106,7 +113,7 @@ endif
 .PHONY: all
 all: $(OUT)
 
-$(OUT): $(O_DIRS) $(OBJS)
+$(OUT): $(O_DIRS) $(OBJS) $(FTPP_DIR)/libftpp.a
 	$(P)printf "$(GRAY)"
 ifneq ($(suffix $(NAME)), .a)
 	$(LD) $(LDFLAGS) $(OBJS) -o $(OUT) $(LDLIBS)
@@ -125,6 +132,9 @@ $(OBJ_DIR)%.o: $(SRC_DIR)%.c
 $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
 	$(P)$(CXX) $(CXXFLAGS) -MMD $(CPPFLAGS) -c $< -o $@
 	$(call clr_print, $(YELLOW),Compiling C++: $<)
+
+$(FTPP_DIR)/libftpp.a:
+	$(P)$(MAKE) -C $(FTPP_DIR)
 
 -include $(DEPS)
 
