@@ -6,19 +6,42 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/08 18:29:07 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/08 19:13:22 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 01:49:38 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cctype>
+#include <cstddef>
 #include <cstdlib>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 #include <stdint.h>
 
 #include "Http/HttpTypes.hpp"
+#include "parsing/configParse.hpp"
+
+namespace config_parse
+{
+
+// ========================================================================
+// Generic helper
+// ========================================================================
+
+std::vector<std::string>	splitWords(const std::string &s)
+{
+	std::vector<std::string>	out;
+	std::istringstream			iss(s);
+	std::string					token;
+
+	while (iss >> token)
+		out.push_back(token);
+	return out;
+}
+
+// ========================================================================
+// Parse Numbers
+// ========================================================================
 
 uint64_t	parseUnsigned(const std::string &s, const std::string &what)
 {
@@ -27,25 +50,15 @@ uint64_t	parseUnsigned(const std::string &s, const std::string &what)
 	uint64_t	val = std::strtoul(cstr, &endptr, 10);
 
 	if (endptr == cstr || *endptr != '\0')
-		throw std::runtime_error("Invalid " + what + " value: '" + s + "'");
+		throw ValueError(what, s);
 	return val;
-}
-
-// Parse bool "on/off true/false 1/0"
-bool	parseBool(const std::string &s)
-{
-	if (s == "on" || s == "true" || s == "1")
-		return true;
-	if (s == "off" || s == "false" || s == "0")
-		return false;
-	throw std::runtime_error("Invalid boolean value: '" + s + "'");
 }
 
 // Parse size with suffix K/M/G (base 1024)
 size_t	parseSize(const std::string &s)
 {
 	if (s.empty())
-		throw std::runtime_error("Empty size value");
+		throw ValueError("size");
 
 	uint64_t	multiplier = 1;
 	std::string	numStr = s;
@@ -71,6 +84,20 @@ size_t	parseSize(const std::string &s)
 	return static_cast<size_t>(base * multiplier);
 }
 
+// ========================================================================
+// Assign string to it's value
+// ========================================================================
+
+// Parse bool "on/off true/false 1/0"
+bool	parseBool(const std::string &s)
+{
+	if (s == "on" || s == "true" || s == "1")
+		return true;
+	if (s == "off" || s == "false" || s == "0")
+		return false;
+	throw ValueError("boolean", s);
+}
+
 http::e_method	parseMethod(const std::string &s)
 {
 	if (s == "GET")     return http::MTH_GET;
@@ -78,16 +105,39 @@ http::e_method	parseMethod(const std::string &s)
 	if (s == "POST")    return http::MTH_POST;
 	if (s == "PUT")     return http::MTH_PUT;
 	if (s == "DELETE")  return http::MTH_DELETE;
-	throw std::runtime_error("Unsupported HTTP method: '" + s + "'");
+	throw ValueError("HTTP method", s);
 }
 
-std::vector<std::string>	splitWords(const std::string &s)
+// ========================================================================
+// Assign number to it's Status Code
+// ========================================================================
+
+http::e_status_code	parseStatusCode(const std::string &s)
 {
-	std::vector<std::string>	out;
-	std::istringstream			iss(s);
-	std::string					token;
+	uint64_t	code = parseUnsigned(s, "status code");
 
-	while (iss >> token)
-		out.push_back(token);
-	return out;
+	switch (code)
+	{
+		case 200: return http::SC_OK;
+		case 201: return http::SC_CREATED;
+		case 204: return http::SC_NO_CONTENT;
+		case 301: return http::SC_MOVED_PERMANENTLY;
+		case 302: return http::SC_FOUND;
+		case 400: return http::SC_BAD_REQUEST;
+		case 403: return http::SC_FORBIDDEN;
+		case 404: return http::SC_NOT_FOUND;
+		case 405: return http::SC_METHOD_NOT_ALLOWED;
+		case 411: return http::SC_LENGTH_REQUIRED;
+		case 413: return http::SC_CONTENT_TOO_LARGE;
+		case 414: return http::SC_URI_TOO_LONG;
+		case 500: return http::SC_INTERNAL_SERVER_ERROR;
+		case 501: return http::SC_NOT_IMPLEMENTED;
+		default:
+			throw ValueError("status code",
+						static_cast<std::ostringstream&>(
+							std::ostringstream() << code).str()
+			);
+	}
 }
+
+} // namespace config_parse
