@@ -12,27 +12,41 @@
 
 #include <cstddef>
 
+#include "ftpp/AstNode.hpp"
 #include "ftpp/Grammar.hpp"
+#include "parsing/configParse.hpp"
 #include "Config.hpp"
 
 // ============================================================================
 // Construction / Destruction
 // ============================================================================
 
-Config::Config(): _ast(NULL), _path(""), _servs()
+Config::Config(): _servs()
 {}
 
 
-Config::Config(const std::string &configPath)
-	: _ast(NULL), _path(configPath), _servs()
+Config::Config(const std::string &configPath): _servs()
 {
-	parseConfigFile();
+	Grammar	peg("assets/webserv.peg", true);
+	AstNode	*ast = peg.parseFile(configPath, "config");
+
+	if (!ast)
+		throw config_parse::WsParseError(
+			"Failed to parse config file '" + configPath + "'"
+		);
+	try
+{
+		parseConfigFile(ast);
+}
+	catch (...)
+{
+		delete ast;
+		throw;
+	}
+	delete ast;
 }
 
-Config::~Config()
-{
-	delete _ast;
-}
+Config::~Config() {}
 
 // ============================================================================
 // Accessors
@@ -64,16 +78,26 @@ const Config::Server	*Config::findServer(const std::string &host, uint16_t port)
 // Methods
 // ============================================================================
 
-void	Config::parseConfigFile(void)
+void	Config::parseConfigFile(const AstNode *root)
 {
-	Grammar	peg("assets/webserv.peg", true);
+	const std::vector<AstNode *> &children = root->children();
+	if (children.empty())
+		throw config_parse::WsParseError("Config file contains no server blocks");
 
-	_ast = peg.parseFile(_path);
-	// TODO: fill structs with _ast data
-	validateConfig();
+	for (size_t i = 0; i < children.size(); ++i)
+	{
+		AstNode	*child = children[i];
+		if (!child)
+			continue;
+		assertNode(child, "server", "config");
+
+		_servs.push_back(config_parse::extractServer(child));
+	}
+	validateConfig(root);
 }
 
-void	Config::validateConfig(void)
+void	Config::validateConfig(const AstNode *root)
 {
-	// TODO: check if configurations values are not
+	// TODO: check configurations values
+	(void)root;
 }

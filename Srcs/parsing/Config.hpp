@@ -63,6 +63,7 @@ public:
 			Optionnal<http::e_status_code>			redirectStatus;
 
 			Location();
+			bool operator<(const Location &other) const;
 
 			std::string	getErrorPage(const Server &parent, http::e_status_code code) const;
 			bool		isAllowed(const Server &parent, http::e_method method) const;
@@ -108,22 +109,14 @@ private:
 	// ============================================================================
 	// Internal data
 	// ============================================================================
-
-	AstNode				*_ast;
-	std::string			_path;
 	std::vector<Server>	_servs;
 
 	// ========================================================================
 	// Internal parsing steps
 	// ========================================================================
 
-	void	parseConfigFile(void);
-	void	validateConfig(void);
-
-	// ---- Extract from AST ----
-	void	extractServer(AstNode *root);
-	void	extractServerDirectives(AstNode *server);
-	void	extractLocations(AstNode *server);
+	void	parseConfigFile(const AstNode *root);
+	void	validateConfig(const AstNode *root);
 
 	// forbiden copy
 	Config& operator=(const Config &other);
