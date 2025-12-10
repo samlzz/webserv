@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:36:59 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 02:30:58 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 03:29:06 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,7 +128,7 @@ Config::Server::Location	extractLocation(const AstNode *locationNode)
 // Server Block Extraction
 // ========================================================================
 
-void	extractServDirectives(Config::Server &serv, const AstNode *serverNode)
+static inline void	_extractServDirectives(Config::Server &serv, const AstNode *serverNode)
 {
 	fillDest(serv.host, serverNode, "host");
 	fillDest(serv.port, serverNode, "port", _extractPort);
@@ -137,7 +137,10 @@ void	extractServDirectives(Config::Server &serv, const AstNode *serverNode)
 	fillDest(serv.d_root, serverNode, "root");
 	fillDest(serv.d_index, serverNode, "index");
 	fillDest(serv.d_autoindex, serverNode, "autoindex", parseBool);
+}
 
+static inline void	_extractServChildren(Config::Server &serv, const AstNode *serverNode)
+{
 	const std::vector<AstNode *> &children = serverNode->children();
 	for (size_t i = 0; i < children.size(); ++i)
 	{
@@ -158,7 +161,8 @@ Config::Server	extractServer(const AstNode *serverNode)
 {
 	Config::Server	srv;
 
-	extractServDirectives(srv, serverNode);
+	_extractServDirectives(srv, serverNode);
+	_extractServChildren(srv, serverNode);
 	std::sort(srv.locations.begin(), srv.locations.end());
 	return srv;
 }
