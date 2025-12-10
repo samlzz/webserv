@@ -105,6 +105,16 @@ public:
 	const Server				*findServer(const std::string &host,
 											uint16_t port) const;
 
+	// ============================================================================
+	// Static helpers
+	// ============================================================================
+	static void					assertNode(const AstNode *node,
+											const std::string &expectedType,
+											const std::string &level);
+	static void					assertProp(const AstNode *node,
+											const std::string &propKey,
+											const std::string &parent);
+
 private:
 	// ============================================================================
 	// Internal data

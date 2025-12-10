@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 21:09:10 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/07 21:43:25 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 02:19:53 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,11 +35,11 @@ Config::Config(const std::string &configPath): _servs()
 			"Failed to parse config file '" + configPath + "'"
 		);
 	try
-{
+	{
 		parseConfigFile(ast);
-}
+	}
 	catch (...)
-{
+	{
 		delete ast;
 		throw;
 	}
@@ -72,6 +72,40 @@ const Config::Server	*Config::findServer(const std::string &host, uint16_t port)
 			return &_servs[i];
 	}
 	return NULL;
+}
+
+// ============================================================================
+// Static methods
+// ============================================================================
+
+void	Config::assertNode(
+	const AstNode *node,
+	const std::string &expectedType,
+	const std::string &level
+)
+{
+	const std::string	&type = node->type();
+	if (type == expectedType)
+		return;
+
+	throw config_parse::WsParseError(
+		"Ast error: unexpected node(" + type + ")"
+		+ " at " + level + " level, please check grammar"
+	);
+}
+
+void	Config::assertProp(
+	const AstNode *node,
+	const std::string &propKey,
+	const std::string &parent
+)
+{
+	if (node->hasAttr(propKey))
+		return;
+	throw config_parse::WsParseError(
+		"Ast error: property " + propKey
+		+ " not found in " + parent + ", please check grammar"
+	);
 }
 
 // ============================================================================
