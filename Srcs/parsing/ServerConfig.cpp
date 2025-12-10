@@ -6,14 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 21:09:01 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/08 18:06:32 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 02:09:25 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Config.hpp"
-#include <algorithm>
 #include <cstddef>
-#include <map>
 #include <string>
 #include <vector>
 
@@ -22,11 +20,26 @@
 // ============================================================================
 
 Config::Server::Server()
-	: host("0.0.0.0"), port(0), maxBodySize(0)
+	: host("0.0.0.0"), port(80)
+	, maxBodySize(1 << 20) // 1MB
+	, d_methods(1, http::MTH_GET)
+	, d_root("html")
+	, d_index("index.html")
+	, d_autoindex(false)
 {}
 
 Config::Server::Location::Location()
 {}
+
+// ============================================================================
+// Operator
+// ============================================================================
+
+// reverse comp to sort in descending order
+bool	Config::Server::Location::operator<(const Location &other) const
+{
+	return path.length() > other.path.length();
+}
 
 // ============================================================================
 // Accessors
@@ -49,34 +62,4 @@ Config::Server::findLocation(const std::string &path) const
 		}
 	}
 	return best;
-}
-
-std::string	Config::Server::Location::getErrorPage(
-	const Server &parent,
-	http::e_status_code code
-) const
-{
-	const t_errPages			&some = errorPages.getOr(
-		parent.d_errorPages
-	);
-	t_errPages::const_iterator	it = some.find(code);
-
-	if (it != some.end())
-		return it->second;
-	return "";
-}
-
-bool	Config::Server::Location::isAllowed(
-	const Server &parent,
-	http::e_method method
-) const
-{
-	const std::vector<http::e_method>			&some = methods.getOr(
-		parent.d_methods
-	);
-	std::vector<http::e_method>::const_iterator	it = std::find(
-		some.begin(), some.end(), method
-	);
-
-	return (it != some.end());
 }
