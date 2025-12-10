@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 22:31:56 by achu              #+#    #+#             */
-/*   Updated: 2025/12/03 17:41:57 by achu             ###   ########.fr       */
+/*   Updated: 2025/12/10 15:40:58 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,33 +43,6 @@ namespace http
 		, SC_INTERNAL_SERVER_ERROR = 500
 		, SC_NOT_IMPLEMENTED = 501
 	};
-};
-
-class HttpConnection {
-
-private:
-
-	int					_stcode;
-
-	HttpRequest			_request;
-	HttpResponse		_response;
-
-private:
-
-	bool		isCGI(void);
-
-	void		handleGET(void);
-	void		handleHEAD(void);
-	void		handlePOST(void);
-	void		handlePUT(void);
-	void		handleDELETE(void);
-
-
-
-public:
-
-
-	
 };
 
 #endif

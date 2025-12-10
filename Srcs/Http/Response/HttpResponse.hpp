@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:03 by achu              #+#    #+#             */
-/*   Updated: 2025/11/24 16:41:54 by achu             ###   ########.fr       */
+/*   Updated: 2025/12/10 16:45:42 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,29 +14,24 @@
 #define __HTTP_RESPONSE_HPP__
 
 #include "../HttpConnection.hpp"
+#include "../Request/HttpRequest.hpp"
+#include "../CGI/CgiHandler.hpp"
 #include <string>
 #include <vector>
 #include <exception>
 
 enum	e_response_state
-	{ RES_SEND_HEADER
-	, RES_SEND_BODY
+	{ RES_START
+	, RES_END
 };
 
 class HttpResponse {
 
 private:
 
-	e_response_state		_state;
+	HttpRequest		_request;
+	CgiHandler		_cgiHandler;
 
-	std::string		_responseLine;
-	std::string		_headers;
-	std::string		_body;
-
-	http::e_method	_method;
-	std::string		_path;
-	std::string		_verMaj;
-	std::string		_verMin;
 	std::string		_statusCode;
 	std::string		_statusMessage;
 
@@ -58,16 +53,20 @@ private:
 
 private:
 
-	void		buildResponseLine(void);
-	void		buildHeaders(void);
-	void		buildBody(void);
+	bool		isCGI(void);
+
+	void		handleGET(void);
+	void		handleHEAD(void);
+	void		handlePOST(void);
+	void		handlePUT(void);
+	void		handleDELETE(void);
 	
 public:
 
-	HttpResponse(void);
+	HttpResponse(HttpRequest pRequest);
 	~HttpResponse(void);
 
-	void		build(const http::e_method& pMethod, const std::string& pPath);
+	void		build();
 
 	std::string		getVersion(void) const;
 	std::string		getStatusCode(void) const;
