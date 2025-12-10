@@ -6,14 +6,15 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 21:09:01 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 02:09:25 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 02:31:56 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Config.hpp"
 #include <cstddef>
 #include <string>
 #include <vector>
+
+#include "Config.hpp"
 
 // ============================================================================
 // Construction

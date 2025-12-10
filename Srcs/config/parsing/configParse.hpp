@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:10:18 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 02:05:48 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 02:30:39 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 # include <stdint.h>
 
 # include "ftpp/AstNode.hpp"
-# include "parsing/Config.hpp"
+# include "config/Config.hpp"
 
 namespace config_parse
 {

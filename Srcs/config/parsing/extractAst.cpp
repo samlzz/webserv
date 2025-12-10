@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:36:59 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 02:06:45 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 02:30:58 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,9 @@
 
 #include "Http/HttpTypes.hpp"
 #include "ftpp/AstNode.hpp"
-#include "parsing/Config.hpp"
-#include "parsing/configParse.hpp"
-#include "parsing/parseUtils.hpp"
+#include "config/Config.hpp"
+#include "./configParse.hpp"
+#include "./parseUtils.hpp"
 
 namespace config_parse
 {

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/08 18:29:07 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 01:49:38 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 02:31:08 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 #include <stdint.h>
 
 #include "Http/HttpTypes.hpp"
-#include "parsing/configParse.hpp"
+#include "./configParse.hpp"
 
 namespace config_parse
 {
