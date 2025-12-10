@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:10:18 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 02:30:39 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 16:11:51 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,8 @@
 # include <stdexcept>
 # include <stdint.h>
 
+# include "RawConfig.hpp"
 # include "ftpp/AstNode.hpp"
-# include "config/Config.hpp"
 
 namespace config_parse
 {
@@ -49,7 +49,7 @@ public:
 // Extraction
 // ============================================================================
 
-Config::Server	extractServer(const AstNode *serverNode);
+RawServer	extractServer(const AstNode *serverNode);
 
 // O is T or Optionnal<T>
 template<typename T, typename O>

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:36:59 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 03:29:06 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 16:16:27 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #include "config/Config.hpp"
 #include "./configParse.hpp"
 #include "./parseUtils.hpp"
+#include "./RawConfig.hpp"
 
 namespace config_parse
 {
@@ -64,7 +65,7 @@ static Config::StatusPath	_extractReturn(const std::string &s)
 // ========================================================================
 
 static inline void	_appendErrorsPageItem(Config::t_errPages &errPages,
-											std::string &defaultPage,
+											Optionnal<std::string> &defaultPage,
 											const AstNode *errorPageNode)
 {
 	Config::assertProp(errorPageNode, "path", "error_page");
@@ -93,9 +94,9 @@ static inline void	_appendCgiItem(Config::t_dict &exts,
 // Location Block Extraction
 // ========================================================================
 
-Config::Server::Location	extractLocation(const AstNode *locationNode)
+RawServer::RawLocation	extractLocation(const AstNode *locationNode)
 {
-	Config::Server::Location	loc;
+	RawServer::RawLocation	loc;
 
 	fillDest(loc.path, locationNode, "path");
 	fillDest(loc.methods, locationNode, "methods", _extractMethods);
@@ -115,11 +116,7 @@ Config::Server::Location	extractLocation(const AstNode *locationNode)
 		if (prop->type() == "cgi")
 			_appendCgiItem(loc.cgiExts, prop);
 		else if (prop->type() == "error_page")
-		{
-			if (loc.defaultErrPage.isNone())
-				loc.defaultErrPage = "";
-			_appendErrorsPageItem(loc.errorPages, *loc.defaultErrPage, prop);
-		}
+			_appendErrorsPageItem(loc.errorPages, loc.defaultErrPage, prop);
 	}
 	return loc;
 }
@@ -128,7 +125,7 @@ Config::Server::Location	extractLocation(const AstNode *locationNode)
 // Server Block Extraction
 // ========================================================================
 
-static inline void	_extractServDirectives(Config::Server &serv, const AstNode *serverNode)
+static inline void	_extractServDirectives(RawServer &serv, const AstNode *serverNode)
 {
 	fillDest(serv.host, serverNode, "host");
 	fillDest(serv.port, serverNode, "port", _extractPort);
@@ -139,7 +136,7 @@ static inline void	_extractServDirectives(Config::Server &serv, const AstNode *s
 	fillDest(serv.d_autoindex, serverNode, "autoindex", parseBool);
 }
 
-static inline void	_extractServChildren(Config::Server &serv, const AstNode *serverNode)
+static inline void	_extractServChildren(RawServer &serv, const AstNode *serverNode)
 {
 	const std::vector<AstNode *> &children = serverNode->children();
 	for (size_t i = 0; i < children.size(); ++i)
@@ -157,9 +154,9 @@ static inline void	_extractServChildren(Config::Server &serv, const AstNode *ser
 	}
 }
 
-Config::Server	extractServer(const AstNode *serverNode)
+RawServer	extractServer(const AstNode *serverNode)
 {
-	Config::Server	srv;
+	RawServer	srv;
 
 	_extractServDirectives(srv, serverNode);
 	_extractServChildren(srv, serverNode);
