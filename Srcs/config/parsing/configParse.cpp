@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:36:59 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 17:04:59 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 17:46:27 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,8 +83,8 @@ static inline void	_appendErrorsPageItem(Config::t_errPages &errPages,
 static inline void	_appendCgiItem(Config::t_dict &exts,
 									const AstNode *cgiNode)
 {
-	Config::assertProp(cgiNode, "extension", "cgi");
-	Config::assertProp(cgiNode, "path", "cgi");
+	Config::assertProp(cgiNode, "ext", "cgi");
+	Config::assertProp(cgiNode, "execPath", "cgi");
 
 	exts[cgiNode->getAttr("extension", "")] = cgiNode->getAttr("path", "");
 }
