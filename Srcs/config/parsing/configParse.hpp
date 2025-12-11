@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:10:18 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 16:11:51 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/10 21:05:48 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,19 +30,12 @@ public:
 	WsParseError(const std::string &msg): std::runtime_error(msg) {}
 };
 
-class PropError : public WsParseError {
-public:
-	PropError(const std::string &msg): WsParseError(msg) {}
-	PropError(const std::string &prop, const std::string &msg)
-		: WsParseError(prop + ": " + msg) {}
-};
-
-class ValueError : public PropError {
+class ValueError : public WsParseError {
 public:
 	ValueError(const std::string &what)
-		: PropError("Empty " + what + " value") {}
+		: WsParseError("Empty " + what + " value") {}
 	ValueError(const std::string &what, const std::string &value)
-		: PropError("Invalid " + what + " value", "'" + value + "'") {}
+		: WsParseError("Invalid " + what + " value" + ": '" + value + "'") {}
 };
 
 // ============================================================================
