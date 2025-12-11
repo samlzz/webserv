@@ -137,7 +137,7 @@ private:
 	// ========================================================================
 
 	void	parseConfigFile(const AstNode *root);
-	void	validateConfig(const AstNode *root);
+	void	validateConfig(void);
 
 	// forbiden
 	Config();

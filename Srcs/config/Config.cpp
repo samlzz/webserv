@@ -6,17 +6,21 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 21:09:10 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 17:41:37 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/11 14:58:11 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
+#include <set>
+#include <string>
+#include <utility>
 
-#include "parsing/RawConfig.hpp"
+#include "Config.hpp"
 #include "ftpp/AstNode.hpp"
 #include "ftpp/Grammar.hpp"
+#include "parsing/RawConfig.hpp"
 #include "parsing/configParse.hpp"
-#include "Config.hpp"
+#include "validation/configValidate.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -125,11 +129,24 @@ void	Config::parseConfigFile(const AstNode *root)
 		config_parse::RawServer	raw = config_parse::extractServer(child);
 		_servs.push_back(raw.normalize(ServerDefaults()));
 	}
-	validateConfig(root);
+	validateConfig();
 }
 
-void	Config::validateConfig(const AstNode *root)
+void	Config::validateConfig(void)
 {
-	// TODO: check configurations values
-	(void)root;
+	std::set<std::pair<std::string, uint16_t> >	hostports;
+
+	for (size_t i = 0; i < _servs.size(); ++i)
+	{
+		const Server	&s = _servs[i];
+
+		config_validate::validateServerBasics(s);
+
+		std::pair<std::string, uint16_t> hp(s.host, s.port);
+		if (!hostports.insert(hp).second)
+			throw config_validate::ServerError(
+				s.host, s.port, "duplicate listen directive");
+
+		config_validate::validateServerLocations(s);
+	}
 }
