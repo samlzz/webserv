@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:19:52 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 14:23:18 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/11 14:57:46 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,8 @@ public:
 // Validation
 // ============================================================================
 
-void	validateServer(const Config::Server &serv);
+void	validateServerBasics(const Config::Server &s);
+void	validateServerLocations(const Config::Server &serv);
 
 // ---- Props validation ----
 

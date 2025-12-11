@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/11 11:30:57 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 11:54:09 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/11 14:47:30 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "config/configValidate.hpp"
+#include "configValidate.hpp"
 
 namespace config_validate
 {

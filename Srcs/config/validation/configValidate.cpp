@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:28:48 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 14:20:48 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/11 14:57:25 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <unistd.h>
 
 #include "config/Config.hpp"
-#include "config/configValidate.hpp"
+#include "configValidate.hpp"
 
 namespace config_validate
 {
@@ -161,7 +161,7 @@ static inline std::string	_normalizePath(const std::string &path)
 	return path;
 }
 
-static inline void	_validateServerBasics(const Config::Server &s)
+void	validateServerBasics(const Config::Server &s)
 {
 	if (s.host.empty())
 		throw ServerError(s.host, s.port, "host cannot be empty");
@@ -171,9 +171,8 @@ static inline void	_validateServerBasics(const Config::Server &s)
 		throw ServerError(s.host, s.port, "invalid client_max_body_size");
 }
 
-void	validateServer(const Config::Server &serv)
+void	validateServerLocations(const Config::Server &serv)
 {
-	_validateServerBasics(serv);
 	std::set<std::string>	normalizedPaths;
 
 	for (size_t i = 0; i < serv.locations.size(); ++i)
