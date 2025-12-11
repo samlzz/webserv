@@ -6,17 +6,18 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:19:52 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 15:15:51 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/11 18:37:41 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __CONFIGVALIDATE_HPP__
 # define __CONFIGVALIDATE_HPP__
 
-#include "config/Config.hpp"
-#include <sstream>
-#include <stdexcept>
+# include <sstream>
+# include <stdexcept>
 # include <stdint.h>
+
+# include "config/Config.hpp"
 
 /**
  * @brief Convert any streamable value to std::string.
@@ -91,7 +92,7 @@ enum e_path_rule
 	PR_MUST_EXEC		= 1 << 3,
 	PR_NO_DOTDOT		= 1 << 4,
 	PR_NO_REGEX			= 1 << 5,
-	PR_NO_START_SL		= 1 << 6,
+	PR_NO_SLASH			= 1 << 6,
 	PR_MUST_START_SL	= 1 << 7,
 };
 

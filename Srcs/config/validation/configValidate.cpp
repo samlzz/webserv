@@ -6,16 +6,18 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:28:48 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 15:27:12 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/11 19:36:30 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <algorithm>
 #include <cstddef>
 #include <set>
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "Http/HttpTypes.hpp"
 #include "config/Config.hpp"
 #include "configValidate.hpp"
 
@@ -57,17 +59,14 @@ static inline void	validateErrorPages(const Config::Server::Location &loc)
 
 		validatePathGeneric(it->second, PR_NO_DOTDOT, "error_page path");
 	}
-	if (loc.errorPages.empty())
-		validatePathGeneric(
-			loc.defaultErrPage,
-			PR_MUST_EXIST | PR_MUST_FILE,
-			"default error_page"
-		);
+	validatePathGeneric(
+		loc.defaultErrPage, PR_NO_DOTDOT, "default error_page"
+	);
 }
 
 // root must be defined
 // extensions must not be empty and start with '.'
-// paths must exist and be executable
+// paths must be an absolute file, exist and be executable
 static inline void	validateCgi(const Config::Server::Location &loc)
 {
 	if (loc.cgiExts.empty())
@@ -85,12 +84,21 @@ static inline void	validateCgi(const Config::Server::Location &loc)
 			throw LocationError(loc.path,
 				"invalid cgi extension '" + ext + "'");
 
-		validatePathGeneric(it->second, PR_MUST_EXIST | PR_MUST_EXEC,
-			"CGI executable");
+		validatePathGeneric(it->second,
+			PR_MUST_START_SL | PR_MUST_EXIST | PR_MUST_EXEC | PR_MUST_FILE,
+			"CGI executable"
+		);
 	}
 }
 
-// forbid other code that 301 or 302, and empty path
+static bool isUrl(const std::string &p)
+{
+	return (p.compare(0, 7, "http://") == 0 ||
+			p.compare(0, 8, "https://") == 0);
+}
+
+// forbid other code that 301 or 302
+// path should be an internal path or an url
 static inline void	validateRedirect(const Config::Server::Location &loc)
 {
 	if (!loc.redirect)
@@ -101,7 +109,20 @@ static inline void	validateRedirect(const Config::Server::Location &loc)
 		throw LocationError(loc.path,
 			"invalid redirect status code (only 301/302 supported)");
 
-	validatePathGeneric(r.path, PR_NONE, "redirect path");
+	if (isUrl(r.path))
+	{
+		size_t	hostStart = r.path.find("://") + 3;
+		if (hostStart == std::string::npos || hostStart >= r.path.size())
+			throw LocationError(loc.path, "invalid redirect URL: missing or malformed host");
+		if (r.path.find('.', hostStart) == std::string::npos)
+			throw LocationError(loc.path, "invalid redirect URL: host must contain a domain");
+		return ;
+	}
+
+	validatePathGeneric(r.path,
+		PR_MUST_START_SL | PR_NO_REGEX | PR_NO_DOTDOT,
+		"redirect path"
+	);
 }
 
 // ============================================================================
@@ -110,6 +131,7 @@ static inline void	validateRedirect(const Config::Server::Location &loc)
 
 /** forbid combinated:
  * - upload and cgi
+ * - upload and no POST
  * - redirect and upload
  * - redirect and cgi
  */
@@ -118,6 +140,12 @@ static inline void	validateLocationConflicts(const Config::Server::Location &loc
 	if (loc.uploadPath && !loc.cgiExts.empty())
 		throw LocationConflictError(loc.path,
 			"cannot enable upload and CGI simultaneously");
+
+	if (loc.uploadPath && std::find(
+					loc.methods.begin(),
+					loc.methods.end(),
+					http::MTH_POST) == loc.methods.end())
+		throw LocationConflictError(loc.path, "upload require POST method");
 
 	if (loc.redirect && loc.uploadPath)
 		throw LocationConflictError(loc.path,
@@ -130,23 +158,22 @@ static inline void	validateLocationConflicts(const Config::Server::Location &loc
 
 static void	validateLocation(const Config::Server::Location &loc)
 {
-	validatePathGeneric(
-		loc.path,
+	validatePathGeneric(loc.path,
 		PR_MUST_START_SL | PR_NO_REGEX | PR_NO_DOTDOT,
 		"location path"
 	);
 	validateMethods(loc);
-	validatePathGeneric(loc.root, PR_NO_DOTDOT, "root");
-	validatePathGeneric(
-		loc.index, PR_NO_DOTDOT | PR_NO_START_SL, "index"
+	validatePathGeneric(loc.root,
+		PR_NO_DOTDOT | PR_MUST_EXIST | PR_MUST_DIR,
+		"root"
 	);
+	validatePathGeneric(loc.index, PR_NO_SLASH, "index");
 	// validateAutoIndex ?
 	validateErrorPages(loc);
 	validateCgi(loc);
 	if (loc.uploadPath)
-		validatePathGeneric(
-			*loc.uploadPath,
-			PR_MUST_EXIST | PR_MUST_DIR,
+		validatePathGeneric(*loc.uploadPath,
+			PR_NO_DOTDOT | PR_MUST_EXIST | PR_MUST_DIR,
 			"upload path"
 		);
 	validateRedirect(loc);
@@ -168,6 +195,7 @@ void	validateServerBasics(const Config::Server &s)
 {
 	if (s.host.empty())
 		throw ServerError(s.host, s.port, "host cannot be empty");
+	// TODO: check host is a correct ip
 	if (s.port == 0)
 		throw ServerError(s.host, s.port, "port cannot be 0");
 	if (s.maxBodySize == 0 || s.maxBodySize > MAX_MBODYSIZE)

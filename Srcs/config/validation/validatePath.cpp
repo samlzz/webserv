@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/11 11:30:57 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 14:47:30 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/11 18:50:26 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,8 +61,8 @@ void	validatePathGeneric(
 	if ((rules & PR_MUST_START_SL) && path[0] != '/')
 		throw ValueValidationError(what + " must start with '/'");
 
-	if ((rules & PR_NO_START_SL) && path[0] == '/')
-		throw ValueValidationError(what + " must not start with '/'");
+	if ((rules & PR_NO_SLASH) && path.find('/') != std::string::npos)
+		throw ValueValidationError(what + " contains forbidden '/'");
 
 	if ((rules & PR_NO_DOTDOT) && path.find("..") != std::string::npos)
 		throw ValueValidationError(what + " contains forbidden '..'");

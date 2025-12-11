@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:10 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 15:06:46 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/11 19:30:01 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ struct RawServer
 
 		RawLocation(const std::string &pPath);
 		Config::Server::Location
-			normalize(const RawServer &parent, const Config::ServerDefaults &def); // TODO: not implemented
+			normalize(const RawServer &parent, const Config::ServerDefaults &def);
 
 	private:
 		// forbidden
@@ -75,7 +75,7 @@ struct RawServer
 	/* RawLocation blocks */
 	std::vector<RawLocation>	locations;
 
-	Config::Server	normalize(const Config::ServerDefaults &def); // TODO: not implemented
+	Config::Server	normalize(const Config::ServerDefaults &def);
 };
 
 // ============================================================================
