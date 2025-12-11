@@ -19,7 +19,7 @@ host_port         <- host:[^:\n\r\t ;{}]+ ':' port:[0-9]+
 port_only         <- port:[0-9]+
 
 method_list       <- method (__ method)*
-method            <- 'GET' / 'POST' / 'DELETE' / 'PUT' / 'HEAD' / 'OPTIONS'
+method            <- 'GET' / 'POST' / 'DELETE' / 'PUT' / 'HEAD'
 
 path              <- [^;\n\r\t {}]+
 
