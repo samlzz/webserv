@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:36:59 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 17:46:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/11 14:26:53 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,7 @@ static inline void	_appendCgiItem(Config::t_dict &exts,
 
 RawServer::RawLocation	extractLocation(const AstNode *locationNode)
 {
-	RawServer::RawLocation	loc;
+	RawServer::RawLocation	loc("");
 
 	fillDest(loc.path, locationNode, "path");
 	fillDest(loc.methods, locationNode, "methods", _extractMethods);

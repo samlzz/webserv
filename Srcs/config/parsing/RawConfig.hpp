@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:10 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 17:29:45 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/11 15:06:46 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,8 +46,13 @@ struct RawServer
 		Optionnal<std::string>			uploadPath;
 		Optionnal<Config::StatusPath>	redirect;
 
+		RawLocation(const std::string &pPath);
 		Config::Server::Location
 			normalize(const RawServer &parent, const Config::ServerDefaults &def); // TODO: not implemented
+
+	private:
+		// forbidden
+		RawLocation();
 	};
 
 // ============================================================================

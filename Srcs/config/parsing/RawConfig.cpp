@@ -6,17 +6,20 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:06 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 17:04:42 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/11 15:06:34 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <algorithm>
+#include <string>
 
 #include "config/Config.hpp"
 #include "RawConfig.hpp"
 
 namespace config_parse
 {
+
+RawServer::RawLocation::RawLocation(const std::string &pPath): path(pPath) {}
 
 Config::Server::Location	RawServer::RawLocation::normalize(
 	const RawServer &parent,
@@ -60,6 +63,8 @@ Config::Server	RawServer::normalize(const Config::ServerDefaults &def)
 	out.port = port.getOr(def.port);
 	out.maxBodySize = maxBodySize.getOr(def.maxBodySize);
 
+	if (locations.empty())
+		locations.push_back(RawLocation("/"));
 	for (size_t i = 0; i < locations.size(); ++i)
 	{
 		out.locations.push_back(
