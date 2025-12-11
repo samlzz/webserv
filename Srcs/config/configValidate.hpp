@@ -79,6 +79,24 @@ public:
 
 void	validateServer(const Config::Server &serv);
 
+// ---- Props validation ----
+
+enum e_path_rule
+{
+	PR_NONE				= 0,
+	PR_MUST_EXIST		= 1 << 0,
+	PR_MUST_DIR			= 1 << 1,
+	PR_MUST_FILE		= 1 << 2,
+	PR_MUST_EXEC		= 1 << 3,
+	PR_NO_DOTDOT		= 1 << 4,
+	PR_NO_REGEX			= 1 << 5,
+	PR_NO_START_SL		= 1 << 6,
+	PR_MUST_START_SL	= 1 << 7,
+};
+
+void	validatePathGeneric(const std::string &path, int32_t rules,
+							const std::string &what);
+
 } // namespace config_validate
 
 #endif /* __CONFIGVALIDATE_HPP__ */
