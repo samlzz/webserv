@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:28:48 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 14:57:25 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/11 15:27:12 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,12 @@ static inline void	validateErrorPages(const Config::Server::Location &loc)
 
 		validatePathGeneric(it->second, PR_NO_DOTDOT, "error_page path");
 	}
+	if (loc.errorPages.empty())
+		validatePathGeneric(
+			loc.defaultErrPage,
+			PR_MUST_EXIST | PR_MUST_FILE,
+			"default error_page"
+		);
 }
 
 // root must be defined
@@ -136,9 +142,6 @@ static void	validateLocation(const Config::Server::Location &loc)
 	);
 	// validateAutoIndex ?
 	validateErrorPages(loc);
-	validatePathGeneric(
-		loc.defaultErrPage, PR_MUST_EXIST | PR_MUST_FILE, "default error_page"
-	);
 	validateCgi(loc);
 	if (loc.uploadPath)
 		validatePathGeneric(

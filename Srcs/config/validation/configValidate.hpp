@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:19:52 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 14:57:46 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/11 15:15:51 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ namespace config_validate
 class WsConfigError : public std::runtime_error {
 public:
 	WsConfigError(const std::string &msg)
-		: std::runtime_error(msg) {}
+		: std::runtime_error("Config error: " + msg) {}
 };
 
 class ValueValidationError : public WsConfigError {
