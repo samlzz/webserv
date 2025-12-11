@@ -19,6 +19,8 @@ FILES =	main.cpp \
 		config/parsing/RawConfig.cpp \
 		config/parsing/configParse.cpp \
 		config/parsing/parseUtils.cpp \
+		config/validation/configValidate.cpp \
+		config/validation/validatePath.cpp \
 ### END ###
 ifeq ($(FILES),)
     $(error FILES is empty: please define source files)
