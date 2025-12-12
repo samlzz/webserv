@@ -6,14 +6,16 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:28:48 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 19:36:30 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/12 17:21:27 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <algorithm>
+#include <arpa/inet.h>
 #include <cstddef>
 #include <set>
 #include <string>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -91,7 +93,7 @@ static inline void	validateCgi(const Config::Server::Location &loc)
 	}
 }
 
-static bool isUrl(const std::string &p)
+static inline bool	_isUrl(const std::string &p)
 {
 	return (p.compare(0, 7, "http://") == 0 ||
 			p.compare(0, 8, "https://") == 0);
@@ -109,7 +111,7 @@ static inline void	validateRedirect(const Config::Server::Location &loc)
 		throw LocationError(loc.path,
 			"invalid redirect status code (only 301/302 supported)");
 
-	if (isUrl(r.path))
+	if (_isUrl(r.path))
 	{
 		size_t	hostStart = r.path.find("://") + 3;
 		if (hostStart == std::string::npos || hostStart >= r.path.size())
@@ -184,22 +186,19 @@ static void	validateLocation(const Config::Server::Location &loc)
 // Server Validation
 // ============================================================================
 
+void	validateServerBasics(const Config::Server &s)
+{
+	if (s.port == 0)
+		throw ServerError(s.host, s.port, "port cannot be 0");
+	if (s.maxBodySize == 0 || s.maxBodySize > MAX_MBODYSIZE)
+		throw ServerError(s.host, s.port, "invalid client_max_body_size");
+}
+
 static inline std::string	_normalizePath(const std::string &path)
 {
 	if (path.size() > 1 && path[path.size() - 1] == '/')
 		return path.substr(0, path.size() - 1);
 	return path;
-}
-
-void	validateServerBasics(const Config::Server &s)
-{
-	if (s.host.empty())
-		throw ServerError(s.host, s.port, "host cannot be empty");
-	// TODO: check host is a correct ip
-	if (s.port == 0)
-		throw ServerError(s.host, s.port, "port cannot be 0");
-	if (s.maxBodySize == 0 || s.maxBodySize > MAX_MBODYSIZE)
-		throw ServerError(s.host, s.port, "invalid client_max_body_size");
 }
 
 void	validateServerLocations(const Config::Server &serv)

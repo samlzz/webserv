@@ -6,13 +6,15 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:19:52 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 18:37:41 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/12 18:31:51 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __CONFIGVALIDATE_HPP__
 # define __CONFIGVALIDATE_HPP__
 
+# include <arpa/inet.h>
+# include <netinet/in.h>
 # include <sstream>
 # include <stdexcept>
 # include <stdint.h>
@@ -56,8 +58,10 @@ public:
 
 class ServerError : public WsConfigError {
 public:
-	ServerError(const std::string &host, uint16_t port, const std::string &msg)
-		: WsConfigError("server " + host + ":" + toString(port) + ": " + msg) {}
+	ServerError(struct in_addr host, uint16_t port, const std::string &msg)
+		: WsConfigError(std::string("server ") + inet_ntoa(host)
+							+ ":" + toString(port) + ": " + msg)
+	{}
 };
 
 // ---- Location block errors ----

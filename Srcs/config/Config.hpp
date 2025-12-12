@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/05 21:08:53 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 16:33:23 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/12 17:24:06 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # include <cstddef>
 # include <map>
+# include <netinet/in.h>
 # include <stdint.h>
 # include <string>
 # include <vector>
@@ -79,7 +80,7 @@ public:
 	// Server properties
 	// ============================================================================
 
-		std::string				host;
+		struct in_addr			host;
 		uint16_t				port; // According to RFC 793, the port is a 16 bit unsigned int.
 		size_t					maxBodySize;
 
@@ -113,7 +114,7 @@ public:
 
 	const std::vector<Server>	&getServers(void) const;
 	const Server				*getServer(size_t idx) const;
-	const Server				*findServer(const std::string &host,
+	const Server				*findServer(struct in_addr host,
 											uint16_t port) const;
 
 	// ============================================================================

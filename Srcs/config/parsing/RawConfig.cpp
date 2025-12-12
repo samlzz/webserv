@@ -6,14 +6,17 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:06 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 15:06:34 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/12 18:59:39 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <algorithm>
+#include <arpa/inet.h>
 #include <string>
+#include <sys/socket.h>
 
 #include "config/Config.hpp"
+#include "configParse.hpp"
 #include "RawConfig.hpp"
 
 namespace config_parse
@@ -59,7 +62,11 @@ Config::Server	RawServer::normalize(const Config::ServerDefaults &def)
 {
 	Config::Server out;
 
-	out.host = host.getOr(def.host);
+	std::string	hostStr = host.getOr(def.host);
+	if (hostStr == "localhost")
+		hostStr = "127.0.0.1";
+	if (!inet_pton(AF_INET, hostStr.c_str(), &out.host))
+		throw ValueError("host IPv4", hostStr);
 	out.port = port.getOr(def.port);
 	out.maxBodySize = maxBodySize.getOr(def.maxBodySize);
 

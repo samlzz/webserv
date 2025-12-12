@@ -6,11 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 21:09:10 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 14:58:11 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/12 17:25:41 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
+#include <netinet/in.h>
 #include <set>
 #include <string>
 #include <utility>
@@ -65,11 +66,11 @@ const Config::Server	*Config::getServer(size_t idx) const
 	return &_servs[idx];
 }
 
-const Config::Server	*Config::findServer(const std::string &host, uint16_t port) const
+const Config::Server	*Config::findServer(struct in_addr host, uint16_t port) const
 {
 	for (size_t i = 0; i < _servs.size(); ++i)
 	{
-		if (_servs[i].host == host && _servs[i].port == port)
+		if (_servs[i].host.s_addr == host.s_addr && _servs[i].port == port)
 			return &_servs[i];
 	}
 	return NULL;
@@ -134,7 +135,7 @@ void	Config::parseConfigFile(const AstNode *root)
 
 void	Config::validateConfig(void)
 {
-	std::set<std::pair<std::string, uint16_t> >	hostports;
+	std::set<std::pair<in_addr_t, uint16_t> >	hostports;
 
 	for (size_t i = 0; i < _servs.size(); ++i)
 	{
@@ -142,7 +143,7 @@ void	Config::validateConfig(void)
 
 		config_validate::validateServerBasics(s);
 
-		std::pair<std::string, uint16_t> hp(s.host, s.port);
+		std::pair<in_addr_t, uint16_t> hp(s.host.s_addr, s.port);
 		if (!hostports.insert(hp).second)
 			throw config_validate::ServerError(
 				s.host, s.port, "duplicate listen directive");
