@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:19:52 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/12 18:31:51 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/12 18:53:38 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,8 @@ class ValueValidationError : public WsConfigError {
 public:
 	ValueValidationError(const std::string &msg)
 		: WsConfigError(msg) {}
+	ValueValidationError(const std::string &msg, const std::string &val)
+		: WsConfigError(msg + ": '" + val + "'") {}
 };
 
 // ---- Server block errors ----

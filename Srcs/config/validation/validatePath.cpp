@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/11 11:30:57 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 18:50:26 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/12 19:28:53 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,13 +59,13 @@ void	validatePathGeneric(
 		throw ValueValidationError(what + " cannot be empty");
 
 	if ((rules & PR_MUST_START_SL) && path[0] != '/')
-		throw ValueValidationError(what + " must start with '/'");
+		throw ValueValidationError(what + " must start with '/'", path);
 
 	if ((rules & PR_NO_SLASH) && path.find('/') != std::string::npos)
-		throw ValueValidationError(what + " contains forbidden '/'");
+		throw ValueValidationError(what + " contains forbidden '/'", path);
 
 	if ((rules & PR_NO_DOTDOT) && path.find("..") != std::string::npos)
-		throw ValueValidationError(what + " contains forbidden '..'");
+		throw ValueValidationError(what + " contains forbidden '..'", path);
 
 	if (rules & PR_NO_REGEX)
 	{
@@ -81,16 +81,16 @@ void	validatePathGeneric(
 	}
 
 	if ((rules & PR_MUST_EXIST) && !pathExists(path))
-		throw ValueValidationError(what + " does not exist");
+		throw ValueValidationError(what + " does not exist", path);
 
 	if ((rules & PR_MUST_DIR) && !pathIsDir(path))
-		throw ValueValidationError(what + " is not a directory");
+		throw ValueValidationError(what + " is not a directory", path);
 
 	if ((rules & PR_MUST_FILE) && !pathIsFile(path))
-		throw ValueValidationError(what + " is not a file");
+		throw ValueValidationError(what + " is not a file", path);
 
 	if ((rules & PR_MUST_EXEC) && !pathIsExecutable(path))
-		throw ValueValidationError(what + " is not executable");
+		throw ValueValidationError(what + " is not executable", path);
 }
 
 } // namespace config_validate
