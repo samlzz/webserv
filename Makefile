@@ -14,6 +14,7 @@ BIN_DIR   =
 
 ### UFILES_START ###
 FILES =	main.cpp \
+		Http/HttpTypes.cpp \
 		config/Config.cpp \
 		config/ServerConfig.cpp \
 		config/parsing/RawConfig.cpp \

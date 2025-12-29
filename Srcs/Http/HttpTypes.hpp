@@ -6,12 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 22:31:56 by achu              #+#    #+#             */
-/*   Updated: 2025/12/10 02:56:21 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/29 07:42:43 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_TYPES_HPP__
-#define __HTTP_TYPES_HPP__
+# define __HTTP_TYPES_HPP__
+
+# include <ostream>
 
 namespace http
 {
@@ -24,6 +26,7 @@ namespace http
 		, MTH_PUT
 		, MTH_DELETE
 	};
+	std::ostream	&operator<<(std::ostream &os, e_method method);
 
 	enum	e_status_code
 	{
@@ -43,6 +46,8 @@ namespace http
 		, SC_INTERNAL_SERVER_ERROR = 500
 		, SC_NOT_IMPLEMENTED = 501
 	};
-};
+	std::ostream	&operator<<(std::ostream &os, e_status_code code);
+
+} // namespace http
 
 #endif /* __HTPP_TYPES_HPP__ */
