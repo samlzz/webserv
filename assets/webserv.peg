@@ -24,7 +24,7 @@ method            <- 'GET' / 'POST' / 'DELETE' / 'PUT' / 'HEAD'
 path              <- [^;\n\r\t {}]+
 
 
-extension         <- ('.' [a-zA-Z0-9]+)
+extension         <- ('.' [a-zA-Z0-9]+) (__ ('.' [a-zA-Z0-9]+))*
 
 bool_value        <- 'on' / 'off' / 'true' / 'false' / '1' / '0'
 

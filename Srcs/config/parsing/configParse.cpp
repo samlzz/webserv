@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:36:59 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/11 15:24:45 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/29 07:25:33 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,8 +54,13 @@ static Config::StatusPath	_extractReturn(const std::string &s)
 
 	if (toks.size() > 2)
 		throw ValueError("redirect", s);
-	redirect.code = parseStatusCode(toks[0]);
-	redirect.path = toks[1];
+	if (toks.size() == 1)
+		redirect.path = toks[0];
+	else
+	{
+		redirect.code = parseStatusCode(toks[0]);
+		redirect.path = toks[1];
+	}
 	return redirect;
 }
 
@@ -80,13 +85,17 @@ static inline void	_appendErrorsPageItem(Config::t_errPages &errPages,
 		errPages[parseStatusCode(toks[i])] = path;
 }
 
-static inline void	_appendCgiItem(Config::t_dict &exts,
+static inline void	_appendCgiItem(Config::t_dict &cgiExts,
 									const AstNode *cgiNode)
 {
 	Config::assertProp(cgiNode, "ext", "cgi");
 	Config::assertProp(cgiNode, "execPath", "cgi");
 
-	exts[cgiNode->getAttr("ext", "")] = cgiNode->getAttr("execPath", "");
+	std::vector<std::string>	exts = splitWords(cgiNode->getAttr("ext", ""));
+	std::string					path = cgiNode->getAttr("execPath", "");
+
+	for (std::vector<std::string>::const_iterator it = exts.begin(); it != exts.end(); ++it)
+		cgiExts[*it] = path;
 }
 
 // ========================================================================
