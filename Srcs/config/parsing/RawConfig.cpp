@@ -6,12 +6,13 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:06 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/12 18:59:39 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/29 07:48:22 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <algorithm>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <string>
 #include <sys/socket.h>
 
@@ -50,7 +51,10 @@ Config::Server::Location	RawServer::RawLocation::normalize(
 
 	out.errorPages = concatMap(parent.d_errorPages, errorPages);
 	out.defaultErrPage = defaultErrPage.getOr(parentDefaultErr);
-	out.cgiExts = concatMap(parent.d_cgiExts, cgiExts);
+	if (uploadPath)
+		out.cgiExts = cgiExts;
+	else
+		out.cgiExts = concatMap(parent.d_cgiExts, cgiExts);
 
 	out.uploadPath = uploadPath;
 	out.redirect = redirect;

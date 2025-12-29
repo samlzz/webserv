@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/08 16:05:45 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 01:02:19 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/29 02:58:00 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ public:
 	Optionnal(const T &val): _none(false), _some(val) {}
 
 	Optionnal(const Optionnal &other)
-		: _none(other._none)
+		: _none(other._none), _some()
 	{
 		if (!other._none)
 			_some = other._some;
@@ -53,7 +53,8 @@ public:
 		if (this != &other)
 		{
 			_none = other._none;
-			_some = other._some;
+			if (!_none)
+				_some = other._some;
 		}
 		return *this;
 	}
