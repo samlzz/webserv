@@ -58,15 +58,19 @@ Config::Server::Location	RawServer::RawLocation::normalize(
 	return out;
 }
 
+static inline void	_setHost(struct in_addr *dest, std::string hostStr)
+{
+	if (hostStr == "localhost")
+		hostStr = "127.0.0.1";
+	if (!inet_pton(AF_INET, hostStr.c_str(), dest))
+		throw ValueError("host IPv4", hostStr);
+}
+
 Config::Server	RawServer::normalize(const Config::ServerDefaults &def)
 {
 	Config::Server out;
 
-	std::string	hostStr = host.getOr(def.host);
-	if (hostStr == "localhost")
-		hostStr = "127.0.0.1";
-	if (!inet_pton(AF_INET, hostStr.c_str(), &out.host))
-		throw ValueError("host IPv4", hostStr);
+	_setHost(&out.host, host.getOr(def.host));
 	out.port = port.getOr(def.port);
 	out.maxBodySize = maxBodySize.getOr(def.maxBodySize);
 
