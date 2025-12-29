@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:19:52 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/12 18:53:38 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/29 06:39:42 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,8 @@ class LocationError : public WsConfigError {
 public:
 	LocationError(const std::string &path, const std::string &msg)
 		: WsConfigError("location '" + path + "': " + msg) {}
+	LocationError(const std::string &path, const std::string &msg, const std::string &val)
+		: WsConfigError("location '" + path + "': " + msg + " (" + val + ")") {}
 };
 
 class LocationConflictError : public LocationError {

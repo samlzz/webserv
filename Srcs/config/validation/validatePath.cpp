@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/11 11:30:57 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/12 19:28:53 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/29 06:38:56 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ void	validatePathGeneric(
 			{
 				case '*': case '?': case '[': case ']':
 					throw ValueValidationError(
-						what + " contains invalid characters: '" + path + "'");
+						what + " contains invalid characters", path);
 			}
 		}
 	}

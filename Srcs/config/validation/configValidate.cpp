@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:28:48 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/12 17:21:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2025/12/29 07:53:22 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ static inline void	validateMethods(const Config::Server::Location &loc)
 		for (size_t j = i + 1; j < loc.methods.size(); ++j)
 		{
 			if (m == loc.methods[j])
-				throw LocationError(loc.path, "duplicate HTTP method");
+				throw LocationError(loc.path, "duplicate HTTP method", toString(m));
 		}
 	}
 }
@@ -56,8 +56,8 @@ static inline void	validateErrorPages(const Config::Server::Location &loc)
 	for (Config::t_errPages::const_iterator it = loc.errorPages.begin();
 			it != loc.errorPages.end(); ++it)
 	{
-		if (it->first == http::SC_NONE)
-			throw LocationError(loc.path, "invalid status code in error_page");
+		if (it->first == http::SC_NONE || it->first < http::SC_BAD_REQUEST)
+			throw LocationError(loc.path, "invalid status code in error_page", toString(it->first));
 
 		validatePathGeneric(it->second, PR_NO_DOTDOT, "error_page path");
 	}
@@ -83,8 +83,7 @@ static inline void	validateCgi(const Config::Server::Location &loc)
 		const std::string &ext = it->first;
 
 		if (ext.empty() || ext[0] != '.')
-			throw LocationError(loc.path,
-				"invalid cgi extension '" + ext + "'");
+			throw LocationError(loc.path, "invalid cgi extension", ext);
 
 		validatePathGeneric(it->second,
 			PR_MUST_START_SL | PR_MUST_EXIST | PR_MUST_EXEC | PR_MUST_FILE,
@@ -107,7 +106,10 @@ static inline void	validateRedirect(const Config::Server::Location &loc)
 		return;
 	const Config::StatusPath &r = *loc.redirect;
 
-	if (r.code != http::SC_MOVED_PERMANENTLY && r.code != http::SC_FOUND )
+	if (r.code != http::SC_NONE
+			&& r.code != http::SC_MOVED_PERMANENTLY
+			&& r.code != http::SC_FOUND
+	)
 		throw LocationError(loc.path,
 			"invalid redirect status code (only 301/302 supported)");
 
@@ -115,9 +117,11 @@ static inline void	validateRedirect(const Config::Server::Location &loc)
 	{
 		size_t	hostStart = r.path.find("://") + 3;
 		if (hostStart == std::string::npos || hostStart >= r.path.size())
-			throw LocationError(loc.path, "invalid redirect URL: missing or malformed host");
+			throw LocationError(loc.path,
+				"invalid redirect URL: missing or malformed host", r.path);
 		if (r.path.find('.', hostStart) == std::string::npos)
-			throw LocationError(loc.path, "invalid redirect URL: host must contain a domain");
+			throw LocationError(loc.path,
+				"invalid redirect URL: host must contain a domain", r.path);
 		return ;
 	}
 
