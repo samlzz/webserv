@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 08:50:37 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/09 12:15:53 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/09 14:49:47 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 // ============================================================================
 
 ServerConnection::ServerConnection(const Config::Server &servConfig)
-	: AConnection(socket(AF_INET, SOCK_STREAM, 0))
+	: AConnection(socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0))
 	, _conf(servConfig)
 {
 	sockaddr_in	addr;

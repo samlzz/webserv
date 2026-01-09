@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:44:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/09 11:24:47 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/09 14:37:02 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ public:
 	virtual ~AConnection();
 
 // ============================================================================
-// Methods
+// Accessors
 // ============================================================================
 
 	virtual int			fd(void) const;
@@ -43,11 +43,16 @@ public:
 	virtual void		setEvents(short events);
 	virtual void		addEvent(short event);
 
+// ============================================================================
+// Methods
+// ============================================================================
+
 	virtual ConnEvent	handleEvents(short revents) = 0;
 
+protected:
+	void				setNonBlocking(void);
+
 private:
-	// called in constructor
-	void	setNonBlocking(void);
 
 	// forbidden
 	AConnection();

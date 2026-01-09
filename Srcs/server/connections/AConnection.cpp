@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:49:52 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/09 12:16:04 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/09 14:36:24 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,6 @@ AConnection::AConnection(int fd, short events)
 {
 	if (_fd < 0)
 		throw SysError("invalid socket fd");
-	setNonBlocking();
 }
 
 // ============================================================================
