@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/09 11:16:58 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/09 12:15:25 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 # define __CLIENTCONNECTION_HPP__
 
 # include "config/Config.hpp"
-# include "server/AConnection.hpp"
+# include "AConnection.hpp"
 
 class ClientConnection: public AConnection {
 

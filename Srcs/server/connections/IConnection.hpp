@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:13:50 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/09 11:45:22 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/09 12:15:12 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 # include <sys/poll.h>
 
-# include "server/ConnEvent.hpp"
+# include "ConnEvent.hpp"
 
 // ============================================================================
 // Interface class for poll-based connections

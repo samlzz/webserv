@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 08:50:37 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/09 12:07:39 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/09 12:15:53 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include "ServerConnection.hpp"
 #include "AConnection.hpp"
 #include "ClientConnection.hpp"
-#include "server/ConnEvent.hpp"
+#include "ConnEvent.hpp"
 #include "server/Exceptions.hpp"
 
 // ============================================================================
