@@ -6,30 +6,27 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 08:50:37 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/08 17:56:35 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/09 11:22:45 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <netinet/in.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
-#include <vector>
 
 #include "ServerConnection.hpp"
 #include "AConnection.hpp"
 #include "ClientConnection.hpp"
-#include "IConnection.hpp"
+#include "server/ConnEvent.hpp"
 #include "server/Exceptions.hpp"
 
 // ============================================================================
 // Construction 
 // ============================================================================
 
-ServerConnection::ServerConnection(const Config::Server &servConfig,
-										std::vector<IConnection *> &connexions)
+ServerConnection::ServerConnection(const Config::Server &servConfig)
 	: AConnection(socket(AF_INET, SOCK_STREAM, 0))
 	, _conf(servConfig)
-	, _pfds(connexions)
 {
 	sockaddr_in	addr;
 	addr.sin_family = AF_INET;
@@ -40,28 +37,28 @@ ServerConnection::ServerConnection(const Config::Server &servConfig,
 		throw SysError("bind");
 	if (listen(_fd, LISTEN_QUEUE) < 0)
 		throw SysError("listen");
-	connexions.push_back(this);
 }
 
 // ============================================================================
 // Methods
 // ============================================================================
 
-bool	ServerConnection::handleEvents(short revents)
+ConnEvent	ServerConnection::handleEvents(short revents)
 {
 	if (isErrEvent(revents))
-		return false;
+		throw SysError("poll error on listen socket");
+
 	if (revents & POLLIN)
 	{
 		int	cliSock = accept(_fd, 0, 0);
 		if (cliSock < 0)
 		{
 			if (isNonBlockingErrno())
-				return true;
+				return ConnEvent::none();
 			throw SysError("accept");
 		}
-		ClientConnection	*client = new ClientConnection(cliSock, _conf);
-		_pfds.push_back(client);
+		return ConnEvent::spawn(new ClientConnection(cliSock, _conf));
 	}
-	return true;
+
+	return ConnEvent::none();
 }

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/08 18:04:57 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/09 11:16:58 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,13 +28,12 @@ private:
 	ClientConnection& operator=(const ClientConnection& other);
 
 	// TODO: use http request and response
-	bool	handleWrite();
-	bool	handleRead();
+	bool	processIO(short revents);
 
 public:
 	ClientConnection(int cliSockFd, const Config::Server &config);
 
-	virtual bool handleEvents(short revents);
+	virtual ConnEvent	handleEvents(short revents);
 };
 
 #endif /* __CLIENTCONNECTION_HPP__ */

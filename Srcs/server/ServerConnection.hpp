@@ -6,14 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 13:05:16 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/08 17:14:54 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/09 11:21:37 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __SERVERCONNECTION_HPP__
 # define __SERVERCONNECTION_HPP__
-
-# include <vector>
 
 # include "AConnection.hpp"
 # include "config/Config.hpp"
@@ -25,7 +23,6 @@ class ServerConnection: public AConnection {
 
 private:
 	const Config::Server		&_conf;
-	std::vector<IConnection *>	&_pfds;
 
 	// forbidden
 	ServerConnection();
@@ -33,10 +30,9 @@ private:
 	ServerConnection& operator=(const ServerConnection& other);
 
 public:
-	ServerConnection(const Config::Server &config,
-						std::vector<IConnection *> &connexions);
+	ServerConnection(const Config::Server &config);
 
-	virtual bool handleEvents(short revents);
+	virtual ConnEvent	handleEvents(short revents);
 };
 
 #endif /* __SERVERCONNECTION_HPP__ */

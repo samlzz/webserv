@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:44:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/08 17:41:09 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/09 11:24:47 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,14 +36,14 @@ public:
 // Methods
 // ============================================================================
 
-	virtual int		fd(void) const;
-	virtual pollfd	pollFd(void) const;
+	virtual int			fd(void) const;
+	virtual pollfd		pollFd(void) const;
 
-	virtual short	events(void) const;
-	virtual void	setEvents(short events);
-	virtual void	addEvent(short event);
+	virtual short		events(void) const;
+	virtual void		setEvents(short events);
+	virtual void		addEvent(short event);
 
-	virtual bool	handleEvents(short revents) = 0;
+	virtual ConnEvent	handleEvents(short revents) = 0;
 
 private:
 	// called in constructor
