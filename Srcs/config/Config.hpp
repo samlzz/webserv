@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/05 21:08:53 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/12 17:24:06 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/09 21:13:32 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,11 @@
 # include <stdint.h>
 # include <string>
 # include <vector>
+
+# ifdef WS_CONFIG_DEBUG
+#  include <ostream>
+#  include <iostream>
+# endif
 
 # include "Optionnal.hpp"
 # include "Http/HttpTypes.hpp"
@@ -126,6 +131,10 @@ public:
 	static void					assertProp(const AstNode *node,
 											const std::string &propKey,
 											const std::string &parent);
+
+# ifdef WS_CONFIG_DEBUG
+	void						print(std::ostream &os = std::cerr) const;
+# endif
 
 private:
 	// ============================================================================

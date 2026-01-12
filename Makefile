@@ -16,6 +16,7 @@ BIN_DIR   =
 FILES =	main.cpp \
 		Http/HttpTypes.cpp \
 		config/Config.cpp \
+		config/ConfigPrint.cpp \
 		config/ServerConfig.cpp \
 		config/parsing/RawConfig.cpp \
 		config/parsing/configParse.cpp \
@@ -37,7 +38,7 @@ CC        = cc
 CFLAGS    = -Wall -Wextra -Werror
 
 CXX       = c++
-CXXFLAGS  = -Wall -Wextra -Werror -std=c++98
+CXXFLAGS  = -Wall -Wextra -Werror -std=c++98 -DWS_CONFIG_DEBUG
 
 FTPP_DIR = lib/ftpp
 
