@@ -24,6 +24,10 @@ FILES =	main.cpp \
 		config/validation/validatePath.cpp \
 		http/HttpStatus.cpp \
 		http/request/HttpRequest.cpp
+		server/Reactor.cpp \
+		server/connections/AConnection.cpp \
+		server/connections/ClientConnection.cpp \
+		server/connections/ServerConnection.cpp
 ### END ###
 ifeq ($(FILES),)
     $(error FILES is empty: please define source files)
