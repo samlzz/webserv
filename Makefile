@@ -23,7 +23,7 @@ FILES =	main.cpp \
 		config/validation/configValidate.cpp \
 		config/validation/validatePath.cpp \
 		http/HttpStatus.cpp \
-		http/request/HttpRequest.cpp
+		http/request/HttpRequest.cpp \
 		server/Reactor.cpp \
 		server/connections/AConnection.cpp \
 		server/connections/ClientConnection.cpp \

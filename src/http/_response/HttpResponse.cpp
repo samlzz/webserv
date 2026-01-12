@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/12 17:57:08 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/12 18:01:31 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,7 @@
 //#                        CONSTRUCTOR & DESTRUCTOR                            #
 //#****************************************************************************#
 
-HttpResponse::HttpResponse(HttpRequest pRequest)
-	: _request(pRequest)
-{
+HttpResponse::HttpResponse(void) {
 	
 }
 
@@ -43,7 +41,7 @@ HttpResponse::~HttpResponse(void) {
 //#                             STATIC FUNCTION                                #
 //#****************************************************************************#
 
-std::string		getextension(const std::string& pPath)
+static std::string		getextension(const std::string& pPath)
 {
 	std::string		result;
 	ssize_t			start;
@@ -58,7 +56,7 @@ std::string		getextension(const std::string& pPath)
 	return (result);
 }
 
-std::string		getCgiDir(const std::string& pPath)
+static std::string		getCgiDir(const std::string& pPath)
 {
 	std::string		result;
 	ssize_t			end;
@@ -73,7 +71,7 @@ std::string		getCgiDir(const std::string& pPath)
 	return (result);
 }
 
-bool	isRegFile(const std::string& pPath)
+static bool		isRegFile(const std::string& pPath)
 {
 	struct stat	st;
 
@@ -82,7 +80,7 @@ bool	isRegFile(const std::string& pPath)
 	return (S_ISREG(st.st_mode));
 }
 
-bool	isDirectory(const std::string& pPath)
+static bool		isDirectory(const std::string& pPath)
 {
 	struct stat	st;
 

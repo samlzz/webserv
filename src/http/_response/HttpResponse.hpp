@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:03 by achu              #+#    #+#             */
-/*   Updated: 2026/01/12 17:57:16 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/12 20:02:38 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,31 @@ enum	e_response_state
 	, RES_END
 };
 
-class HttpResponse {
+class IHttpResponse {
+	std::string		_raw;
+	bool			_headSent;
+
+public:
+	virtual void				build(const HttpRequest &req) = 0;
+	virtual	std::string			raw(void) = 0;
+	virtual	size_t				size(void) = 0;
+	virtual void				reset(void) = 0;
+};
+
+/**
+ * if (!_isCgi)
+ * 		return _raw;
+ * std::string chunk = getChunk(_cgiHandler.getOut());
+ * if (_headSent)
+ * 		return chunk;
+ * else
+ * {
+ *     _headSent = true;
+ *		return _raw + chunk;
+ * }
+ */
+
+class HttpResponse : public IHttpResponse {
 
 private:
 
@@ -65,7 +89,7 @@ private:
 	
 public:
 
-	HttpResponse(HttpRequest pRequest);
+	HttpResponse(void);
 	~HttpResponse(void);
 
 	void				build();

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/12 17:28:57 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/12 18:42:17 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -473,7 +473,7 @@ bool	HttpRequest::isKeepAlive(void)
 }
 
 // Use this function to check is the request has finished parsing at the end
-bool	HttpRequest::isParsingDone(void)
+bool	HttpRequest::isDone(void)
 {
 	return (CURRENT_STATE() == PARSING_DONE);
 }

@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/12 03:08:27 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/12 18:42:17 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,7 +98,7 @@ public:
 	~HttpRequest(void);
 
 	void	feed(char *pBuffer, size_t pSize);
-	bool	isParsingDone(void);
+	bool	isDone(void);
 	bool	isKeepAlive(void);
 	void	reset(void);
 
