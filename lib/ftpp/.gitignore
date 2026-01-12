@@ -1,6 +1,5 @@
 **/**.swp
 .vscode/*
-.cache
 
 **/ign_*
 
@@ -14,5 +13,5 @@ build/*
 .clang*
 compile_commands.json
 
-*.todo
-webserv
+.cache/
+test_bin

@@ -2,27 +2,21 @@
 #* >> USER CONFIGURATION (MANDATORY)
 # =============================================================================
 
-NAME      ?= webserv
+NAME      ?= libftlog.a
 ifeq ($(NAME),)
     $(error NAME is empty: please define executable name)
 endif
 
 # ? Directory (end with /)
-SRC_DIR   = Srcs/
+SRC_DIR   = src/ft_log/
 OBJ_DIR   = build/
 BIN_DIR   =
 
 ### UFILES_START ###
-FILES =	main.cpp \
-		Http/HttpTypes.cpp \
-		config/Config.cpp \
-		config/ConfigPrint.cpp \
-		config/ServerConfig.cpp \
-		config/parsing/RawConfig.cpp \
-		config/parsing/configParse.cpp \
-		config/parsing/parseUtils.cpp \
-		config/validation/configValidate.cpp \
-		config/validation/validatePath.cpp \
+FILES =	Log.cpp \
+		LogScope.cpp \
+		Logger.cpp \
+		level.cpp
 ### END ###
 ifeq ($(FILES),)
     $(error FILES is empty: please define source files)
@@ -38,14 +32,12 @@ CC        = cc
 CFLAGS    = -Wall -Wextra -Werror
 
 CXX       = c++
-CXXFLAGS  = -Wall -Wextra -Werror -std=c++98 -DWS_CONFIG_DEBUG
+CXXFLAGS  = -Wall -Wextra -Werror -std=c++98
 
-FTPP_DIR = lib/ftpp
-
-INCL_DIRS = lib/ft_log/include lib/ftpp/include $(SRC_DIR)
+INCL_DIRS = include/ft_log
 # ? Directories & Libraries to link against
-LIB_DIRS  = $(FTPP_DIR) lib/ft_log
-LIB_FILES = ftpp ftlog
+LIB_DIRS  =
+LIB_FILES =
 
 RM = rm -f
 MD = mkdir -p
@@ -117,7 +109,7 @@ endif
 .PHONY: all
 all: $(OUT)
 
-$(OUT): $(O_DIRS) $(OBJS) $(FTPP_DIR)/libftpp.a
+$(OUT): $(O_DIRS) $(OBJS)
 	$(P)printf "$(GRAY)"
 ifneq ($(suffix $(NAME)), .a)
 	$(LD) $(LDFLAGS) $(OBJS) -o $(OUT) $(LDLIBS)
@@ -136,9 +128,6 @@ $(OBJ_DIR)%.o: $(SRC_DIR)%.c
 $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
 	$(P)$(CXX) $(CXXFLAGS) -MMD $(CPPFLAGS) -c $< -o $@
 	$(call clr_print, $(YELLOW),Compiling C++: $<)
-
-$(FTPP_DIR)/libftpp.a:
-	$(P)$(MAKE) -C $(FTPP_DIR)
 
 -include $(DEPS)
 
