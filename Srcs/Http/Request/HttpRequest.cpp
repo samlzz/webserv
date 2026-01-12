@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2025/11/24 16:40:26 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/12 03:33:18 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,12 @@
 #define CURRENT_STATE() _state
 #define UPDATE_STATE(S) _state = S
 
+#define SEND_ERROR(code) {\
+	_status = code; \
+	UPDATE_STATE(PARSING_ERROR); \
+	return; \
+}
+
 //#****************************************************************************#
 //#                        CONSTRUCTOR & DESTRUCTOR                            #
 //#****************************************************************************#
@@ -24,8 +30,16 @@
 HttpRequest::HttpRequest(void)
 {
 	UPDATE_STATE(REQ_METHOD);
-	_transferLength = 0;
+
+	_path.clear();
+	_query.clear();
+	_fragment.clear();
+	_body.clear();
+	_headers.clear();
+
 	_contentLength = 0;
+	_transferLength = 0;
+	_status = 200;
 }
 
 HttpRequest::~HttpRequest(void)
@@ -53,28 +67,23 @@ static bool		isHex(const std::string& pStr)
 	return (pStr.find_first_not_of("0123456789ABCDEFabcdef") == std::string::npos);
 }
 
-/// (string) Hexadecimal to (int) Decimal 
+// (string) Hexadecimal to (int) Decimal 
 static int		htod(const std::string& pHex)
 {
 	if (pHex.empty())
-		return (-1);
+		return -1;
 
-	int		result = 0;
-	int		base = 1;
-	
-	for (size_t i = pHex.size(); i > 0; i--)
+	int result = 0;
+
+	for (size_t i = 0; i < pHex.size(); ++i)
 	{
-		int val;
+		char c = pHex[i];
+		result = result * 16;
 
-		if ('0' <= pHex[i] && pHex[i] <= '9')
-			val = static_cast<int>(pHex[i] - '0');
-		else if ('A' <= pHex[i] && pHex[i] <= 'F')
-			val = static_cast<int>(pHex[i] - 'A') + 10;
-		else if ('a' <= pHex[i] && pHex[i] <= 'f')
-			val = static_cast<int>(pHex[i] - 'a') + 10;
-
-		result += val * base;
-		base *= 16;
+		if (c >= '0' && c <= '9') result += c - '0';
+		else if (c >= 'A' && c <= 'F') result += c - 'A' + 10;
+		else if (c >= 'a' && c <= 'f') result += c - 'a' + 10;
+		else return (-1);
 	}
 	return (result);
 }
@@ -83,19 +92,21 @@ static int		htod(const std::string& pHex)
 //#                             MEMBER FUNCTION                                #
 //#****************************************************************************#
 
-void HttpRequest::feed(char *pBuffer, size_t pSize)
+/// @brief None-blocking function using a state machine that parse all the incoming request from client to proceed
+/// @param pBuffer Insert the socket incoming buffer string
+/// @param pSize Insert the socket incoming buffer size
+void	HttpRequest::feed(char *pBuffer, size_t pSize)
 {
 	char	ch;
 
 	for (size_t i = 0; i < pSize; i++)
 	{
 		ch = pBuffer[i];
-		std::cout << ch;
 		switch (CURRENT_STATE()) {
 		case REQ_METHOD: {
 			if (ch != ' ') {
 				if (_buffer.length() > MAX_METHOD_LENGTH)
-					return ; // throw 501
+					SEND_ERROR(501);
 				_buffer += ch;
 				break;
 			}
@@ -105,7 +116,13 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 			else if (_buffer == "POST")		_method = http::MTH_POST;
 			else if (_buffer == "PUT")		_method = http::MTH_PUT;
 			else if (_buffer == "DELETE")	_method = http::MTH_DELETE;
-			else return; // throw (_buffer.empty() ? 404 : 501);
+			else {
+				if (_buffer.empty()) {
+					SEND_ERROR(http::SC_NOT_FOUND);
+				} else {
+					SEND_ERROR(http::SC_NOT_IMPLEMENTED);
+				}
+			}
 
 			UPDATE_STATE(REQ_SPACE_BEFORE_URI);
 			_buffer.clear();
@@ -113,12 +130,12 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case REQ_SPACE_BEFORE_URI:
 			std::cout << ch;
-			if (ch != ' ') return ; //thorw 400
+			if (ch != ' ') SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(REQ_URI_SLASH);
 			break;
 
 		case REQ_URI_SLASH:
-			if (ch != '/') return ; //thorw 400
+			if (ch != '/') SEND_ERROR(http::SC_BAD_REQUEST);
 			_buffer += ch;
 			UPDATE_STATE(REQ_URI_PATH);
 			break;
@@ -138,7 +155,7 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 			else {
 				if (_buffer.length() > MAX_URI_LENGTH)
-					return; //thorw 414
+					SEND_ERROR(http::SC_URI_TOO_LONG);
 				_buffer += ch;
 				break;
 			}
@@ -159,7 +176,7 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 			else {
 				if (_buffer.length() > MAX_URI_LENGTH)
-					return; //thorw 414
+					return; SEND_ERROR(http::SC_URI_TOO_LONG);
 				_buffer += ch;
 				break;
 			}
@@ -174,72 +191,72 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 			else {
 				if (_buffer.length() > MAX_URI_LENGTH)
-					return; //thorw 414
+					return; SEND_ERROR(http::SC_URI_TOO_LONG);
 				_buffer += ch;
 				break;
 			}
 		}
 
 		case REQ_SPACE_BEFORE_VER:
-			if (ch != ' ') return ; //thorw 400
+			if (ch != ' ') SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(REQ_HTTP_H);
 			break;
 
 		case REQ_HTTP_H:
-			if (ch != 'H') return ; //thorw 400
+			if (ch != 'H') SEND_ERROR(http::SC_BAD_REQUEST);
 			_buffer += ch;
 			UPDATE_STATE(REQ_HTTP_HT);
 			break;
 
 		case REQ_HTTP_HT:
-			if (ch != 'T') return ; //thorw 400
+			if (ch != 'T') SEND_ERROR(http::SC_BAD_REQUEST);
 			_buffer += ch;
 			UPDATE_STATE(REQ_HTTP_HTT);
 			break;
 
 		case REQ_HTTP_HTT:
-			if (ch != 'T') return ; //thorw 400
+			if (ch != 'T') SEND_ERROR(http::SC_BAD_REQUEST);
 			_buffer += ch;
 			UPDATE_STATE(REQ_HTTP_HTTP);
 			break;
 
 		case REQ_HTTP_HTTP:
-			if (ch != 'P') return ; //thorw 400
+			if (ch != 'P') SEND_ERROR(http::SC_BAD_REQUEST);
 			_buffer += ch;
 			UPDATE_STATE(REQ_HTTP_SLASH);
 			break;
 
 		case REQ_HTTP_SLASH:
-			if (ch != '/') return ; //thorw 400
+			if (ch != '/') SEND_ERROR(http::SC_BAD_REQUEST);
 			_buffer += ch;
 			UPDATE_STATE(REQ_HTTP_MAJOR_VER);
 			break;
 
 		case REQ_HTTP_MAJOR_VER:
-			if (!std::isdigit(ch)) return ; //thorw 400
+			if (!std::isdigit(ch)) SEND_ERROR(http::SC_BAD_REQUEST);
 			_verMaj = ch;
 			UPDATE_STATE(REQ_HTTP_DOT);
 			break;
 
 		case REQ_HTTP_DOT:
-			if (ch != '.') return ; //thorw 400
+			if (ch != '.') SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(REQ_HTTP_MINOR_VER);
 			break;
 
 		case REQ_HTTP_MINOR_VER:
-			if (!std::isdigit(ch)) return ; //thorw 400
+			if (!std::isdigit(ch)) SEND_ERROR(http::SC_BAD_REQUEST);
 			_verMin = ch;
 			UPDATE_STATE(REQ_ALMOST_DONE);
 			_buffer.clear();
 			break;
 
 		case REQ_ALMOST_DONE:
-			if (ch != '\r') return ; //thorw 400
+			if (ch != '\r') SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(REQ_DONE);
 			break;
 
 		case REQ_DONE:
-			if (ch != '\n') return ; //thorw 400
+			if (ch != '\n') SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(HEADER_START);
 			break;
 
@@ -253,14 +270,14 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 		}
 
 		case HEADER_FIELD_NAME_START: {
-			if (!std::isalpha(ch)) return; // thorw 400
+			if (!std::isalpha(ch)) SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(HEADER_FIELD_NAME);
 			// fallthrough
 		}
 
 		case HEADER_FIELD_NAME: {
 			if (ch != ':') {
-				if (_buffer.length() > MAX_HEADER_LENGTH) return; // thorw 431
+				if (_buffer.length() > MAX_HEADER_LENGTH) SEND_ERROR(http::SC_HEADER_FIELDS_TOO_LARGE);
 				_buffer += ch;
 				break;
 			}
@@ -270,18 +287,18 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 		}
 
 		case HEADER_FIELD_COLON:
-			if (ch != ':') return ; //thorw 400
+			if (ch != ':') return ; SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(HEADER_FIELD_VALUE_START);
 			break;
 
 		case HEADER_FIELD_VALUE_START:
-			if (ch != ' ') return ; //thorw 400
+			if (ch == ' ') break;
 			UPDATE_STATE(HEADER_FIELD_VALUE);
 			break;
 
 		case HEADER_FIELD_VALUE: {
 			if (ch != '\r') {
-				if (_buffer.length() > MAX_HEADER_LENGTH) return; // thorw 431
+				if (_buffer.length() > MAX_HEADER_LENGTH) SEND_ERROR(http::SC_HEADER_FIELDS_TOO_LARGE);
 				_buffer += ch;
 				break;
 			}
@@ -292,17 +309,17 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 		}
 
 		case HEADER_FIELD_ALMOST_DONE:
-			if (ch != '\r') return ; //thorw 400
+			if (ch != '\r') return ; SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(HEADER_FIELD_DONE);
 			break;
 
 		case HEADER_FIELD_DONE:
-			if (ch != '\n') return ; //thorw 400
+			if (ch != '\n') return ; SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(HEADER_FIELD_NAME_START);
 			break;
 
 		case HEADER_END: {
-			if (ch != '\n') return; // throw 400
+			if (ch != '\n') return; SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(BODY_MESSAGE_START);
 			break;
 		}
@@ -315,10 +332,10 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 			
 			if (hasHeaderName("Transfer-Encoding")) {
 				if (hasHeaderName("Content-Length"))
-					return ; // throw 400
+					SEND_ERROR(http::SC_BAD_REQUEST);
 				_transferEncoding = getHeaderValue("Transfer-Encoding");
 				if (_transferEncoding != "chunked")
-					return ; // throw 501
+					SEND_ERROR(http::SC_NOT_IMPLEMENTED);
 				UPDATE_STATE(BODY_CHUNKED_SIZE);
 				break;
 			}
@@ -326,14 +343,14 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 			if (hasHeaderName("Content-Length")) {
 				_buffer = getHeaderValue("Content-Length");
 				if (!isDec(_buffer))
-					return ; // 400
+					SEND_ERROR(http::SC_BAD_REQUEST);
 				_contentLength = std::atoi(_buffer.c_str());
 				UPDATE_STATE(BODY_CONTENT);
 				_buffer.clear();
 				break;
 			}
 
- 			return ; // throw 411
+ 			SEND_ERROR(http::SC_LENGTH_REQUIRED);
 		}
 
 		case BODY_CHUNKED_SIZE: {
@@ -343,7 +360,7 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 
 			if (!isHex(_buffer))
-				return ; // throw 400
+				SEND_ERROR(http::SC_BAD_REQUEST);
 
 			_transferLength = htod(_buffer);
 			UPDATE_STATE(BODY_CHUNKED_SIZE_ALMOST_DONE);
@@ -352,12 +369,12 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 		}
 
 		case BODY_CHUNKED_SIZE_ALMOST_DONE:
-			if (ch != '\r') return ; //400
+			if (ch != '\r') SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(BODY_CHUNKED_SIZE_DONE);
 			break;
 
 		case BODY_CHUNKED_SIZE_DONE:
-			if (ch != '\n') return ; //400
+			if (ch != '\n') SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(BODY_CHUNKED_DATA);
 			break;
 
@@ -371,9 +388,11 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 				break;
 			}
 
-			_body.append(pBuffer + i, readbytes);
-			_transferLength -= readbytes;
-			i += readbytes - 1;
+			if (readbytes > 0) {
+				_body.append(pBuffer + i, readbytes);
+				_transferLength -= readbytes;
+				i += readbytes - 1;
+			}
 
 			if (_transferLength == 0)
 				UPDATE_STATE(BODY_CHUNKED_DATA_ALMOST_DONE);
@@ -382,22 +401,22 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 		}
 
 		case BODY_CHUNKED_DATA_ALMOST_DONE:
-			if (ch != '\r') return ; //400
+			if (ch != '\r') SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(BODY_CHUNKED_DATA_DONE);
 			break;
 
 		case BODY_CHUNKED_DATA_DONE:
-			if (ch != '\n') return ; //400
+			if (ch != '\n') SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(BODY_CHUNKED_SIZE);
 			break;
 			
 		case BODY_CHUNKED_ALMOST_DONE:
-			if (ch != '\r') return ; //400
+			if (ch != '\r') SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(BODY_CHUNKED_DONE);
 			break;
 
 		case BODY_CHUNKED_DONE:
-			if (ch != '\n') return ; //400
+			if (ch != '\n') SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(PARSING_DONE);
 			break;
 
@@ -408,27 +427,68 @@ void HttpRequest::feed(char *pBuffer, size_t pSize)
 
 			_body.append(pBuffer + i, readbytes);
 			_contentLength -= readbytes;
-			i += readbytes - 1;
+
+			i += readbytes;
 
 			if (_contentLength == 0)
 				UPDATE_STATE(PARSING_DONE);
+
+			if (readbytes > 0) i--;
+
 			break;
 		}
 
 		case PARSING_DONE:
 			break;
 
-		default:
+		case PARSING_ERROR:
+			std::cout << "error: " << _status << std::endl;
 			break;
 		}
 	}
+}
+
+// Use this function to determine if the socket should be kept for the next request
+bool	HttpRequest::isKeepAlive(void)
+{
+	std::string connection = getHeaderValue("Connection");
+
+	if (!connection.empty()) {
+		if (connection == "close") return (false);
+		if (connection == "keep-alive") return (true);
+	}
+
+	if (_verMaj == "1" && _verMin == "1")
+		return (true);
+
+	return (false);
+}
+
+bool	HttpRequest::isParsingDone(void)
+{
+	return (CURRENT_STATE() == PARSING_DONE);
+}
+
+void	HttpRequest::reset(void)
+{
+	UPDATE_STATE(REQ_METHOD);
+
+	_path.clear();
+	_query.clear();
+	_fragment.clear();
+	_body.clear();
+	_headers.clear();
+
+	_contentLength = 0;
+	_transferLength = 0;
+	_status = 200;
 }
 
 //#****************************************************************************#
 //#                             GETTER & SETTER                                #
 //#****************************************************************************#
 
-bool			HttpRequest::hasHeaderName(const std::string &pKey) const {
+bool	HttpRequest::hasHeaderName(const std::string &pKey) const {
 	for (size_t i = 0; i < _headers.size(); ++i)
 	{
 		if (_headers[i].first == pKey)
@@ -444,11 +504,6 @@ std::string		HttpRequest::getHeaderValue(const std::string& pKey) const {
 	}
 	return ("");
 };
-std::string		HttpRequest::getHeaderValueAt(int pIdx) const {
-	if (_headers.size() < pIdx)
-		return ("");
-	return (_headers[pIdx].second);
-}
 
 void		HttpRequest::addHeader(const std::string& pKey, const std::string& pValue) {
 	_headers.push_back(std::make_pair(pKey, pValue));
@@ -474,32 +529,4 @@ std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 	std::cout << pRequest.getBody();
 	
 	return (pOut);
-}
-
-//#****************************************************************************#
-//#                                EXCEPTION                                   #
-//#****************************************************************************#
-
-const char*		HttpRequest::BadRequestException::what() const throw() {
-	return ("400 Bad request");
-}
-
-const char*		HttpRequest::LengthRequiredException::what() const throw() {
-	return ("411 Length Required");
-}
-
-const char		*HttpRequest::ContentTooLargeException::what() const throw() {
-	return ("413 Content Too Large");
-}
-
-const char*		HttpRequest::URITooLongException::what() const throw() {
-	return ("414 URI Too Long");
-}
-
-const char*		HttpRequest::HeaderFieldsTooLargeException::what() const throw() {
-	return ("431 Request Header Fields Too Large");
-}
-
-const char*		HttpRequest::NotImplementedException::what() const throw() {
-	return ("501 Not Implemented");
 }

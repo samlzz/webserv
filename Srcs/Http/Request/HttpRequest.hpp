@@ -6,14 +6,14 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2025/11/29 16:50:50 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/12 03:08:27 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_REQUEST_HPP__
 #define __HTTP_REQUEST_HPP__
 
-#include "../HttpConnection.hpp"
+#include "../HttpStatus.hpp"
 #include <string>
 #include <vector>
 #include <exception>
@@ -61,6 +61,7 @@ enum	e_request_state
 	, BODY_CHUNKED_DONE
 	, BODY_CONTENT
 	, PARSING_DONE
+	, PARSING_ERROR
 };
 
 class HttpRequest {
@@ -84,7 +85,7 @@ private:
 	int					_transferLength;
 	int					_contentLength;
 
-	http::e_status_code										_status;
+	int					_status;
 
 private:
 
@@ -97,6 +98,9 @@ public:
 	~HttpRequest(void);
 
 	void	feed(char *pBuffer, size_t pSize);
+	bool	isParsingDone(void);
+	bool	isKeepAlive(void);
+	void	reset(void);
 
 	http::e_method		getMethod(void) const		{ return (_method);   };
 	std::string			getPath(void) const  		{ return (_path);     };
@@ -109,40 +113,10 @@ public:
 
 	bool				hasHeaderName(const std::string& pKey) const;
 	std::string			getHeaderValue(const std::string& pKey) const;
-	std::string			getHeaderValueAt(int pIdx) const;
 
-	std::string					getBody(void) const			{ return (_body);   };
-	http::e_status_code			getStatusCode(void) const	{ return (_status); };
+	std::string			getBody(void) const			{ return (_body);   };
 
-	class BadRequestException : public std::exception {
-	public:
-		const char*	what() const throw();
-	};
-
-	class LengthRequiredException : public std::exception {
-	public:
-		const char*	what() const throw();
-	};
-
-	class URITooLongException : public std::exception {
-	public:
-		const char*	what() const throw();
-	};
-
-	class HeaderFieldsTooLargeException : public std::exception {
-	public:
-		const char*	what() const throw();
-	};
-
-	class  ContentTooLargeException : public std::exception {
-	public:
-		const char*	what() const throw();
-	};
-
-	class NotImplementedException : public std::exception {
-	public:
-		const char*	what() const throw();
-	};
+	int					getStatusCode(void) const	{ return (_status); };
 };
 
 std::ostream&		operator<<(std::ostream& pOut, const HttpRequest& pRequest);

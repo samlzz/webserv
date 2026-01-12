@@ -6,12 +6,14 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2025/12/10 16:24:57 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/12 01:22:54 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../Request/HttpRequest.hpp"
 #include "HttpResponse.hpp"
+#include <fstream>
+#include <sstream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -26,9 +28,10 @@
 //#                        CONSTRUCTOR & DESTRUCTOR                            #
 //#****************************************************************************#
 
-HttpResponse::HttpResponse(HttpRequest pRequest) {
-	_request = pRequest;
-	_cgiHandler = pRequest;
+HttpResponse::HttpResponse(HttpRequest pRequest)
+	: _request(pRequest)
+{
+	
 }
 
 HttpResponse::~HttpResponse(void) {
@@ -91,7 +94,24 @@ bool	isDirectory(const std::string& pPath)
 //#                             MEMBER FUNCTION                                #
 //#****************************************************************************#
 
-// this functoin need the config file for cgi_pass
+void	HttpResponse::loadFile(const std::string& path, int code)
+{
+    std::ifstream file(path.c_str(), std::ios::binary);
+
+    if (!file.is_open()) {
+        handleERROR(http::SC_FORBIDDEN);
+        return;
+    }
+
+    std::ostringstream ss;
+    ss << file.rdbuf();
+    _body = ss.str();
+    
+    _statusCode = code;
+    //_headers["Content-Type"] = _getMimeType(path);
+}
+
+//CONFIG: this functoin need the config file for cgi_pass
 bool		HttpResponse::isCGI(void)
 {
 	std::string		extension = getextension(_request.getPath());
@@ -112,131 +132,154 @@ bool		HttpResponse::isCGI(void)
 
 void		HttpResponse::handleGET(void)
 {
-	if (isCGI()) {
-		return ; //run CGI
+	std::string		path = _request.getPath();
+
+	if (isDirectory(path)) {
+		if (path.back() != '/') {
+			//_headers["Location"] = path + "/";
+			handleERROR(http::SC_MOVED_PERMANENTLY);
+			return ;
+		}
+
+		std::string index = path + "index.html";
+		if (isRegFile(index)) {
+			loadFile(index, http::SC_OK);
+			return ;
+		}
+
+		//CONFIG: check for auto index and return if enabled
+
+		handleERROR(http::SC_FORBIDDEN);
+		return ;
 	}
 
-	if (isDirectory(_request.getPath())) {
-		if (_request.getPath().back() != '/')
-			return ; // 301 redirect by adding the missing '/'
-
-		std::string		index = _request.getPath() + "index.html";
-		if (isRegFile(index))
-			return ; // sendFile
-
-		//check for auto index and return if enabled
-		return ; // 403
+	if (isRegFile(path)) {
+		loadFile(path, http::SC_OK);
+		return ;
 	}
 
-	if (isRegFile(_request.getPath())) {
-		return ; //sendFile
-	}
-
-	return ; // throw 404
+	handleERROR(http::SC_NOT_FOUND);
 }
 
 /// No body for this one, but the content length must predict
 /// how much it would actually send 
 void		HttpResponse::handleHEAD(void)
 {
-	if (isDirectory(_request.getPath())) {
-		if (_request.getPath().back() != '/')
-			return ; // 301 redirect by adding the missing '/'
+	std::string		path = _request.getPath();
 
-		std::string		index = _request.getPath() + "index.html";
-		if (isRegFile(index))
-			return ; // sendFile
+	if (isDirectory(path)) {
+		if (path.back() != '/') {
+			//_headers["Location"] = path + "/";
+			handleERROR(http::SC_MOVED_PERMANENTLY);
+			return ;
+		}
 
-		//check for auto index and return if enabled
-		return ; // 403
+		std::string index = path + "index.html";
+		if (isRegFile(index)) {
+			loadFile(index, http::SC_OK);
+			return ;
+		}
+
+		//CONFIG: check for auto index and return if enabled
+
+		handleERROR(http::SC_FORBIDDEN);
+		return ;
 	}
 
-	if (isRegFile(_request.getPath())) {
-		return ; //sendFile
+	if (isRegFile(path)) {
+		loadFile(path, http::SC_OK);
+		return ;
 	}
 
-	return ; // throw 404
+	handleERROR(http::SC_NOT_FOUND);
 }
 
 // Best to create a non overriding PUT method
 void		HttpResponse::handlePOST(void)
 {
-	if (isCGI()) {
-		return ; //run CGI
-	}
-
+	
 	return ; // thorw 405 method not allowed
 }
 
 void		HttpResponse::handlePUT(void)
 {
 	struct stat		st;
-
 	std::string		path = _request.getPath();
-	bool			exist = stat(path.c_str(), &st);
 
-	if (exist && isDirectory(path))
-		return ; //403
+	bool	fileExist = (stat(path.c_str(), &st) == 0);
 
-	if (exist && access(path.c_str(), W_OK) < 0)
-		return ; //403
+	if (fileExist && isDirectory(path))
+		return handleERROR(http::SC_FORBIDDEN);
 
-	if (!exist) {
-		std::string		parpath = path.substr(0, path.find_last_of('/'));
-		if (access(parpath.c_str(), W_OK) < 0)
-			return ; // 403
+	if (fileExist && access(path.c_str(), W_OK) != 0)
+		return handleERROR(http::SC_FORBIDDEN);
+
+	if (!fileExist) {
+		std::string parent = path.substr(0, path.find_last_of('/'));
+		if (stat(parent.c_str(), &st) != 0 || access(parent.c_str(), W_OK) != 0)
+			return handleERROR(http::SC_FORBIDDEN);
 	}
 
 	int		fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-
 	if (fd < 0)
-		return ; // 500
-	size_t	written = write(fd, _request.getBody().c_str(), atoi(_request.getHeaderValue("Content-Length").c_str()));
+		return handleERROR(http::SC_INTERNAL_SERVER_ERROR);
+
+	std::string body = _request.getBody();
+	size_t	written = write(fd, body.c_str(), body.length());
 	close(fd);
 
 	if (written < 0)
-		return ; // 500
+		return handleERROR(http::SC_INTERNAL_SERVER_ERROR);
 
-	return ;//(exist ? 201 : 200)
+	fileExist ? _statusCode = http::SC_NO_CONTENT : _statusCode = http::SC_CREATED;
 }
 
-void		HttpResponse::handleDELETE(void)
+void	HttpResponse::handleDELETE(void)
 {
-	if (isDirectory(_request.getPath()))
-		return ; // throw 403 forbidden
+	struct stat st;
+	std::string path = _request.getPath();
 
-	if (isRegFile(_request.getPath()))
-		return ; //unlink(_path.c_str()) or other delete file
-				 //204 no content no need for a body
+	if (stat(path.c_str(), &st) != 0)
+		return (handleERROR(http::SC_NOT_FOUND));
 
-	return ; // throw 404
+	if (S_ISDIR(st.st_mode))
+		return (handleERROR(http::SC_FORBIDDEN));
+
+	if (access(path.c_str(), W_OK) != 0)
+		return (handleERROR(http::SC_FORBIDDEN));
+
+	if (std::remove(path.c_str()) != 0)
+		return (handleERROR(http::SC_INTERNAL_SERVER_ERROR));
+
+	_statusCode = http::SC_NO_CONTENT;
 }
 
 void		HttpResponse::build()
 {
-	if (isCGI())
-		_cgiHandler.runCGI();
-	else
-	switch (_request.getMethod())
-	{
-	case http::MTH_GET:
-		handleGET();
-		break;
-	case http::MTH_HEAD:
-		handleHEAD();
-		break;
-	case http::MTH_POST:
-		handlePOST();
-		break;
-	case http::MTH_PUT:
-		handlePUT();
-		break;
-	case http::MTH_DELETE:
-		handleDELETE();
-		break;
-	default:
-		break;
+	if (_request.getStatusCode() != http::SC_OK)
+		return handleERROR(_request.getStatusCode());
+
+	if (isCGI()) { //TODO: finish this
+		//_cgiHandler.runCGI();
+		return ;
 	}
+
+	switch (_request.getMethod()) {
+		case http::MTH_GET:		handleGET(); break;
+		case http::MTH_HEAD:	handleHEAD(); break;
+		case http::MTH_POST:	handlePOST(); break;
+		case http::MTH_PUT:		handlePUT(); break;
+		case http::MTH_DELETE:	handleDELETE(); break;
+		default:
+			handleERROR(http::SC_NOT_IMPLEMENTED); break;
+	}
+
+	//toString
+}
+
+void		HttpResponse::handleERROR(int pCode)
+{
+	
 }
 
 //#****************************************************************************#
