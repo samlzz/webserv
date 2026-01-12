@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:06 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/29 07:48:22 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/12 16:28:44 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,14 +78,17 @@ Config::Server	RawServer::normalize(const Config::ServerDefaults &def)
 	out.port = port.getOr(def.port);
 	out.maxBodySize = maxBodySize.getOr(def.maxBodySize);
 
-	if (locations.empty())
-		locations.push_back(RawLocation("/"));
+	bool	has_root = false;
 	for (size_t i = 0; i < locations.size(); ++i)
 	{
+		if (locations[i].path == "/")
+			has_root = true;
 		out.locations.push_back(
 			locations[i].normalize(*this, def)
 		);
 	}
+	if (!has_root)
+		locations.push_back(RawLocation("/"));
 	std::sort(out.locations.begin(), out.locations.end());
 	return out;
 }
