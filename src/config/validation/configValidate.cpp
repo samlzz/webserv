@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:28:48 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/12 16:57:23 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/12 17:12:49 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "Http/HttpStatus.hpp"
+#include "http/HttpStatus.hpp"
 #include "config/Config.hpp"
 #include "configValidate.hpp"
 

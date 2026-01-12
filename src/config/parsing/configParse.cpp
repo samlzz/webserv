@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:36:59 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/12 16:57:02 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/12 17:11:49 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-#include "Http/HttpStatus.hpp"
+#include "http/HttpStatus.hpp"
 #include "ftpp/AstNode.hpp"
 #include "config/Config.hpp"
 #include "./configParse.hpp"

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/05 21:08:53 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/12 16:56:50 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/12 17:07:32 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@
 # endif
 
 # include "Optionnal.hpp"
-# include "Http/HttpStatus.hpp"
+# include "http/HttpStatus.hpp"
 # include "ftpp/AstNode.hpp"
 
 # define MAX_MBODYSIZE	2147483648 // ? 2GB
