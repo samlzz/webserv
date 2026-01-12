@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/12 17:11:01 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/12 17:30:17 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include "HttpResponse.hpp"
 #include <fstream>
 #include <sstream>
+#include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -46,7 +47,7 @@ std::string		getextension(const std::string& pPath)
 	std::string		result;
 	ssize_t			start;
 
-	if (start = pPath.find_last_of('.') == std::string::npos)
+	if ((start = pPath.find_last_of('.')) == std::string::npos)
 		return ("");
 
 	result = pPath.substr(start, pPath.length() - start);
@@ -61,7 +62,7 @@ std::string		getCgiDir(const std::string& pPath)
 	std::string		result;
 	ssize_t			end;
 
-	if (end = pPath.find_first_of('/', 1) == std::string::npos)
+	if ((end = pPath.find_first_of('/', 1)) == std::string::npos)
 		return ("");
 
 	result = pPath.substr(0, end);

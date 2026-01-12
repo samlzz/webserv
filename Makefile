@@ -8,13 +8,12 @@ ifeq ($(NAME),)
 endif
 
 # ? Directory (end with /)
-SRC_DIR   = Srcs/
+SRC_DIR   = src/
 OBJ_DIR   = build/
 BIN_DIR   =
 
 ### UFILES_START ###
 FILES =	main.cpp \
-		Http/HttpTypes.cpp \
 		config/Config.cpp \
 		config/ConfigPrint.cpp \
 		config/ServerConfig.cpp \
@@ -23,6 +22,8 @@ FILES =	main.cpp \
 		config/parsing/parseUtils.cpp \
 		config/validation/configValidate.cpp \
 		config/validation/validatePath.cpp \
+		http/HttpStatus.cpp \
+		http/request/HttpRequest.cpp
 ### END ###
 ifeq ($(FILES),)
     $(error FILES is empty: please define source files)
