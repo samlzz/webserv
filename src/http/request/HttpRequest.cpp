@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/12 03:36:28 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/12 17:28:57 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpRequest.hpp"
+#include <cstdlib>
 #include <iostream>
-#include <cmath>
 
 #define CURRENT_STATE() _state
 #define UPDATE_STATE(S) _state = S
@@ -126,11 +126,13 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 			UPDATE_STATE(REQ_SPACE_BEFORE_URI);
 			_buffer.clear();
+			__attribute__ ((fallthrough));
 		}
 
 		case REQ_SPACE_BEFORE_URI:
 			std::cout << ch;
-			if (ch != ' ') SEND_ERROR(http::SC_BAD_REQUEST);
+			if (ch != ' ')
+				SEND_ERROR(http::SC_BAD_REQUEST)
 			UPDATE_STATE(REQ_URI_SLASH);
 			break;
 
@@ -145,7 +147,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				_path = _buffer;
 				UPDATE_STATE(REQ_SPACE_BEFORE_VER);
 				_buffer.clear();
-				// fallthrough
+				__attribute__ ((fallthrough));
 			}
 			else if (ch == '?' || ch == '#') {
 				_path = _buffer;
@@ -163,10 +165,10 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case REQ_URI_QUERY: {
 			if (ch == ' ') {
-			 	_query = _buffer;
+				_query = _buffer;
 				UPDATE_STATE(REQ_SPACE_BEFORE_VER);
 				_buffer.clear();
-				// fallthrough
+				__attribute__ ((fallthrough));
 			}
 			else if (ch == '#') {
 				_query = _buffer;
@@ -176,7 +178,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 			else {
 				if (_buffer.length() > MAX_URI_LENGTH)
-					return; SEND_ERROR(http::SC_URI_TOO_LONG);
+					SEND_ERROR(http::SC_URI_TOO_LONG)
 				_buffer += ch;
 				break;
 			}
@@ -187,11 +189,11 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				_fragment = _buffer;
 				UPDATE_STATE(REQ_SPACE_BEFORE_VER);
 				_buffer.clear();
-				// fallthrough
+				__attribute__ ((fallthrough));
 			}
 			else {
 				if (_buffer.length() > MAX_URI_LENGTH)
-					return; SEND_ERROR(http::SC_URI_TOO_LONG);
+					SEND_ERROR(http::SC_URI_TOO_LONG)
 				_buffer += ch;
 				break;
 			}
@@ -266,13 +268,13 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				break;
 			}
 			UPDATE_STATE(HEADER_FIELD_NAME_START);
-			// fallthrow
+			__attribute__ ((fallthrough));
 		}
 
 		case HEADER_FIELD_NAME_START: {
 			if (!std::isalpha(ch)) SEND_ERROR(http::SC_BAD_REQUEST);
 			UPDATE_STATE(HEADER_FIELD_NAME);
-			// fallthrough
+			__attribute__ ((fallthrough));
 		}
 
 		case HEADER_FIELD_NAME: {
@@ -284,10 +286,12 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			addHeader(_buffer, "");
 			UPDATE_STATE(HEADER_FIELD_COLON);
 			_buffer.clear();
+			__attribute__ ((fallthrough));
 		}
 
 		case HEADER_FIELD_COLON:
-			if (ch != ':') return ; SEND_ERROR(http::SC_BAD_REQUEST);
+			if (ch != ':')
+				SEND_ERROR(http::SC_BAD_REQUEST)
 			UPDATE_STATE(HEADER_FIELD_VALUE_START);
 			break;
 
@@ -298,28 +302,32 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case HEADER_FIELD_VALUE: {
 			if (ch != '\r') {
-				if (_buffer.length() > MAX_HEADER_LENGTH) SEND_ERROR(http::SC_HEADER_FIELDS_TOO_LARGE);
+				if (_buffer.length() > MAX_HEADER_LENGTH)
+					SEND_ERROR(http::SC_HEADER_FIELDS_TOO_LARGE)
 				_buffer += ch;
 				break;
 			}
 			setLastHeader(_buffer);
 			UPDATE_STATE(HEADER_FIELD_ALMOST_DONE);
 			_buffer.clear();
-			// fallthrough
+			__attribute__ ((fallthrough));
 		}
 
 		case HEADER_FIELD_ALMOST_DONE:
-			if (ch != '\r') return ; SEND_ERROR(http::SC_BAD_REQUEST);
+			if (ch != '\r')
+				SEND_ERROR(http::SC_BAD_REQUEST)
 			UPDATE_STATE(HEADER_FIELD_DONE);
 			break;
 
 		case HEADER_FIELD_DONE:
-			if (ch != '\n') return ; SEND_ERROR(http::SC_BAD_REQUEST);
+			if (ch != '\n')
+				SEND_ERROR(http::SC_BAD_REQUEST)
 			UPDATE_STATE(HEADER_FIELD_NAME_START);
 			break;
 
 		case HEADER_END: {
-			if (ch != '\n') return; SEND_ERROR(http::SC_BAD_REQUEST);
+			if (ch != '\n')
+				SEND_ERROR(http::SC_BAD_REQUEST)
 			UPDATE_STATE(BODY_MESSAGE_START);
 			break;
 		}
@@ -350,7 +358,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				break;
 			}
 
- 			SEND_ERROR(http::SC_LENGTH_REQUIRED);
+			SEND_ERROR(http::SC_LENGTH_REQUIRED);
 		}
 
 		case BODY_CHUNKED_SIZE: {
@@ -365,7 +373,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			_transferLength = htod(_buffer);
 			UPDATE_STATE(BODY_CHUNKED_SIZE_ALMOST_DONE);
 			_buffer.clear();
-			// fallthrough
+			__attribute__ ((fallthrough));
 		}
 
 		case BODY_CHUNKED_SIZE_ALMOST_DONE:
