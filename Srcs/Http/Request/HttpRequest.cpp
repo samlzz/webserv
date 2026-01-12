@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/12 03:33:18 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/12 03:36:28 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -464,11 +464,13 @@ bool	HttpRequest::isKeepAlive(void)
 	return (false);
 }
 
+// Use this function to check is the request has finished parsing at the end
 bool	HttpRequest::isParsingDone(void)
 {
 	return (CURRENT_STATE() == PARSING_DONE);
 }
 
+// Use this function to reset after the request and response has been send, and the connection is keep-alive
 void	HttpRequest::reset(void)
 {
 	UPDATE_STATE(REQ_METHOD);
