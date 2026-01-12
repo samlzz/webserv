@@ -3,15 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/12 17:30:17 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/12 17:57:08 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "http/request/HttpRequest.hpp"
-#include "HttpResponse.hpp"
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -20,6 +18,9 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <fcntl.h>
+
+#include "http/request/HttpRequest.hpp"
+#include "HttpResponse.hpp"
 
 #define CURRENT_STATE() _state
 #define UPDATE_STATE(S) _state = S

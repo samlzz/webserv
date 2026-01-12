@@ -3,18 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:03 by achu              #+#    #+#             */
-/*   Updated: 2026/01/12 17:15:30 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/12 17:57:16 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_RESPONSE_HPP__
 #define __HTTP_RESPONSE_HPP__
 
-#include "http/request/HttpRequest.hpp"
 #include <string>
+
+#include "http/request/HttpRequest.hpp"
 
 enum	e_response_state
 	{ RES_START
