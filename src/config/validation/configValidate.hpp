@@ -6,12 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:19:52 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/29 06:39:42 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/13 13:58:25 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __CONFIGVALIDATE_HPP__
-# define __CONFIGVALIDATE_HPP__
+#ifndef __CONFIG_VALIDATE_HPP__
+# define __CONFIG_VALIDATE_HPP__
 
 # include <arpa/inet.h>
 # include <netinet/in.h>
@@ -109,4 +109,4 @@ void	validatePathGeneric(const std::string &path, int32_t rules,
 
 } // namespace config_validate
 
-#endif /* __CONFIGVALIDATE_HPP__ */
+#endif /* __CONFIG_VALIDATE_HPP__ */

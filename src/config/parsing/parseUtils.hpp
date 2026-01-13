@@ -6,12 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:21:48 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/12 17:12:14 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/13 13:58:05 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __PARSEUTILS_HPP__
-# define __PARSEUTILS_HPP__
+#ifndef __PARSE_UTILS_HPP__
+# define __PARSE_UTILS_HPP__
 
 # include <stdint.h>
 # include <string>
@@ -44,4 +44,4 @@ http::e_status_code				parseStatusCode(const std::string &s);
 
 }
 
-#endif /* __PARSEUTILS_HPP__ */
+#endif /* __PARSE_UTILS_HPP__ */

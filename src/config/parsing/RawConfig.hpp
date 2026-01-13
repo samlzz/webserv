@@ -6,12 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/12 17:12:38 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/13 13:57:56 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __RAWCONFIG_HPP__
-# define __RAWCONFIG_HPP__
+#ifndef __RAW_CONFIG_HPP__
+# define __RAW_CONFIG_HPP__
 
 # include <map>
 # include <stdint.h>
@@ -92,4 +92,4 @@ std::map<K, V>	concatMap(const std::map<K, V> &first, const std::map<K, V> &seco
 
 }
 
-#endif /* __RAWCONFIG_HPP__ */
+#endif /* __RAW_CONFIG_HPP__ */

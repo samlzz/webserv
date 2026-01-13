@@ -6,12 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:10:18 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 21:05:48 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/13 13:56:40 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __PARSEPROPS_HPP__
-# define __PARSEPROPS_HPP__
+#ifndef __CONFIG_PARSE_HPP__
+# define __CONFIG_PARSE_HPP__
 
 # include <stdexcept>
 # include <stdint.h>
@@ -64,4 +64,4 @@ void	fillDest(O &dest, const AstNode *node, const std::string &prop)
 
 } // namespace config_parse
 
-#endif /* __PARSEPROPS_HPP__ */
+#endif /* __CONFIG_PARSE_HPP__ */
