@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpStatus.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/11 22:43:24 by achu              #+#    #+#             */
-/*   Updated: 2026/01/12 16:58:57 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/13 22:07:46 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ std::ostream	&operator<<(std::ostream &os, e_status_code code)
 	return os;
 }
 
-StatusCode		getStatusCode(int code)
+StatusCode		setStatusCode(int code)
 {
 	static const StatusCode statusData[] = {
 		{ 200, "OK" },
@@ -72,7 +72,7 @@ StatusCode		getStatusCode(int code)
 			return (statusData[i]);
 	}
 
-	return (getStatusCode(SC_INTERNAL_SERVER_ERROR));
+	return (setStatusCode(SC_INTERNAL_SERVER_ERROR));
 }
 
 } // namespace http

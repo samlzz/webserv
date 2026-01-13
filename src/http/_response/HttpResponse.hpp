@@ -1,4 +1,4 @@
-/* ************************************************************************** */
+  /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.hpp                                   :+:      :+:    :+:   */
@@ -15,23 +15,10 @@
 
 #include <string>
 
+#include "IHttpResponse.hpp"
 #include "http/request/HttpRequest.hpp"
-
-enum	e_response_state
-	{ RES_START
-	, RES_END
-};
-
-class IHttpResponse {
-	std::string		_raw;
-	bool			_headSent;
-
-public:
-	virtual void				build(const HttpRequest &req) = 0;
-	virtual	std::string			raw(void) = 0;
-	virtual	size_t				size(void) = 0;
-	virtual void				reset(void) = 0;
-};
+#include "HttpStatus.hpp"
+#include "Config.hpp"
 
 /**
  * if (!_isCgi)
@@ -47,36 +34,43 @@ public:
  */
 
 class HttpResponse : public IHttpResponse {
+public:
+
+	HttpResponse(const HttpRequest& pRequest, const Config::Server& pServer);
+	~HttpResponse(void);
+
+	// ========== State Control ==========
+	void	build(void);
+	bool	isDone() const;
+	void	reset(void);
+	bool	isConnectionClose(void) const;
+
+	// ========== Output Production ==========
+	bool					produceNext(void);
+	const std::string&		buffer() const;
 
 private:
 
-	HttpRequest		_request;
-	// CgiHandler		_cgiHandler;
+	// ========== Response Reply ==========
+	typedef std::map<std::string, std::string>	t_headers;
+	struct Response {
+		http::StatusCode	_statusCode;
+		t_headers			_headers;
+		std::string			_body;
+	};
 
-	std::string		_responseLine;
-	std::string		_statusCode;
-	std::string		_statusMessage;
-	std::string		_body;
 
-	std::string		_allow;
-	std::string		_cacheControl;
-	std::string		_connection;
-	std::string		_contentEncoding;
-	std::string		_contentType;
-	std::string		_contentLength;
-	std::string		_contentLocation;
-	std::string		_date;
-	std::string		_lastModified;
-	std::string		_location;
-	std::string		_retryAfter;
-	std::string		_server;
-	std::string		_setCookie;
-	std::string		_tranferEncoding;
-	std::string		_vary;
+	void	addHeader(const std::string &pHeader, const std::string &pContent);
 
-private:
+	// ========== Response Config ==========
+	const HttpRequest					&_request;
+	const Config::Server				&_server;
+	const Config::Server::Location		*_location;
+
+	Response							_response;
 
 	void		loadFile(const std::string& pPath, int code);
+
 
 	bool		isCGI(void);
 
@@ -86,18 +80,6 @@ private:
 	void		handlePUT(void);
 	void		handleDELETE(void);
 	void		handleERROR(int pCode);
-	
-public:
-
-	HttpResponse(void);
-	~HttpResponse(void);
-
-	void				build();
-	std::string			toString(void);
-
-	std::string		getVersion(void) const;
-	std::string		getStatusCode(void) const;
-	std::string		getStatusMessage(void) const;
 };
 
 #endif

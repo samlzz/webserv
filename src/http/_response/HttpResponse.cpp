@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/12 18:01:31 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/13 22:45:30 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,17 +19,16 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "http/request/HttpRequest.hpp"
 #include "HttpResponse.hpp"
+#include "http/request/HttpRequest.hpp"
+#include "Config.hpp"
 
-#define CURRENT_STATE() _state
-#define UPDATE_STATE(S) _state = S
+// =========================================================================== //
+//                        CONSTRUCTOR & DESTRUCTOR                             //
+// =========================================================================== //
 
-//#****************************************************************************#
-//#                        CONSTRUCTOR & DESTRUCTOR                            #
-//#****************************************************************************#
-
-HttpResponse::HttpResponse(void) {
+HttpResponse::HttpResponse(const HttpRequest& pRequest, const Config::Server& pServer)
+	: _request(pRequest), _server(pServer) {
 	
 }
 
@@ -37,9 +36,9 @@ HttpResponse::~HttpResponse(void) {
 	
 }
 
-//#****************************************************************************#
-//#                             STATIC FUNCTION                                #
-//#****************************************************************************#
+// =========================================================================== //
+//                            STATIC FUNCTION                                  //
+// =========================================================================== //
 
 static std::string		getextension(const std::string& pPath)
 {
@@ -89,9 +88,80 @@ static bool		isDirectory(const std::string& pPath)
 	return (S_ISDIR(st.st_mode));
 }
 
-//#****************************************************************************#
-//#                             MEMBER FUNCTION                                #
-//#****************************************************************************#
+static inline std::string	trimLocationPath(const std::string &pPath)
+{
+	if (pPath.empty())
+		return ("");
+
+	std::string	result;
+
+	if (pPath[0] != '/')
+		result += "/";
+
+	size_t	lastSlash = pPath.find_last_of('/');
+	if (lastSlash != std::string::npos)
+		result.append(pPath.substr(0, lastSlash));
+
+	return (result);
+}
+
+// =========================================================================== //
+//                            MEMBER FUNCTION                                  //
+// =========================================================================== //
+
+void		HttpResponse::build(void)
+{
+	std::string	path = _request.getPath();
+
+	_location =	_server.findLocation(trimLocationPath(path));
+	if (!_location)
+		return (handleERROR(http::SC_NOT_FOUND));
+
+	if (_location->redirect.isSome())
+	{
+		addHeader("Location", _location->redirect.get()->path);
+		_response._statusCode = http::setStatusCode(_location->redirect.get()->code);
+	}
+}
+
+bool		HttpResponse::isDone(void) const
+{
+	
+}
+
+void		HttpResponse::reset(void)
+{
+	_location = NULL;
+}
+
+bool		HttpResponse::isConnectionClose(void) const
+{
+	
+}
+
+// ---------------------------------------------------------------------
+// Output production (transport-driven)
+// ---------------------------------------------------------------------
+
+bool		HttpResponse::produceNext(void)
+{
+	
+}
+
+const std::string&		HttpResponse::buffer(void) const
+{
+	
+}
+
+// =========================================================================== //
+//                         PRIVATE MEMBER FUNCTION                             //
+// =========================================================================== //
+
+void HttpResponse::addHeader(const std::string &pHeader, const std::string &pContent)
+{
+	_response._headers[pHeader] = pContent;
+}
+
 
 void	HttpResponse::loadFile(const std::string& path, int code)
 {
@@ -253,33 +323,12 @@ void	HttpResponse::handleDELETE(void)
 	_statusCode = http::SC_NO_CONTENT;
 }
 
-void		HttpResponse::build()
-{
-	if (_request.getStatusCode() != http::SC_OK)
-		return handleERROR(_request.getStatusCode());
-
-	if (isCGI()) { //TODO: finish this
-		//_cgiHandler.runCGI();
-		return ;
-	}
-
-	switch (_request.getMethod()) {
-		case http::MTH_GET:		handleGET(); break;
-		case http::MTH_HEAD:	handleHEAD(); break;
-		case http::MTH_POST:	handlePOST(); break;
-		case http::MTH_PUT:		handlePUT(); break;
-		case http::MTH_DELETE:	handleDELETE(); break;
-		default:
-			handleERROR(http::SC_NOT_IMPLEMENTED); break;
-	}
-
-	//toString
-}
-
 void		HttpResponse::handleERROR(int pCode)
 {
 	
 }
+
+
 
 //#****************************************************************************#
 //#                             GETTER & SETTER                                #
