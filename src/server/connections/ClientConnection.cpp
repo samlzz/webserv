@@ -83,8 +83,16 @@ ConnEvent	ClientConnection::handleEvents(short revents)
 	if (isErrEvent(revents))
 		return ConnEvent::close();
 
-	if (!processIO(revents))
+	if ((revents & POLLIN) && !handleRead())
+		return ConnEvent::close();
+
+	if ((revents & POLLOUT) && !handleWrite())
 		return ConnEvent::close();
 
 	return ConnEvent::none();
+}
+
+void	ClientConnection::notifyWritable(void)
+{
+	addEvent(POLLOUT);
 }
