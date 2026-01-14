@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:29:27 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/14 10:08:05 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/14 13:29:20 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,25 +15,45 @@
 
 # include <string>
 
+// ============================================================================
+// Chunked output FIFO stream interface
+// ============================================================================
 class IChunkedStream {
 
 public:
 	virtual ~IChunkedStream() {}
 
 	// ============================================================================
-	// Consumer side (ClientConnection)
+	// Consumer side 
 	// ============================================================================
 
 	virtual bool				hasChunk(void) const = 0;
 
-	// for thoses operations hasChunk must be true, else they has UB
+	/**
+	 * Access the current front buffer.
+	 *
+	 * Precondition:
+	 * - `hasChunk() == true`
+	 *
+	 * The returned reference remains valid until `pop()` is called.
+	 */
 	virtual const std::string&	front(void) const = 0;
+
+	/**
+	 * Remove the current front buffer from the stream.
+	 *
+	 * Precondition:
+	 * - `hasChunk() == true`
+	 */
 	virtual void				pop(void) = 0;
 
 	// ============================================================================
 	// Producer side (HttpResponse / CgiConnection)
 	// ============================================================================
 
+	/**
+	 * Push a new output buffer at the end of the stream.
+	 */
 	virtual void				push(const std::string& chunk) = 0;
 };
 

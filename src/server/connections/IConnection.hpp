@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:13:50 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/09 12:15:12 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/14 13:32:31 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,11 @@
 
 // ============================================================================
 // Interface class for poll-based connections
+//
+// An IConnection represents a single pollable entity associated with
+// exactly one file descriptor.
+//
+// This interface is protocol-agnostic and transport-agnostic.
 // ============================================================================
 class IConnection {
 
@@ -27,6 +32,10 @@ private:
 public:
 	virtual ~IConnection() {};
 
+	// ============================================================================
+	// Poll integration
+	// ============================================================================
+
 	virtual int				fd(void) const = 0;
 	virtual struct pollfd	pollFd(void) const = 0;
 
@@ -34,6 +43,16 @@ public:
 	virtual void			setEvents(short events) = 0;
 	virtual void			addEvent(short event) = 0;
 
+	/**
+	 * Handle poll events reported by the Reactor.
+	 *
+	 * - Must not block
+	 * - Must not call poll internally
+	 * - Must perform at most one logical I/O step per call
+	 *
+	 * @param revents The events returned by poll()
+	 * @return A ConnEvent describing the requested action
+	 */
 	virtual ConnEvent		handleEvents(short revents) = 0;
 };
 
