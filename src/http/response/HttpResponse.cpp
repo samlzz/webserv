@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/14 17:59:08 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/14 19:32:49 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,6 @@
 
 HttpResponse::HttpResponse(const Config::Server& pServer)
 	: _server(pServer) {
-	
 }
 
 HttpResponse::~HttpResponse(void) {
@@ -158,9 +157,9 @@ void		HttpResponse::build(const HttpRequest &pReq)
 	if (!_location)
 		return (handleERROR(http::SC_NOT_FOUND));
 
-	if (_location->redirect.isSome()) {
+	if (_location->redirect) {
 		addHeader("Location", _location->redirect.get()->path);
-		_response.setStatusCode(_location->redirect.get()->code);
+		_response.setStatusCode(_location->redirect.get()->code); //TODO: check for none
 		return ;
 	}
 
@@ -363,22 +362,20 @@ void		HttpResponse::handlePUT(void)
 	fileExist ? _response.setStatusCode(http::SC_NO_CONTENT) : _response.setStatusCode(http::SC_CREATED);
 }
 
+// Delete method to remove an existing file
 void	HttpResponse::handleDELETE(void)
 {
+	std::string path = _location->path + _request.getPath();
 	struct stat st;
-	std::string path = _request.getPath();
 
 	if (stat(path.c_str(), &st) != 0)
-		return (handleERROR(http::SC_NOT_FOUND));
+		return ; //TODO: handle 404
 
 	if (S_ISDIR(st.st_mode))
-		return (handleERROR(http::SC_FORBIDDEN));
+		return ; //TODO: handle 403
 
-	if (access(path.c_str(), W_OK) != 0)
-		return (handleERROR(http::SC_FORBIDDEN));
-
-	if (std::remove(path.c_str()) != 0)
-		return (handleERROR(http::SC_INTERNAL_SERVER_ERROR));
+	if (unlink(path.c_str()) != 0)
+		return ; //TODO: handle 500
 
 	_response.setStatusCode(http::SC_NO_CONTENT);
 }

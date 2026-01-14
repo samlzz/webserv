@@ -20,15 +20,6 @@
 #include "http/HttpData.hpp"
 #include "config/Config.hpp"
 
-enum	e_response_state
-	{ RES_INIT
-	, RES_BUILD
-	, RES_CGI
-	, RES_ERROR
-	, RES_TOSTRING
-	, RES_SEND
-};
-
 class HttpResponse : public IHttpResponse {
 public:
 
