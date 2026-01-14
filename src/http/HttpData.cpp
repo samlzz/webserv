@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 03:48:58 by achu              #+#    #+#             */
-/*   Updated: 2026/01/14 04:12:34 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/14 16:19:10 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 //                        CONSTRUCTOR & DESTRUCTOR                             //
 // =========================================================================== //
 
-HttpData::HttpData(void)
+void HttpData::initData(void)
 {
 	// ====== Status Init ======
 	statusData[200] = "OK";
@@ -46,17 +46,13 @@ HttpData::HttpData(void)
 	mimeData["png"]		= "images/png";
 }
 
-HttpData::~HttpData(void) {
-	
-}
-
 // =========================================================================== //
 //                             MEMBER FUNCTION                                 //
 // =========================================================================== //
 
 std::string	HttpData::getStatusType(const int &pCode)
 {
-	StatusData::iterator	it = statusData.find(pCode);
+	t_statusData::iterator	it = statusData.find(pCode);
 	if (it != statusData.end())
 		return (it->second);
 	return ("Unknown");
@@ -64,10 +60,8 @@ std::string	HttpData::getStatusType(const int &pCode)
 
 std::string	HttpData::getMimeType(const std::string &pExt)
 {
-	MimeData::iterator	it = mimeData.find(pExt);
+	t_mimeData::iterator	it = mimeData.find(pExt);
 	if (it != mimeData.end())
 		return (it->second);
 	return ("application/octet-stream");
 }
-
-static HttpData httpData;

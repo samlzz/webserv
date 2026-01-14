@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 03:48:58 by achu              #+#    #+#             */
-/*   Updated: 2026/01/14 04:12:30 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/14 16:19:02 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,14 +18,14 @@
 
 class HttpData {
 public:
-	HttpData(void);
-	~HttpData(void);
 
-	typedef std::map<int, std::string>			StatusData;
-	typedef std::map<std::string, std::string>	MimeData;
+	typedef std::map<int, std::string>			t_statusData;
+	typedef std::map<std::string, std::string>	t_mimeData;
 
-	static StatusData	statusData;
-	static MimeData		mimeData;
+	static t_statusData		statusData;
+	static t_mimeData		mimeData;
+
+	static void	initData(void);
 
 	static std::string		getStatusType(const int &pCode);
 	static std::string		getMimeType(const std::string &pExt);

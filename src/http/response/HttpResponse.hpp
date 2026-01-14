@@ -15,39 +15,35 @@
 
 #include <string>
 
-#include "IHttpResponse.hpp"
+#include "http/response/IHttpResponse.hpp"
 #include "http/request/HttpRequest.hpp"
-#include "HttpStatus.hpp"
-#include "Config.hpp"
+#include "http/HttpData.hpp"
+#include "config/Config.hpp"
 
-/**
- * if (!_isCgi)
- * 		return _raw;
- * std::string chunk = getChunk(_cgiHandler.getOut());
- * if (_headSent)
- * 		return chunk;
- * else
- * {
- *     _headSent = true;
- *		return _raw + chunk;
- * }
- */
+enum	e_response_state
+	{ RES_INIT
+	, RES_BUILD
+	, RES_CGI
+	, RES_ERROR
+	, RES_TOSTRING
+	, RES_SEND
+};
 
 class HttpResponse : public IHttpResponse {
 public:
 
-	HttpResponse(const HttpRequest& pRequest, const Config::Server& pServer);
+	HttpResponse(const Config::Server& pServer);
 	~HttpResponse(void);
 
 	// ========== State Control ==========
-	void	build(void);
-	bool	isDone() const;
-	void	reset(void);
-	bool	isConnectionClose(void) const;
+	virtual void	build(const HttpRequest& pRequest);
+	virtual bool	isDone() const;
+	virtual void	reset(void);
+	virtual bool	isConnectionClose(void) const;
 
 	// ========== Output Production ==========
-	bool					produceNext(void);
-	const std::string&		buffer() const;
+	virtual bool					produceNext(void);
+	virtual const std::string&		buffer() const;
 
 private:
 
@@ -69,13 +65,11 @@ private:
 	void	addHeader(const std::string &pHeader, const std::string &pContent);
 
 	// ========== Response Config ==========
-	const HttpRequest					&_request;
+	HttpRequest							_request;
 	const Config::Server				&_server;
 	const Config::Server::Location		*_location;
 
 	Response							_response;
-
-	void		loadFile(const std::string& pPath, int code);
 
 	void		handleGET(void);
 	void		handleHEAD(void);
@@ -83,6 +77,8 @@ private:
 	void		handlePUT(void);
 	void		handleDELETE(void);
 	void		handleERROR(int pCode);
+
+	void		loadFile(const std::string& pPath, int code);
 };
 
 #endif

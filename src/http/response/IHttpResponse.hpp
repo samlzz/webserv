@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/13 16:45:40 by achu              #+#    #+#             */
-/*   Updated: 2026/01/13 17:28:37 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/14 16:31:31 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ public:
      * Must be called exactly once per request.
      * After this call, the response is ready to produce output buffers.
      */
-    virtual void build(void) = 0;
+    virtual void build(const HttpRequest &pReq) = 0;
 
     /**
      * Reset the response to its initial empty state.

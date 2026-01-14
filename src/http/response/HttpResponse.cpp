@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/14 04:25:55 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/14 17:59:08 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,17 +21,18 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "HttpData.hpp"
-#include "HttpResponse.hpp"
+#include "http/HttpData.hpp"
+#include "http/HttpStatus.hpp"
+#include "http/response/HttpResponse.hpp"
 #include "http/request/HttpRequest.hpp"
-#include "Config.hpp"
+#include "config/Config.hpp"
 
 // =========================================================================== //
 //                        CONSTRUCTOR & DESTRUCTOR                             //
 // =========================================================================== //
 
-HttpResponse::HttpResponse(const HttpRequest& pRequest, const Config::Server& pServer)
-	: _request(pRequest), _server(pServer) {
+HttpResponse::HttpResponse(const Config::Server& pServer)
+	: _server(pServer) {
 	
 }
 
@@ -64,24 +65,18 @@ static inline std::string	subLocaPath(const std::string &pPath)
 // Create a content-value string for the header "Allow"
 static inline std::string	methodsTOstring(const std::vector<http::e_method> &pMethods)
 {
-	std::string	methods;
+	std::ostringstream	methods;
 	std::vector<http::e_method>::const_iterator	it;
 
 	for (it = pMethods.begin(); it != pMethods.end(); it++)
 	{
-		switch (*it) {
-		case http::e_method::MTH_GET:		methods.append("GET"); break;
-		case http::e_method::MTH_HEAD:		methods.append("HEAD"); break;
-		case http::e_method::MTH_POST:		methods.append("POST"); break;
-		case http::e_method::MTH_PUT:		methods.append("PUT"); break;
-		case http::e_method::MTH_DELETE:	methods.append("DELETE"); break;
-		}
+		methods << *it;
 
 		if (it != pMethods.end() - 1)
-			methods.append(", ");
+			methods << ", ";
 	}
 
-	return (methods);
+	return (methods.str());
 }
 
 // Subsctract the extension part of a URI path
@@ -154,8 +149,9 @@ static inline bool		isExtAuth(const std::string &pExt, const Config::t_dict &pEx
 //                            MEMBER FUNCTION                                  //
 // =========================================================================== //
 
-void		HttpResponse::build(void)
+void		HttpResponse::build(const HttpRequest &pReq)
 {
+	_request = pReq;
 	std::string	path = _request.getPath();
 
 	_location =	_server.findLocation(subLocaPath(path));
@@ -189,14 +185,22 @@ void		HttpResponse::build(void)
 	}
 
 	if (isCgi) {
-		if (access(interpreterPath.c_str(), F_OK) != 0) return ; //TODO: handle error 500 notfound
-		if (access(interpreterPath.c_str(), X_OK) != 0) return ; //TODO: handle error 500 forbidden
-		if (access((_location->path + path).c_str(), F_OK) != 0) return ; //TODO: handle error 404 forbidden
+		if (access((_location->path + path).c_str(), F_OK) != 0) return ; //TODO: handle error 404 not found
 		if (access((_location->path + path).c_str(), R_OK) != 0) return ; //TODO: handle error 403 forbidden
 		//TODO: CGI stuff
+		return ;
 	}
 
-	
+	switch (_request.getMethod()) {
+	case http::MTH_GET:		handleGET(); break;
+	case http::MTH_HEAD:	handleHEAD(); break;
+	case http::MTH_POST:	handlePOST(); break;
+	case http::MTH_PUT:		handlePUT(); break;
+	case http::MTH_DELETE:	handleDELETE(); break;
+	default: return; //TODO: handle error 501 not implemented
+	}
+
+	//TODO: toString
 }
 
 bool		HttpResponse::isDone(void) const
@@ -204,9 +208,14 @@ bool		HttpResponse::isDone(void) const
 	
 }
 
+// Clean all the variable in the response class to prepare for the next incoming request
 void		HttpResponse::reset(void)
 {
 	_location = NULL;
+	_response.statusCode.code = 0;
+	_response.statusCode.reason.clear();
+	_response.headers.clear();
+	_response.body.clear();
 }
 
 bool		HttpResponse::isConnectionClose(void) const
@@ -229,7 +238,7 @@ const std::string&		HttpResponse::buffer(void) const
 }
 
 // =========================================================================== //
-//                         PRIVATE MEMBER FUNCTION                             //
+//                        PRIVATE MEMBER FUNCTION                              //
 // =========================================================================== //
 
 void	HttpResponse::Response::setStatusCode(const int &pCode) {
@@ -292,13 +301,13 @@ void		HttpResponse::handleHEAD(void)
 			return ;
 		}
 
+		//CONFIG: check for auto index and return if enabled
+
 		std::string index = path + "index.html";
 		if (isRegFile(index)) {
 			loadFile(index, http::SC_OK);
 			return ;
 		}
-
-		//CONFIG: check for auto index and return if enabled
 
 		handleERROR(http::SC_FORBIDDEN);
 		return ;
@@ -308,6 +317,8 @@ void		HttpResponse::handleHEAD(void)
 		loadFile(path, http::SC_OK);
 		return ;
 	}
+
+	// Check if the file has existed
 
 	handleERROR(http::SC_NOT_FOUND);
 }
@@ -371,13 +382,6 @@ void	HttpResponse::handleDELETE(void)
 
 	_response.setStatusCode(http::SC_NO_CONTENT);
 }
-
-void		HttpResponse::handleERROR(int pCode)
-{
-	
-}
-
-
 
 //#****************************************************************************#
 //#                             GETTER & SETTER                                #
