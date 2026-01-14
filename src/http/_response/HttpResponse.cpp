@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/14 03:26:27 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/14 04:25:55 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include "HttpData.hpp"
 #include "HttpResponse.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "Config.hpp"
@@ -163,7 +164,7 @@ void		HttpResponse::build(void)
 
 	if (_location->redirect.isSome()) {
 		addHeader("Location", _location->redirect.get()->path);
-		_response.statusCode = http::setStatusCode(_location->redirect.get()->code);
+		_response.setStatusCode(_location->redirect.get()->code);
 		return ;
 	}
 
@@ -194,6 +195,8 @@ void		HttpResponse::build(void)
 		if (access((_location->path + path).c_str(), R_OK) != 0) return ; //TODO: handle error 403 forbidden
 		//TODO: CGI stuff
 	}
+
+	
 }
 
 bool		HttpResponse::isDone(void) const
@@ -229,11 +232,16 @@ const std::string&		HttpResponse::buffer(void) const
 //                         PRIVATE MEMBER FUNCTION                             //
 // =========================================================================== //
 
-void HttpResponse::addHeader(const std::string &pHeader, const std::string &pContent)
-{
+void	HttpResponse::Response::setStatusCode(const int &pCode) {
+	statusCode.code = pCode;
+	statusCode.reason = HttpData::getStatusType(pCode);
+}
+
+void HttpResponse::addHeader(const std::string &pHeader, const std::string &pContent) {
 	_response.headers[pHeader] = pContent;
 }
 
+// ------------------------------------------
 
 void	HttpResponse::loadFile(const std::string& path, int code)
 {
@@ -341,7 +349,7 @@ void		HttpResponse::handlePUT(void)
 	if (written < 0)
 		return handleERROR(http::SC_INTERNAL_SERVER_ERROR);
 
-	fileExist ? _response.statusCode = http::setStatusCode(http::SC_NO_CONTENT) : _response.statusCode = http::setStatusCode(http::SC_CREATED);
+	fileExist ? _response.setStatusCode(http::SC_NO_CONTENT) : _response.setStatusCode(http::SC_CREATED);
 }
 
 void	HttpResponse::handleDELETE(void)
@@ -361,7 +369,7 @@ void	HttpResponse::handleDELETE(void)
 	if (std::remove(path.c_str()) != 0)
 		return (handleERROR(http::SC_INTERNAL_SERVER_ERROR));
 
-	_response.statusCode = http::setStatusCode(http::SC_NO_CONTENT);
+	_response.setStatusCode(http::SC_NO_CONTENT);
 }
 
 void		HttpResponse::handleERROR(int pCode)

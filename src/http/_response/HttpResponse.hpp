@@ -53,12 +53,18 @@ private:
 
 	// ========== Response Reply ==========
 	typedef std::map<std::string, std::string>	t_headers;
-	struct Response {
-		http::StatusCode	statusCode;
+	struct Response
+	{
+		struct StatusCode {
+			int				code;
+			std::string		reason;
+		};
+		void	setStatusCode(const int &pCode);
+
+		StatusCode			statusCode;
 		t_headers			headers;
 		std::string			body;
 	};
-
 
 	void	addHeader(const std::string &pHeader, const std::string &pContent);
 
