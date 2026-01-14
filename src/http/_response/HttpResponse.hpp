@@ -71,9 +71,6 @@ private:
 
 	void		loadFile(const std::string& pPath, int code);
 
-
-	bool		isCGI(void);
-
 	void		handleGET(void);
 	void		handleHEAD(void);
 	void		handlePOST(void);

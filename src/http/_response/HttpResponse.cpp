@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/14 01:14:30 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/14 03:26:27 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,49 @@ HttpResponse::~HttpResponse(void) {
 //                            STATIC FUNCTION                                  //
 // =========================================================================== //
 
-static std::string		getextension(const std::string& pPath)
+// Subsctract the location part of a URI path
+static inline std::string	subLocaPath(const std::string &pPath)
+{
+	if (pPath.empty())
+		return ("");
+
+	std::string	dirPath;
+
+	if (pPath[0] != '/')
+		dirPath += "/";
+
+	size_t	lastSlash = pPath.find_last_of('/');
+	if (lastSlash != std::string::npos)
+		dirPath.append(pPath.substr(0, lastSlash));
+
+	return (dirPath);
+}
+
+// Create a content-value string for the header "Allow"
+static inline std::string	methodsTOstring(const std::vector<http::e_method> &pMethods)
+{
+	std::string	methods;
+	std::vector<http::e_method>::const_iterator	it;
+
+	for (it = pMethods.begin(); it != pMethods.end(); it++)
+	{
+		switch (*it) {
+		case http::e_method::MTH_GET:		methods.append("GET"); break;
+		case http::e_method::MTH_HEAD:		methods.append("HEAD"); break;
+		case http::e_method::MTH_POST:		methods.append("POST"); break;
+		case http::e_method::MTH_PUT:		methods.append("PUT"); break;
+		case http::e_method::MTH_DELETE:	methods.append("DELETE"); break;
+		}
+
+		if (it != pMethods.end() - 1)
+			methods.append(", ");
+	}
+
+	return (methods);
+}
+
+// Subsctract the extension part of a URI path
+static inline std::string	subExtPath(const std::string& pPath)
 {
 	std::string		result;
 	ssize_t			start;
@@ -57,7 +99,7 @@ static std::string		getextension(const std::string& pPath)
 	return (result);
 }
 
-static std::string		getCgiDir(const std::string& pPath)
+static inline std::string		subCgiDir(const std::string& pPath)
 {
 	std::string		result;
 	ssize_t			end;
@@ -90,44 +132,21 @@ static bool		isDirectory(const std::string& pPath)
 	return (S_ISDIR(st.st_mode));
 }
 
-// Trim the path so the sub-path is able to search an exact location config
-static inline std::string	trimLocPath(const std::string &pPath)
+/// Search every authorized extension in the location config
+/// @return A boolean that authorized or not the uri path extension
+static inline bool		isExtAuth(const std::string &pExt, const Config::t_dict &pExts)
 {
-	if (pPath.empty())
-		return ("");
+	Config::t_dict::const_iterator it;
 
-	std::string	dirPath;
-
-	if (pPath[0] != '/')
-		dirPath += "/";
-
-	size_t	lastSlash = pPath.find_last_of('/');
-	if (lastSlash != std::string::npos)
-		dirPath.append(pPath.substr(0, lastSlash));
-
-	return (dirPath);
-}
-
-static inline std::string	methodTOstring(const std::vector<http::e_method> &pMethods)
-{
-	std::string	methods;
-	std::vector<http::e_method>::const_iterator	it;
-
-	for (it = pMethods.begin(); it != pMethods.end(); it++)
+	for (it = pExts.begin(); it != pExts.end(); it++)
 	{
-		switch (*it) {
-		case http::e_method::MTH_GET:		methods.append("GET"); break;
-		case http::e_method::MTH_HEAD:		methods.append("HEAD"); break;
-		case http::e_method::MTH_POST:		methods.append("POST"); break;
-		case http::e_method::MTH_PUT:		methods.append("PUT"); break;
-		case http::e_method::MTH_DELETE:	methods.append("DELETE"); break;
-		}
-
-		if (it != pMethods.end() - 1)
-			methods.append(", ");
+		std::string	ext = it->first;
+		std::string path = it->second;
+		if (pExt == ext)
+			return (true);
 	}
 
-	return (methods);
+	return (false);
 }
 
 // =========================================================================== //
@@ -138,7 +157,7 @@ void		HttpResponse::build(void)
 {
 	std::string	path = _request.getPath();
 
-	_location =	_server.findLocation(trimLocPath(path));
+	_location =	_server.findLocation(subLocaPath(path));
 	if (!_location)
 		return (handleERROR(http::SC_NOT_FOUND));
 
@@ -149,13 +168,31 @@ void		HttpResponse::build(void)
 	}
 
 	http::e_method	curMethod = _request.getMethod();
-	std::vector<http::e_method>::const_iterator	it;
-
-	it = std::find(_location->methods.begin(), _location->methods.end(), curMethod);
-	if (it == _location->methods.end()) {
+	std::vector<http::e_method>::const_iterator	itMethods;
+	itMethods = std::find(_location->methods.begin(), _location->methods.end(), curMethod);
+	if (itMethods == _location->methods.end()) {
 		//TODO: handle error 405 method not allowed
-		addHeader("Allow", methodTOstring(_location->methods));
+		addHeader("Allow", methodsTOstring(_location->methods));
 		return ;
+	}
+
+	bool		isCgi = false;
+	std::string	interpreterPath;
+
+	for (Config::t_dict::const_iterator itCgiExts = _location->cgiExts.begin(); itCgiExts !=_location->cgiExts.end(); itCgiExts++) {
+		if (subExtPath(path) == itCgiExts->first) {
+			interpreterPath = itCgiExts->second;
+			isCgi = true;
+			break;	
+		}
+	}
+
+	if (isCgi) {
+		if (access(interpreterPath.c_str(), F_OK) != 0) return ; //TODO: handle error 500 notfound
+		if (access(interpreterPath.c_str(), X_OK) != 0) return ; //TODO: handle error 500 forbidden
+		if (access((_location->path + path).c_str(), F_OK) != 0) return ; //TODO: handle error 404 forbidden
+		if (access((_location->path + path).c_str(), R_OK) != 0) return ; //TODO: handle error 403 forbidden
+		//TODO: CGI stuff
 	}
 }
 
@@ -200,38 +237,7 @@ void HttpResponse::addHeader(const std::string &pHeader, const std::string &pCon
 
 void	HttpResponse::loadFile(const std::string& path, int code)
 {
-    std::ifstream file(path.c_str(), std::ios::binary);
-
-    if (!file.is_open()) {
-        handleERROR(http::SC_FORBIDDEN);
-        return;
-    }
-
-    std::ostringstream ss;
-    ss << file.rdbuf();
-    _body = ss.str();
-    
-    _statusCode = code;
-    //_headers["Content-Type"] = _getMimeType(path);
-}
-
-//CONFIG: this functoin need the config file for cgi_pass
-bool		HttpResponse::isCGI(void)
-{
-	std::string		extension = getextension(_request.getPath());
-	std::string		cgiPath = getCgiDir(_request.getPath());
-
-	if (extension.empty() || cgiPath.empty())
-		return (false);
-
-	// compare extension with config allowed extension
-	// compare cgiPath with config supposed directory for cgi
-
-	return (true);
-
-	// find script cgi
-	// is executable access ?
-	// what interpreter extension ?
+	
 }
 
 void		HttpResponse::handleGET(void)
@@ -335,7 +341,7 @@ void		HttpResponse::handlePUT(void)
 	if (written < 0)
 		return handleERROR(http::SC_INTERNAL_SERVER_ERROR);
 
-	fileExist ? _statusCode = http::SC_NO_CONTENT : _statusCode = http::SC_CREATED;
+	fileExist ? _response.statusCode = http::setStatusCode(http::SC_NO_CONTENT) : _response.statusCode = http::setStatusCode(http::SC_CREATED);
 }
 
 void	HttpResponse::handleDELETE(void)
@@ -355,7 +361,7 @@ void	HttpResponse::handleDELETE(void)
 	if (std::remove(path.c_str()) != 0)
 		return (handleERROR(http::SC_INTERNAL_SERVER_ERROR));
 
-	_statusCode = http::SC_NO_CONTENT;
+	_response.statusCode = http::setStatusCode(http::SC_NO_CONTENT);
 }
 
 void		HttpResponse::handleERROR(int pCode)
