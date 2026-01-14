@@ -6,13 +6,15 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/13 22:45:30 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/14 01:14:30 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 #include <string>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -88,21 +90,44 @@ static bool		isDirectory(const std::string& pPath)
 	return (S_ISDIR(st.st_mode));
 }
 
-static inline std::string	trimLocationPath(const std::string &pPath)
+// Trim the path so the sub-path is able to search an exact location config
+static inline std::string	trimLocPath(const std::string &pPath)
 {
 	if (pPath.empty())
 		return ("");
 
-	std::string	result;
+	std::string	dirPath;
 
 	if (pPath[0] != '/')
-		result += "/";
+		dirPath += "/";
 
 	size_t	lastSlash = pPath.find_last_of('/');
 	if (lastSlash != std::string::npos)
-		result.append(pPath.substr(0, lastSlash));
+		dirPath.append(pPath.substr(0, lastSlash));
 
-	return (result);
+	return (dirPath);
+}
+
+static inline std::string	methodTOstring(const std::vector<http::e_method> &pMethods)
+{
+	std::string	methods;
+	std::vector<http::e_method>::const_iterator	it;
+
+	for (it = pMethods.begin(); it != pMethods.end(); it++)
+	{
+		switch (*it) {
+		case http::e_method::MTH_GET:		methods.append("GET"); break;
+		case http::e_method::MTH_HEAD:		methods.append("HEAD"); break;
+		case http::e_method::MTH_POST:		methods.append("POST"); break;
+		case http::e_method::MTH_PUT:		methods.append("PUT"); break;
+		case http::e_method::MTH_DELETE:	methods.append("DELETE"); break;
+		}
+
+		if (it != pMethods.end() - 1)
+			methods.append(", ");
+	}
+
+	return (methods);
 }
 
 // =========================================================================== //
@@ -113,14 +138,24 @@ void		HttpResponse::build(void)
 {
 	std::string	path = _request.getPath();
 
-	_location =	_server.findLocation(trimLocationPath(path));
+	_location =	_server.findLocation(trimLocPath(path));
 	if (!_location)
 		return (handleERROR(http::SC_NOT_FOUND));
 
-	if (_location->redirect.isSome())
-	{
+	if (_location->redirect.isSome()) {
 		addHeader("Location", _location->redirect.get()->path);
-		_response._statusCode = http::setStatusCode(_location->redirect.get()->code);
+		_response.statusCode = http::setStatusCode(_location->redirect.get()->code);
+		return ;
+	}
+
+	http::e_method	curMethod = _request.getMethod();
+	std::vector<http::e_method>::const_iterator	it;
+
+	it = std::find(_location->methods.begin(), _location->methods.end(), curMethod);
+	if (it == _location->methods.end()) {
+		//TODO: handle error 405 method not allowed
+		addHeader("Allow", methodTOstring(_location->methods));
+		return ;
 	}
 }
 
@@ -159,7 +194,7 @@ const std::string&		HttpResponse::buffer(void) const
 
 void HttpResponse::addHeader(const std::string &pHeader, const std::string &pContent)
 {
-	_response._headers[pHeader] = pContent;
+	_response.headers[pHeader] = pContent;
 }
 
 

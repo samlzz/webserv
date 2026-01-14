@@ -54,9 +54,9 @@ private:
 	// ========== Response Reply ==========
 	typedef std::map<std::string, std::string>	t_headers;
 	struct Response {
-		http::StatusCode	_statusCode;
-		t_headers			_headers;
-		std::string			_body;
+		http::StatusCode	statusCode;
+		t_headers			headers;
+		std::string			body;
 	};
 
 
