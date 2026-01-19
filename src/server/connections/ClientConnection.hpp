@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/14 09:45:55 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/14 15:34:58 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,9 @@
 # include "http/request/HttpRequest.hpp"
 # include "IWritableNotifier.hpp"
 
-# define RECV_BUF_SIZE	2048
+# ifndef CLIENT_READ_BUF_SIZE
+#  define CLIENT_READ_BUF_SIZE	2048
+# endif
 
 class ClientConnection: public AConnection, public IWritableNotifier {
 
