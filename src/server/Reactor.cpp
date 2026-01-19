@@ -6,12 +6,13 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 14:21:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/19 12:20:52 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/19 18:37:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
 #include <set>
+#include <sys/wait.h>
 
 #include "Reactor.hpp"
 #include "server/Exceptions.hpp"
@@ -56,6 +57,11 @@ void	Reactor::addConnection(IConnection* conn)
 void	Reactor::stop(void)
 {
 	_running = false;
+}
+
+static inline void	_reapChildsProcess(void)
+{
+	while (waitpid(-1, 0, WNOHANG));
 }
 
 /**
@@ -115,6 +121,7 @@ void	Reactor::run(void)
 			_pfds[i].events = conn->events();
 			_pfds[i].revents = 0;
 			i++;
+			_reapChildsProcess();
 		}
 	}
 }
