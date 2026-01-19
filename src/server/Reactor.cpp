@@ -6,11 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 14:21:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/19 12:20:44 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/19 12:20:52 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
+#include <set>
 
 #include "Reactor.hpp"
 #include "server/Exceptions.hpp"
@@ -62,6 +63,8 @@ void	Reactor::stop(void)
  */
 void	Reactor::run(void)
 {
+	std::set<IConnection *>	pendingClose;
+
 	_running = true;
 	while (_running)
 	{
@@ -74,6 +77,12 @@ void	Reactor::run(void)
 		{
 			IConnection	*conn = _connections[i];
 
+			if (pendingClose.count(conn))
+			{
+				pendingClose.erase(conn);
+				removeConnection(i);
+				continue;
+			}
 			if (_pfds[i].revents == 0)
 			{
 				i++;
@@ -87,6 +96,11 @@ void	Reactor::run(void)
 				if (ev.conn)
 					addConnection(ev.conn);
 				break;
+
+			case ConnEvent::CE_CLOSE_WITH:
+				if (ev.conn && ev.conn != conn)
+					pendingClose.insert(ev.conn);
+				__attribute__ ((fallthrough));
 
 			case ConnEvent::CE_CLOSE:
 				removeConnection(i);
