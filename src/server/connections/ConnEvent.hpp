@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 10:58:03 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/17 11:35:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/20 13:24:39 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,6 @@ struct ConnEvent {
 	{
 		CE_NONE,
 		CE_CLOSE,
-		CE_CLOSE_WITH,
 		CE_SPAWN
 	};
 
@@ -40,7 +39,6 @@ struct ConnEvent {
 
 	static ConnEvent none()						{ return ConnEvent(CE_NONE, 0); }
 	static ConnEvent close()					{ return ConnEvent(CE_CLOSE, 0); }
-	static ConnEvent closeWith(IConnection *c)	{ return ConnEvent(CE_CLOSE_WITH, c); }
 	static ConnEvent spawn(IConnection *c)		{ return ConnEvent(CE_SPAWN, c); }
 
 private:
