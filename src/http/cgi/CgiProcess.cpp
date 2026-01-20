@@ -221,6 +221,7 @@ void	CgiProcess::onEof(void)
 	_terminated = true;
 	_read = NULL;
 	_encoder.finalize();
+	_notifier.notifyWritable();
 	cleanup(false);
 }
 
