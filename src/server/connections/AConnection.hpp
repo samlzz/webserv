@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:44:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/09 14:37:02 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/20 14:06:30 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,9 @@ public:
 // ============================================================================
 
 	virtual ConnEvent	handleEvents(short revents) = 0;
+
+	virtual IConnection	*buddy(void);
+	virtual void		detachBuddy(void);
 
 protected:
 	void				setNonBlocking(void);

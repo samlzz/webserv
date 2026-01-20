@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:13:50 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/14 13:32:31 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/20 14:06:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,6 +54,9 @@ public:
 	 * @return A ConnEvent describing the requested action
 	 */
 	virtual ConnEvent		handleEvents(short revents) = 0;
+
+	virtual IConnection		*buddy(void) = 0;
+	virtual void			detachBuddy(void) = 0;
 };
 
 #endif /* __ICONNECTION_HPP__ */
