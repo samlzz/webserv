@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/19 19:05:40 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/20 16:18:31 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,6 @@
 # include "server/connections/IConnection.hpp"
 # include "server/connections/IWritableNotifier.hpp"
 
-class CgiReadConnection;
-class CgiWriteConnection;
-
 class CgiProcess {
 
 private:
@@ -32,8 +29,8 @@ private:
 	pid_t				_pid;
 	uint8_t				_exitCode;
 	bool				_terminated;
-	CgiReadConnection	*_read;
-	CgiWriteConnection	*_write;
+	IConnection			*_read;
+	IConnection			*_write;
 
 public:
 
@@ -49,6 +46,8 @@ public:
 
 	IConnection			*read(void) const;
 	IConnection			*write(void) const;
+	void				forgetRead(void);
+	void				forgetWrite(void);
 
 	bool				isDone(void) const;
 	uint8_t				exitCode(void) const;
@@ -57,7 +56,7 @@ public:
 	// Methods
 	// ============================================================================
 
-	CgiReadConnection	*start(const char* scriptPath,
+	IConnection			*start(const char* scriptPath,
 								char* const argv[],
 								char* const envp[],
 								const std::string &body = "");

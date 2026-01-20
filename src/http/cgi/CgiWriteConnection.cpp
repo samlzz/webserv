@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:44:04 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/17 12:10:32 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/20 19:02:12 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ CgiWriteConnection::CgiWriteConnection(
 	int stdinFd, const std::string &body, CgiProcess &ctx
 )
 	: AConnection(stdinFd, POLLOUT)
-	, _body(body), _offset(0), _ctx(ctx)
+	, _body(body), _offset(0), _ctx(ctx), _spawned(false)
 {
 	setNonBlocking();
 }
@@ -36,21 +36,36 @@ CgiWriteConnection::CgiWriteConnection(
 // Methods
 // ============================================================================
 
+IConnection	*CgiWriteConnection::buddy(void)
+{
+	if (!_spawned)
+		return 0;
+	return _ctx.read();
+}
+
+void	CgiWriteConnection::detachBuddy(void)
+{
+	if (_spawned)
+		_ctx.forgetRead();
+}
+
 ConnEvent	CgiWriteConnection::handleEvents(short revents)
 {
+	_spawned = true;
 	if (isErrEvent(revents))
-		return (_ctx.onError(), ConnEvent::closeWith(_ctx.read()));
+		return (_ctx.onError(), ConnEvent::close());
 
 	if (revents & POLLOUT)
 	{
 		ssize_t n = write(_fd, _body.c_str() + _offset, _body.size() - _offset);
 		if (n <= 0)
-			return (_ctx.onError(), ConnEvent::closeWith(_ctx.read()));
+			return (ConnEvent::none());
 
 		_offset += static_cast<size_t>(n);
 		if (_offset == _body.size())
 		{
 			_ctx.onBodyEnd();
+			_spawned = false;
 			return ConnEvent::close();
 		}
 	}

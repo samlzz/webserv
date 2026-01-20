@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/19 19:05:37 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/20 18:09:15 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@
 CgiProcess::CgiProcess(IChunkEncoder &encoder, IWritableNotifier &notifier)
 	: _encoder(encoder), _notifier(notifier)
 	, _pid(-1), _exitCode(0), _terminated(false)
-	, _read(NULL), _write(NULL)
+	, _read(0), _write(0)
 {}
 
 CgiProcess::~CgiProcess()
@@ -43,6 +43,9 @@ CgiProcess::~CgiProcess()
 
 IConnection	*CgiProcess::read(void) const		{ return _read; }
 IConnection	*CgiProcess::write(void) const		{ return _write; }
+
+void		CgiProcess::forgetRead(void)		{ _read = 0; }
+void		CgiProcess::forgetWrite(void)		{ _write = 0; }
 
 bool		CgiProcess::isDone(void) const		{ return _terminated; }
 
@@ -111,7 +114,7 @@ static void	_execChild(
 
 // Returned connection must be spawned for the reactor
 // CgiProcess doesn't owns it
-CgiReadConnection	*CgiProcess::start(const char* scriptPath,
+IConnection	*CgiProcess::start(const char* scriptPath,
 										char* const argv[],
 										char* const envp[],
 										const std::string &body)
@@ -211,7 +214,7 @@ void	CgiProcess::cleanup(bool killChild)
 
 void	CgiProcess::onBodyEnd(void)
 {
-	_write = NULL;
+	forgetWrite();
 }
 
 void	CgiProcess::onEof(void)
@@ -219,7 +222,7 @@ void	CgiProcess::onEof(void)
 	if (_terminated)
 		return;
 	_terminated = true;
-	_read = NULL;
+	forgetRead();
 	_encoder.finalize();
 	_notifier.notifyWritable();
 	cleanup(false);

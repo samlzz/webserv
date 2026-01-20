@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/19 19:11:11 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/20 19:01:59 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,7 @@
 // ============================================================================
 
 CgiReadConnection::CgiReadConnection(int stdoutFd, CgiProcess &ctx)
-	: AConnection(stdoutFd, POLLIN)
-	, _ctx(ctx), _writeSpawned(false)
+	: AConnection(stdoutFd, POLLIN), _ctx(ctx)
 {
 	setNonBlocking();
 }
@@ -35,23 +34,20 @@ CgiReadConnection::CgiReadConnection(int stdoutFd, CgiProcess &ctx)
 // Methods
 // ============================================================================
 
-static inline ConnEvent	_getCloseEvent(IConnection *bindedConn)
+IConnection	*CgiReadConnection::buddy(void)
 {
-	if (bindedConn)
-		return ConnEvent::closeWith(bindedConn);
-	return ConnEvent::close();
+	return _ctx.write();
+}
+
+void	CgiReadConnection::detachBuddy(void)
+{
+	_ctx.forgetWrite();
 }
 
 ConnEvent	CgiReadConnection::handleEvents(short revents)
 {
-	if (!_writeSpawned)
-	{
-		_writeSpawned = true;
-		return ConnEvent::spawn(_ctx.write());
-	}
-
 	if (isErrEvent(revents))
-		return (_ctx.onError(), _getCloseEvent(_ctx.write()));
+		return (_ctx.onError(), ConnEvent::close());
 
 	if (revents & POLLIN)
 	{
@@ -59,12 +55,11 @@ ConnEvent	CgiReadConnection::handleEvents(short revents)
 		ssize_t	n = read(_fd, buf, CGI_READ_BUF_SIZE);
 
 		if (n < 0)
-			return (_ctx.onError(), _getCloseEvent(_ctx.write()));
+			return (ConnEvent::none());
 		if (n == 0)
-			return (_ctx.onEof(), _getCloseEvent(_ctx.write()));
+			return (_ctx.onEof(), ConnEvent::close());
 
 		_ctx.onRead(buf, static_cast<size_t>(n));
 	}
 	return ConnEvent::none();
 }
-

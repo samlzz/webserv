@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:52:27 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/19 19:08:32 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/20 17:51:20 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,12 +26,13 @@ class CgiReadConnection: public AConnection {
 
 private:
 	CgiProcess	&_ctx;
-	bool		_writeSpawned;
 
 public:
 	CgiReadConnection(int stdoutFd, CgiProcess &ctx);
 
 	virtual ConnEvent	handleEvents(short revents);
+	virtual IConnection	*buddy(void);
+	virtual void		detachBuddy(void);
 
 private:
 	// forbidden
