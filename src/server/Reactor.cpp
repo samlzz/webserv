@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 14:21:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/19 18:37:14 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/20 17:53:15 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,13 +64,50 @@ static inline void	_reapChildsProcess(void)
 	while (waitpid(-1, 0, WNOHANG));
 }
 
+bool	Reactor::manageConnEvent(ConnEvent ev, size_t idx)
+{
+	switch (ev.type)
+	{
+	case ConnEvent::CE_SPAWN:
+	{
+		addConnection(ev.conn);
+		IConnection	*buddy = ev.conn->buddy();
+		while (buddy)
+		{
+			addConnection(buddy);
+			buddy = buddy->buddy();
+		}
+		break;
+	}
+
+	case ConnEvent::CE_CLOSE:
+	{
+		IConnection	*victim = _connections[idx];
+		IConnection	*buddy = victim->buddy();
+
+		if (buddy)
+		{
+			victim->detachBuddy();
+			if (buddy->buddy() == victim)
+				buddy->detachBuddy();
+			_pendingClose.insert(buddy);
+		}
+		removeConnection(idx);
+		return true;
+	}
+	case ConnEvent::CE_NONE:
+		__attribute__ ((fallthrough));
+	default:
+		break;
+	}
+	return false;
+}
+
 /**
  * Main poll listen loop
  */
 void	Reactor::run(void)
 {
-	std::set<IConnection *>	pendingClose;
-
 	_running = true;
 	while (_running)
 	{
@@ -83,9 +120,9 @@ void	Reactor::run(void)
 		{
 			IConnection	*conn = _connections[i];
 
-			if (pendingClose.count(conn))
+			if (_pendingClose.count(conn))
 			{
-				pendingClose.erase(conn);
+				_pendingClose.erase(conn);
 				removeConnection(i);
 				continue;
 			}
@@ -94,34 +131,13 @@ void	Reactor::run(void)
 				i++;
 				continue;
 			}
-
-			ConnEvent	ev = conn->handleEvents(_pfds[i].revents);
-			switch (ev.type)
-			{
-			case ConnEvent::CE_SPAWN:
-				if (ev.conn)
-					addConnection(ev.conn);
-				break;
-
-			case ConnEvent::CE_CLOSE_WITH:
-				if (ev.conn && ev.conn != conn)
-					pendingClose.insert(ev.conn);
-				__attribute__ ((fallthrough));
-
-			case ConnEvent::CE_CLOSE:
-				removeConnection(i);
+			if (manageConnEvent(conn->handleEvents(_pfds[i].revents), i))
 				continue;
-
-			case ConnEvent::CE_NONE:
-				__attribute__ ((fallthrough));
-			default:
-				break;
-			}
-
+			
 			_pfds[i].events = conn->events();
 			_pfds[i].revents = 0;
 			i++;
-			_reapChildsProcess();
 		}
+		_reapChildsProcess();
 	}
 }
