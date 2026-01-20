@@ -3,71 +3,77 @@
 /*                                                        :::      ::::::::   */
 /*   IHttpResponse.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/01/13 16:45:40 by achu              #+#    #+#             */
-/*   Updated: 2026/01/14 16:31:31 by achu             ###   ########.fr       */
+/*   Created: 2026/01/14 10:12:02 by sliziard          #+#    #+#             */
+/*   Updated: 2026/01/14 16:55:09 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "HttpRequest.hpp"
+#ifndef __IHTTP_RESPONSE_HPP__
+# define __IHTTP_RESPONSE_HPP__
 
-class IHttpResponse {
+# include "IChunkedStream.hpp"
+# include "IChunkEncoder.hpp"
+#include "server/connections/IWritableNotifier.hpp"
+
+class HttpRequest;
+class ConnEvent;
+
+class IHttpResponse: public IChunkEncoder {
+
 public:
-    virtual ~IHttpResponse() {}
+	virtual ~IHttpResponse() {}
 
-    // ---------------------------------------------------------------------
-    // Lifecycle
-    // ---------------------------------------------------------------------
+	// ========================================================================
+	// Lifecycle
+	// ========================================================================
 
-    /**
-     * Build the HTTP response from a fully parsed request.
-     * Must be called exactly once per request.
-     * After this call, the response is ready to produce output buffers.
-     */
-    virtual void build(const HttpRequest &pReq) = 0;
+	/**
+	 * Build the HTTP response from a fully parsed request.
+	 *
+	 * - Must be called exactly once per request
+	 * - Initializes headers and internal state
+	 * - May push initial buffers into the output stream (e.g. headers)
+	 *
+	 * @return ConnEvent::NONE  if no extra connection is required
+	 * @return ConnEvent::SPAWN if a CGI connection must be spawned
+	 */
+	virtual ConnEvent		build(const HttpRequest& req, IWritableNotifier &notifier) = 0;
 
-    /**
-     * Reset the response to its initial empty state.
-     */
-    virtual void reset(void) = 0;
+	/**
+	 * Reset the response to its initial empty state.
+	 * Called after the response has been fully sent.
+	 */
+	virtual void			reset(void) = 0;
 
-    // ---------------------------------------------------------------------
-    // Output production (transport-driven)
-    // ---------------------------------------------------------------------
+	// ========================================================================
+	// Output stream (consumer side)
+	// ========================================================================
 
-    /**
-     * Prepare the next output buffer to be sent on the socket.
-     *
-     * This method MUST be called only when the previous buffer
-     * has been completely sent.
-     *
-     * @return true  if a new buffer is available (buffer() becomes non-empty)
-     * @return false if no data is available for now (e.g. CGI not ready yet)
-     */
-    virtual bool produceNext(void) = 0;
+	/**
+	 * Access the output stream of ready-to-send buffers.
+	 * ClientConnection consumes this stream.
+	 */
+	virtual IChunkedStream&	stream(void) = 0;
 
-    /**
-     * Return the current output buffer.
-     *
-     * The returned buffer MUST remain stable and unchanged until
-     * produceNext() is called again.
-     *
-     * @return a reference to the current buffer (may be empty)
-     */
-    virtual const std::string& buffer(void) const = 0;
+	// ========================================================================
+	// Response state
+	// ========================================================================
 
-    // ---------------------------------------------------------------------
-    // State / flow control
-    // ---------------------------------------------------------------------
+	/**
+	 * Indicates whether the response has finished producing all output.
+	 * Meaning:
+	 * - no more buffers will never be added to the stream (see IChumkEncoder::finalize)
+	 */
+	virtual bool			isDone(void) const = 0;
 
-    virtual bool isDone(void) const = 0;
-   
-    /**
-     * Inside response bc in some case (e.g. timeout or 500 errors)
-     * we can want to delete connexion after the response sent
-     *
-     * It is not only decided by the headers (like in isKeepAlive now)
-     */ 
-    virtual bool isConnectionClose(void) const = 0;
+	/**
+	 * Indicates whether the connection must be closed after this response.
+	 * Encapsulates HTTP semantics (version, headers, errors).
+	 */
+	virtual bool			shouldCloseConnection(void) const = 0;
 };
+
+#endif /* __IHTTP_RESPONSE_HPP__ */
+
