@@ -334,7 +334,129 @@ void		HttpResponse::handleHEAD(void)
 // TODO: need a Reverse Deque Technique like send but receive instead, might need to redo request 
 void		HttpResponse::handlePOST(void)
 {
+	std::cout << "Handling POST method" << std::endl;
 
+	// Search in _request for Content-Length or Transfer-Encoding: chunked
+	// If none found, return 411 Length Required
+	std::string contentLength = _request.getHeaderValue("Content-Length");
+	std::string transferEncoding = _request.getHeaderValue("Transfer-Encoding");
+	std::string contentType = _request.getHeaderValue("Content-Type");
+
+	if (contentLength.empty() && transferEncoding != "chunked")
+		return setError(http::SC_LENGTH_REQUIRED);
+
+	if (!contentLength.empty()) {
+		if (!isDec(contentLength))
+			return setError(http::SC_BAD_REQUEST);
+
+		//A verifer
+		// int	clen = std::atoi(contentLength.c_str());
+		// if (clen > MAX_BODY_LENGTH)
+		// 	return setError(http::SC_CONTENT_TOO_LARGE);
+	}
+
+	if (contentType.empty())
+		return setError(http::SC_BAD_REQUEST);
+
+	// Handle multipart/form-data //upload
+	if (contentType.find("multipart/form-data") != std::string::npos)
+	{
+		//SEARCH BOUNDARY
+		size_t	boundaryPos = contentType.find("boundary=");
+		if (boundaryPos == std::string::npos)
+			return setError(http::SC_BAD_REQUEST);
+		std::string	boundary = "--" + contentType.substr(boundaryPos + 9);
+		std::string delimiter = "--" + boundary;
+
+		size_t	pos = 0;
+		std::string	body = _request.getBody();
+
+		while (pos = body.find(delimiter, pos) != std::string::npos)
+		{	
+			size_t	nextPos = body.find(delimiter, pos + delimiter.length());
+			if (nextPos == std::string::npos)
+				break;
+
+			//EXTRACT FILENAME AND CONTENT
+			std::string	part = body.substr(pos + delimiter.length(), nextPos - pos - delimiter.length());
+			size_t	filenamePos = part.find("filename=\"");
+			if (filenamePos != std::string::npos)
+			{
+				size_t	filenameEnd = part.find("\"", filenamePos + 10);
+				if (filenameEnd != std::string::npos)
+				{
+					//EXTRACT FILENAME
+					std::string	filename = part.substr(filenamePos + 10, filenameEnd - filenamePos - 10);
+
+					//EXTRACT CONTENT
+					size_t	contentPos = part.find("\r\n\r\n");
+					if (contentPos != std::string::npos)
+					{
+						//EXTRACT CONTENT AND SAVE TO FILE
+						std::string	fileContent = part.substr(contentPos + 4, part.length() - contentPos - 6); // -6 to remove trailing \r\n
+
+						//add random time to filename to avoid overwriting
+						std::string new_filename;
+						size_t ext_pos = filename.find_last_of(".");
+						if (ext_pos != std::string::npos)
+							new_filename = filename.substr(0, ext_pos) + "_" + std::to_string(std::time(0)) + filename.substr(ext_pos);
+						else
+							new_filename = filename + "_" + std::to_string(std::time(0));
+
+						//SAVE FILE TO filePath
+						std::string	filePath = _location->path + "/" + new_filename;
+						std::ofstream	outFile(filePath.c_str(), std::ios::binary);
+						if (!outFile)
+							return setError(http::SC_INTERNAL_SERVER_ERROR);
+						outFile.write(fileContent.c_str(), fileContent.length());
+						outFile.close();
+					}
+				}
+			}
+			pos = nextPos;
+		}
+		//code 201 Created
+		_response.setStatusCode(http::SC_CREATED);
+		return;
+	}
+	// Handle application/x-www-form-urlencoded //forms
+	else if (contentType == "application/x-www-form-urlencoded")
+	{
+		std::istringstream stream(_request.getBody());
+		std::string line;
+		std::map<std::string, std::string> data;
+		while (std::getline(stream, line, '&'))
+		{
+			// std::cout << line << std::endl;
+			size_t pos = line.find('=');
+			if (pos != std::string::npos)
+			{
+				std::string key = url_decode(line.substr(0, pos));
+				std::string value = url_decode(line.substr(pos + 1));
+				data[key] = value;
+			}
+		}
+		
+		for (std::map<std::string, std::string>::iterator it = data.begin(); it != data.end(); it++)
+		{
+			_response.body << "<li><b>" << it->first << "</b>:" << it->second << "</li>\n";
+		}
+		_response.setStatusCode(http::SC_OK);
+		return;
+	}
+	// If not multipart/form-data, just save the body to a file
+	else
+	{
+		std::string	filePath = _location->path + "/post_data_" + std::to_string(std::time(0)) + ".txt";
+		std::ofstream	outFile(filePath.c_str(), std::ios::binary);
+		if (!outFile)
+			return setError(http::SC_INTERNAL_SERVER_ERROR);
+		outFile.write(_request.getBody().c_str(), _request.getBody().length());
+		outFile.close();
+
+		_response.setStatusCode(http::SC_CREATED);
+		return;
+	}
 }
 
 void		HttpResponse::handlePUT(void)

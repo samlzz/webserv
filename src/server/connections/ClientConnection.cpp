@@ -32,51 +32,40 @@ ClientConnection::ClientConnection(int cliSockFd, const Config::Server &config)
 // Methods
 // ============================================================================
 
-bool	ClientConnection::processIO(short revents)
+bool ClientConnection::handleRead(void)
 {
-/* TODO: Expected logic
-	if ((revents & POLLIN) && !_request.done())
-		_request.consume(_fd);
+	char	buf[1024];
+	ssize_t	n = recv(_fd, buf, sizeof(buf) - 1, 0);
 
-	if ((revents & POLLOUT) && _request.done())
-		_response.produce(_fd);
-
-	if (_response.done())
+	if (n > 0)
 	{
-		if (_response.shouldClose())
-			return false;
-
-		_request.reset();
-		_response.reset();
+		buf[n] = 0;
+		std::cout << "Received from fd " << _fd << ":\n" << buf << std::endl;
+		_events = POLLOUT;
 	}
-*/
-	if (revents & POLLIN)
-	{
-		char	buf[1024];
-		ssize_t	n = recv(_fd, buf, sizeof(buf) - 1, 0);
+	else if (n <= 0)
+		return false;
+	return true;
+}
 
-		if (n > 0)
-		{
-			buf[n] = 0;
-			std::cout << "Received from fd " << _fd << ":\n" << buf << std::endl;
-			_events = POLLOUT;
-		}
-		else if (n <= 0)
-			return false;
+bool ClientConnection::handleWrite(void)
+{
+	std::string	resp = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!";
+	ssize_t		sent = send(_fd, resp.c_str(), resp.length(), 0);
+
+	if (sent < 0)
+	{
+		std::cerr << "failed to send response to fd " << _fd << std::endl;
+		return false;
 	}
-	if (revents & POLLOUT)
+	else
 	{
-		std::string	resp = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!";
-		ssize_t		sent = send(_fd, resp.c_str(), resp.length(), 0);
-
-		if (sent < 0)
-			std::cerr << "failed to send response to fd " << _fd << std::endl;
-		else
-			std::cout << "Response sent to fd " << _fd << std::endl;
+		std::cout << "Response sent to fd " << _fd << std::endl;
 		_events = POLLIN;
 	}
 	return true;
 }
+
 
 ConnEvent	ClientConnection::handleEvents(short revents)
 {
