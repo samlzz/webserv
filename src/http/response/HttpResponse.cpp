@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/14 19:32:49 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/20 02:48:24 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,8 +78,15 @@ static inline std::string	methodsTOstring(const std::vector<http::e_method> &pMe
 	return (methods.str());
 }
 
-// Subsctract the extension part of a URI path
-static inline std::string	subExtPath(const std::string& pPath)
+// Create a content-value string for the header "Content-Length"
+static inline std::string	longTOstring(const long pSize) {
+	std::ostringstream stream;
+	stream << pSize;
+	return (stream.str());
+}
+
+// Subsctract the extension part of a URI path or file
+static inline std::string	subExt(const std::string& pPath)
 {
 	std::string		result;
 	ssize_t			start;
@@ -176,7 +183,7 @@ void		HttpResponse::build(const HttpRequest &pReq)
 	std::string	interpreterPath;
 
 	for (Config::t_dict::const_iterator itCgiExts = _location->cgiExts.begin(); itCgiExts !=_location->cgiExts.end(); itCgiExts++) {
-		if (subExtPath(path) == itCgiExts->first) {
+		if (subExt(path) == itCgiExts->first) {
 			interpreterPath = itCgiExts->second;
 			isCgi = true;
 			break;	
@@ -251,61 +258,136 @@ void HttpResponse::addHeader(const std::string &pHeader, const std::string &pCon
 
 // ------------------------------------------
 
-void	HttpResponse::loadFile(const std::string& path, int code)
+void	HttpResponse::loadFile(const std::string& pPath)
 {
-	
+	std::ifstream file(pPath.c_str(), std::ios::binary);
+	if (!file) {
+		handleERROR(http::SC_FORBIDDEN);
+		return;
+	}
+
+	struct stat	st;
+	stat(pPath.c_str(), &st);
+	std::string	ext = subExt(pPath);
+
+	addHeader("Content-Length", longTOstring(st.st_size));
+	addHeader("Content-Type", HttpData::getMimeType(ext));
 }
 
 void		HttpResponse::handleGET(void)
 {
-	std::string		path = _request.getPath();
+	struct stat	st;
+	std::string	path = _location->path + _request.getPath();
 
-	if (isDirectory(path)) {
-		if (path.back() != '/') {
-			//_headers["Location"] = path + "/";
-			handleERROR(http::SC_MOVED_PERMANENTLY);
+	if (stat(path.c_str(), &st) != 0)
+		return ; //TODO: handle 404
+
+	if (S_ISDIR(st.st_mode)) {
+		if (path[path.length() - 1] != '/') {
+			std::string redirectPath = _request.getPath() + "/";
+			addHeader("Location", redirectPath);
+			return ; //TODO: handle 301 MOVED PERMA
+		}
+
+		std::string fullIndex = path + _location->index;
+		if (isRegFile(fullIndex)) {
+			loadFile(fullIndex);
 			return ;
 		}
 
-		std::string index = path + "index.html";
-		if (isRegFile(index)) {
-			loadFile(index, http::SC_OK);
-			return ;
-		}
+		if (_location->autoindex)
+		{
+			DIR *dir = opendir(path.c_str());
+			if (!dir)
+				return; // TODO: handle 403 forbidden
+	
+			struct dirent				*entry;
+			std::vector<std::string>	folders;
+			std::vector<std::string>	files;
 
-		//CONFIG: check for auto index and return if enabled
+			while ((entry = readdir(dir)) != NULL) {
+				struct stat s;
+				if (stat(entry->d_name, &s) == 0) {
+					if (S_ISDIR(s.st_mode))
+						folders.push_back(entry->d_name);
+					if (S_ISREG(s.st_mode))
+						files.push_back(entry->d_name);
+				}
+			}
+			std::sort(folders.begin(), folders.end());
+			std::sort(files.begin(), files.end());
+
+			for (size_t i = 0; i < folders.size(); ++i)
+				_response.body += "<a href=\"" + folders[i] + "\">" + folders[i] + "</a><br>\n";
+			for (size_t i = 0; i < files.size(); ++i)
+				_response.body += "<a href=\"" + files[i] + "\">" + files[i] + "</a><br>\n";
+
+			closedir(dir);
+			return;
+		}
 
 		handleERROR(http::SC_FORBIDDEN);
 		return ;
 	}
 
 	if (isRegFile(path)) {
-		loadFile(path, http::SC_OK);
+		loadFile(path);
 		return ;
 	}
 
 	handleERROR(http::SC_NOT_FOUND);
 }
 
-/// No body for this one, but the content length must predict
-/// how much it would actually send 
 void		HttpResponse::handleHEAD(void)
 {
-	std::string		path = _request.getPath();
+	struct stat	st;
+	std::string	path = _location->path + _request.getPath();
 
-	if (isDirectory(path)) {
-		if (path.back() != '/') {
-			//_headers["Location"] = path + "/";
-			handleERROR(http::SC_MOVED_PERMANENTLY);
+	if (stat(path.c_str(), &st) != 0)
+		return ; //TODO: handle 404
+
+	if (S_ISDIR(st.st_mode)) {
+		if (path[path.length() - 1] != '/') {
+			std::string redirectPath = _request.getPath() + "/";
+			addHeader("Location", redirectPath);
+			return ; //TODO: handle 301 MOVED PERMA
+		}
+
+		std::string fullIndex = path + _location->index;
+		if (isRegFile(fullIndex)) {
+			loadFile(fullIndex);
 			return ;
 		}
 
-		//CONFIG: check for auto index and return if enabled
+		if (_location->autoindex)
+		{
+			DIR *dir = opendir(path.c_str());
+			if (!dir)
+				return; // TODO: handle 403 forbidden
+	
+			struct dirent				*entry;
+			std::vector<std::string>	folders;
+			std::vector<std::string>	files;
 
-		std::string index = path + "index.html";
-		if (isRegFile(index)) {
-			loadFile(index, http::SC_OK);
-			return ;
+			while ((entry = readdir(dir)) != NULL) {
+				struct stat s;
+				if (stat(entry->d_name, &s) == 0) {
+					if (S_ISDIR(s.st_mode))
+						folders.push_back(entry->d_name);
+					if (S_ISREG(s.st_mode))
+						files.push_back(entry->d_name);
+				}
+			}
+			std::sort(folders.begin(), folders.end());
+			std::sort(files.begin(), files.end());
+
+			for (size_t i = 0; i < folders.size(); ++i)
+				_response.body += "<a href=\"" + folders[i] + "\">" + folders[i] + "</a><br>\n";
+			for (size_t i = 0; i < files.size(); ++i)
+				_response.body += "<a href=\"" + files[i] + "\">" + files[i] + "</a><br>\n";
+
+			closedir(dir);
+			return;
 		}
 
 		handleERROR(http::SC_FORBIDDEN);
@@ -313,16 +395,14 @@ void		HttpResponse::handleHEAD(void)
 	}
 
 	if (isRegFile(path)) {
-		loadFile(path, http::SC_OK);
+		loadFile(path);
 		return ;
 	}
-
-	// Check if the file has existed
 
 	handleERROR(http::SC_NOT_FOUND);
 }
 
-// Best to create a non overriding PUT method
+// TODO: need a Reverse Deque Technique like send but receive instead, might need to redo request 
 void		HttpResponse::handlePOST(void)
 {
 	

@@ -69,7 +69,7 @@ private:
 	void		handleDELETE(void);
 	void		handleERROR(int pCode);
 
-	void		loadFile(const std::string& pPath, int code);
+	void		loadFile(const std::string& pPath);
 };
 
 #endif
