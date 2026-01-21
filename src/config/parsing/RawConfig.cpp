@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:06 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/12 16:28:44 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/21 18:30:56 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,7 @@ Config::Server	RawServer::normalize(const Config::ServerDefaults &def)
 		);
 	}
 	if (!has_root)
-		locations.push_back(RawLocation("/"));
+		out.locations.push_back(RawLocation("/").normalize(*this, def));
 	std::sort(out.locations.begin(), out.locations.end());
 	return out;
 }
