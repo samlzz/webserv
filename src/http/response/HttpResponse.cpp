@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/20 17:07:16 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/21 16:36:07 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,11 +37,13 @@ HttpResponse::HttpResponse(const Config::Server& pServer)
 }
 
 HttpResponse::~HttpResponse(void) {
+	close(fd);
 }
 
 // =========================================================================== //
 //                            STATIC FUNCTION                                  //
 // =========================================================================== //
+#pragma region static function
 
 // Subsctract the location part of a URI path
 static inline std::string	subLocaPath(const std::string &pPath)
@@ -151,9 +153,12 @@ static inline bool		isExtAuth(const std::string &pExt, const Config::t_dict &pEx
 	return (false);
 }
 
+#pragma endregion
+
 // =========================================================================== //
 //                            MEMBER FUNCTION                                  //
 // =========================================================================== //
+#pragma region member function
 
 ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notifier)
 {
@@ -217,32 +222,64 @@ ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notif
 		return ConnEvent::none();
 	}
 
-	//TODO: toString
+	if (!_response.body.empty()) {
+		_chunkedStream.push(toString());
+	}
 }
 
-bool		HttpResponse::isDone(void) const { return (_isDone);}
+void		HttpResponse::chunkStream(void)
+{
+	char	buffer[__SIZE_OF_CHUNK__];
+	while (_chunkedStream.size() <= __MAX_CHUNK__) {
+		ssize_t	rd = read(fd, buffer, sizeof(buffer));
+
+		if (rd < 0) {
+			_isConnection = false;
+			return ;
+		}
+
+		if (rd == 0) {
+			_isDone = true;
+			fd = -1;
+			return ;
+		}
+		_chunkedStream.push(std::string(buffer, rd));
+	}
+}
 
 // Clean all the variable in the response class to prepare for the next incoming request
 void		HttpResponse::reset(void)
 {
 	_location = NULL;
 
-	_response.statusCode.code = 0;
+	_response.statusCode.code = 200;
 	_response.statusCode.reason.clear();
 	_response.headers.clear();
 	_response.body.clear();
 
 	_isDone = false;
+	_isConnection = true;
+	fd = -1;
+
+	//clear chunked stream too
 }
+
+IChunkedStream	&HttpResponse::stream(void) { return (_chunkedStream); }
+
+bool		HttpResponse::isDone(void) const { return (_isDone);}
+
 
 bool		HttpResponse::isConnectionClose(void) const
 {
 	
 }
 
+#pragma endregion
+
 // =========================================================================== //
 //                        PRIVATE MEMBER FUNCTION                              //
 // =========================================================================== //
+#pragma region private member function
 
 void	HttpResponse::Response::setStatusCode(const int &pCode) {
 	statusCode.code = pCode;
@@ -258,6 +295,11 @@ void	HttpResponse::loadFile(const std::string& pPath)
 	struct stat	st;
 	stat(pPath.c_str(), &st);
 	std::string	ext = subExt(pPath);
+
+	if (fd = open(pPath.c_str(), R_OK)) {
+		setError(http::SC_FORBIDDEN);
+		return;
+	}
 
 	addHeader("Content-Length", longTOstring(st.st_size));
 	addHeader("Content-Type", HttpData::getMimeType(ext));
@@ -326,17 +368,6 @@ void		HttpResponse::handleGET(void)
 	return setError(http::SC_NOT_FOUND);
 }
 
-void		HttpResponse::handleHEAD(void)
-{
-
-}
-
-// TODO: need a Reverse Deque Technique like send but receive instead, might need to redo request 
-void		HttpResponse::handlePOST(void)
-{
-
-}
-
 void		HttpResponse::handlePUT(void)
 {
 	struct stat		st;
@@ -388,7 +419,7 @@ void	HttpResponse::handleDELETE(void)
 	_response.setStatusCode(http::SC_NO_CONTENT);
 }
 
-void	HttpResponse::setError(int pCode)
+void	HttpResponse::setError(int pCode)W
 {
 	_response.body.clear();
 	_response.statusCode.code = pCode;
@@ -427,6 +458,4 @@ std::string	HttpResponse::toString(void) const
 	}
 }
 
-//#****************************************************************************#
-//#                             GETTER & SETTER                                #
-//#****************************************************************************#
+#pragma endregion

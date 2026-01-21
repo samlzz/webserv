@@ -23,6 +23,14 @@
 #include "server/connections/ConnEvent.hpp"
 #include "config/Config.hpp"
 
+# ifndef __MAX_CHUNK__
+# define __MAX_CHUNK__	3
+# endif
+
+# ifndef __SIZE_OF_CHUNK__
+# define __SIZE_OF_CHUNK__	32000
+# endif
+
 class HttpResponse : public IHttpResponse {
 public:
 
@@ -31,6 +39,7 @@ public:
 
 	// ========== Life Cycle ==========
 	virtual ConnEvent	build(const HttpRequest& pRequest, IWritableNotifier &notifier);
+	void				chunkStream(void);
 	virtual void		reset(void);
 
 	// ========== Output Production ==========
@@ -65,7 +74,10 @@ private:
 	Response		_response;
 
 	bool				_isDone;
+	bool				_isConnection;
 	ChunkedStream		_chunkedStream;
+
+	int			fd;
 
 	void		setError(int pCode);
 
