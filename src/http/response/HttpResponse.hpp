@@ -13,6 +13,7 @@
 #ifndef __HTTP_RESPONSE_HPP__
 #define __HTTP_RESPONSE_HPP__
 
+#include <ctime>
 #include <string>
 
 #include "http/response/IHttpResponse.hpp"
@@ -55,6 +56,17 @@ private:
 		std::string			body;
 	};
 
+	typedef std::map<std::string, std::string>	t_cookies;
+	struct SessionData
+	{
+		std::string		username;
+		time_t		last_activity;
+		t_cookies	_cookies;
+	};
+
+	typedef std::map<std::string, SessionData>	t_id;
+	t_id _sessionIds;
+	
 	void	addHeader(const std::string &pHeader, const std::string &pContent);
 
 	// ========== Response Config ==========
@@ -84,6 +96,22 @@ private:
 	std::string url_decode(const std::string &str);
 	void		handleOctetStream(void);
 	void		handleTextPlain(void);
+
+	std::map<std::string, std::string> 		parseCookies(void);
+	std::string searchIDInCookies(void);
+	std::string generateSessionId(void);
+	bool		checkSession(void);
+	bool		checkSession(const std::string &pSessionId);
+	void		createCookieHeader(const std::string &id);
+	void		addCookie(const std::string &id ,const std::string &pKey, const std::string &pValue);
+
+	void		createSession(const std::string &lang);
+	std::string buildCookieHeader(void);
+	void 		appendCookieHeader(const std::string &pHeader);
+	void 		createCookieHeader();
+	void 		clearSession(const std::string &pSessionId);
+	void 		clearExpiredSessions(time_t pExpirationTime);
+	void 		addCookieOptions(const std::string &pOptions);
 };
 
 #endif
