@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ChunkedStream.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:36:54 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/14 10:08:52 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/20 13:52:25 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ public:
 	ChunkedStream(): _queue() {}
 	virtual ~ChunkedStream() {}
 
+	virtual size_t		size(void) const			{return _queue.size(); }
 	virtual bool	hasChunk(void) const			{ return !_queue.empty(); }
 	virtual const std::string
 					&front(void) const				{ return _queue.front(); }

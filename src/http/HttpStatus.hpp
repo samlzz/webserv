@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpStatus.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 22:31:56 by achu              #+#    #+#             */
-/*   Updated: 2026/01/12 16:58:34 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/14 04:09:24 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,12 +54,6 @@ namespace http
 		, SC_GATEWAY_TIMEOUT = 504
 	};
 	std::ostream	&operator<<(std::ostream &os, e_status_code code);
-
-	struct StatusCode {
-		int				code;
-		const char*		reason;
-	};
-
 }
 
 #endif /* __HTTP_STATUS_HPP__ */

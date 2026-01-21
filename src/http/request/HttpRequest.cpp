@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/12 18:42:17 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/20 16:47:51 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -333,14 +333,15 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 		}
 
 		case BODY_MESSAGE_START: {
-			if (getMethod() == http::MTH_GET || getMethod() == http::MTH_HEAD) {
+			if (getMethod() == http::MTH_GET || getMethod() == http::MTH_HEAD || getMethod() == http::MTH_DELETE) {
 				UPDATE_STATE(PARSING_DONE);
 				break;
 			}
 			
 			if (hasHeaderName("Transfer-Encoding")) {
-				if (hasHeaderName("Content-Length"))
-					SEND_ERROR(http::SC_BAD_REQUEST);
+				// TODO:
+				// if (hasHeaderName("Content-Length"))
+				// 	SEND_ERROR(http::SC_BAD_REQUEST);
 				_transferEncoding = getHeaderValue("Transfer-Encoding");
 				if (_transferEncoding != "chunked")
 					SEND_ERROR(http::SC_NOT_IMPLEMENTED);
@@ -353,6 +354,8 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				if (!isDec(_buffer))
 					SEND_ERROR(http::SC_BAD_REQUEST);
 				_contentLength = std::atoi(_buffer.c_str());
+				if (_contentLength > MAX_BODY_LENGTH)
+					SEND_ERROR(http::SC_CONTENT_TOO_LARGE);
 				UPDATE_STATE(BODY_CONTENT);
 				_buffer.clear();
 				break;
@@ -407,6 +410,9 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 			break;
 		}
+
+		//TODO: 0 \r\n
+		//		\r\n
 
 		case BODY_CHUNKED_DATA_ALMOST_DONE:
 			if (ch != '\r') SEND_ERROR(http::SC_BAD_REQUEST);
