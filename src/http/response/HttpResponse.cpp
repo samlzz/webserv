@@ -378,6 +378,25 @@ void		HttpResponse::handlePOST(void)
 	// Handle multipart/form-data //upload
 	if (contentType.find("multipart/form-data") != std::string::npos)
 	{
+		//get upload dir path
+		std::string uploadDir;
+		if (_location->uploadDir.empty())
+			uploadDir = _location->path;
+		else
+			uploadDir = _location->uploadDir;
+
+		//if uploadDir doesn't exist, error 500
+		if (access(uploadDir.c_str(), F_OK) != 0)
+		{
+			return setError(http::SC_INTERNAL_SERVER_ERROR);
+		}
+		//write access
+		if (access(uploadDir.c_str(), W_OK) != 0)
+		{
+			return setError(http::SC_FORBIDDEN);
+		}
+
+
 		//SEARCH BOUNDARY
 		size_t	boundaryPos = contentType.find("boundary=");
 		if (boundaryPos == std::string::npos)
@@ -405,6 +424,13 @@ void		HttpResponse::handlePOST(void)
 					//EXTRACT FILENAME
 					std::string	filename = part.substr(filenamePos + 10, filenameEnd - filenamePos - 10);
 
+					//CLEAN FILENAME (remove path if any)
+					size_t lastSlash = filename.find_last_of("/\\");
+					if (lastSlash != std::string::npos)
+						filename = filename.substr(lastSlash + 1);
+					if (filename.empty())
+						continue;
+
 					//EXTRACT CONTENT
 					size_t	contentPos = part.find("\r\n\r\n");
 					if (contentPos != std::string::npos)
@@ -423,7 +449,7 @@ void		HttpResponse::handlePOST(void)
 							new_filename = filename + "_" + oss.str();
 
 						//SAVE FILE TO filePath
-						std::string	filePath = _location->path + "/" + new_filename;
+						std::string	filePath = uploadDir + "/" + new_filename;
 						std::ofstream	outFile(filePath.c_str(), std::ios::binary);
 						if (!outFile)
 							return setError(http::SC_INTERNAL_SERVER_ERROR);
@@ -431,7 +457,7 @@ void		HttpResponse::handlePOST(void)
 						outFile.close();
 
 						//A verifier? location dans le header si upload
-						addHeader("Location", new_filename);
+						addHeader("Location", "/" + new_filename);
 					}
 				}
 			}
@@ -442,7 +468,7 @@ void		HttpResponse::handlePOST(void)
 		return;
 	}
 	// Handle application/x-www-form-urlencoded //forms
-	else if (contentType == "application/x-www-form-urlencoded")
+	else if (contentType.find("application/x-www-form-urlencoded") != std::string::npos)
 	{
 		std::istringstream stream(_request.getBody());
 		std::string line;
