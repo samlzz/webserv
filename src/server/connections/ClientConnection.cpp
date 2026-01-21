@@ -6,12 +6,13 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/09 21:08:43 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/21 17:34:59 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
+#include <cstddef>
 #include <sys/poll.h>
+#include <sys/types.h>
 
 #include "ClientConnection.hpp"
 #include "config/Config.hpp"
@@ -23,7 +24,7 @@
 // ============================================================================
 
 ClientConnection::ClientConnection(int cliSockFd, const Config::Server &config)
-	: AConnection(cliSockFd), _conf(config)
+	: AConnection(cliSockFd), _req(), _resp(config)
 {
 	setNonBlocking();
 }
@@ -32,62 +33,74 @@ ClientConnection::ClientConnection(int cliSockFd, const Config::Server &config)
 // Methods
 // ============================================================================
 
-bool	ClientConnection::processIO(short revents)
+ConnEvent	ClientConnection::handleRead(void)
 {
-/* TODO: Expected logic
-	if ((revents & POLLIN) && !_request.done())
-		_request.consume(_fd);
+	char	buf[CLIENT_READ_BUF_SIZE];
+	ssize_t	n = recv(_fd, buf, CLIENT_READ_BUF_SIZE, 0);
 
-	if ((revents & POLLOUT) && _request.done())
-		_response.produce(_fd);
+	if (n <= 0)
+		return ConnEvent::close();
 
-	if (_response.done())
+	_req.feed(buf, static_cast<size_t>(n));
+	ConnEvent	ret = ConnEvent::none();
+	if (_req.isDone())
 	{
-		if (_response.shouldClose())
-			return false;
-
-		_request.reset();
-		_response.reset();
+		ret = _resp.build(_req, *this);
+		_events = POLLOUT;
 	}
-*/
-	if (revents & POLLIN)
-	{
-		char	buf[1024];
-		ssize_t	n = recv(_fd, buf, sizeof(buf) - 1, 0);
-
-		if (n > 0)
-		{
-			buf[n] = 0;
-			std::cout << "Received from fd " << _fd << ":\n" << buf << std::endl;
-			_events = POLLOUT;
-		}
-		else if (n <= 0)
-			return false;
-	}
-	if (revents & POLLOUT)
-	{
-		std::string	resp = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!";
-		ssize_t		sent = send(_fd, resp.c_str(), resp.length(), 0);
-
-		if (sent < 0)
-			std::cerr << "failed to send response to fd " << _fd << std::endl;
-		else
-			std::cout << "Response sent to fd " << _fd << std::endl;
-		_events = POLLIN;
-	}
-	return true;
+	return ret;
 }
+
+ConnEvent	ClientConnection::handleWrite(void)
+{
+	_resp.fillStream();
+	const std::string	&buf = _resp.stream().front();
+
+	ssize_t n = send(_fd,
+					buf.c_str() + _offset,
+					buf.size() - _offset,
+					0);
+	if (n <= 0)
+		return ConnEvent::close();
+
+	_offset += static_cast<size_t>(n);
+
+	// all curent buffer was sent
+	if (_offset == buf.size())
+	{
+		_resp.stream().pop();
+		_offset = 0;
+
+		if (!_resp.stream().hasChunk())
+		{
+			if (_resp.isDone())
+			{
+				if (_resp.shouldCloseConnection())
+					return ConnEvent::close();
+
+				_req.reset();
+				_resp.reset();
+				_events = POLLIN;
+			}
+			else
+				_events = 0;
+		}
+	}
+	return ConnEvent::none();
+}
+
+
 
 ConnEvent	ClientConnection::handleEvents(short revents)
 {
 	if (isErrEvent(revents))
 		return ConnEvent::close();
 
-	if ((revents & POLLIN) && !handleRead())
-		return ConnEvent::close();
+	if (revents & POLLIN)
+		return handleRead();
 
-	if ((revents & POLLOUT) && !handleWrite())
-		return ConnEvent::close();
+	if (revents & POLLOUT)
+		return handleWrite();
 
 	return ConnEvent::none();
 }
