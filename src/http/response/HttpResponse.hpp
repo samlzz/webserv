@@ -31,23 +31,8 @@
 # endif
 
 class HttpResponse : public IHttpResponse {
+
 public:
-
-	HttpResponse(const Config::Server& pServer);
-	~HttpResponse(void);
-
-	// ========== Life Cycle ==========
-	virtual ConnEvent			build(const HttpRequest& pRequest, IWritableNotifier &notifier);
-	void						chunkStream(void);
-	virtual void				reset(void);
-
-	// ========== Output Production ==========
-	virtual IChunkedStream&		stream(void);
-	virtual bool				isDone() const;
-	virtual bool				isConnectionClose(void) const;
-
-private:
-
 	// ========== Response Reply ==========
 	typedef std::map<std::string, std::string>	t_headers;
 	struct Response
@@ -62,6 +47,8 @@ private:
 		t_headers			headers;
 		std::string			body;
 	};
+
+private:
 
 	void	addHeader(const std::string &pHeader, const std::string &pContent);
 
@@ -88,7 +75,22 @@ private:
 
 	void		loadFile(const std::string& pPath);
 
-	std::string		toString(void) const;
+public:
+	HttpResponse(const Config::Server& pServer);
+	~HttpResponse(void);
+
+	// ========== Life Cycle ==========
+	virtual ConnEvent			build(const HttpRequest& pRequest, IWritableNotifier &notifier);
+	void						fillStream(void);
+	virtual void				reset(void);
+
+	// ========== Output Production ==========
+	virtual IChunkedStream&		stream(void);
+	virtual bool				isDone() const;
+	virtual bool				shouldCloseConnection(void) const;
+
 };
+
+std::ostream	&operator<<(std::ostream &pOut, const HttpResponse::Response &pResponse);
 
 #endif
