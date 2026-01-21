@@ -22,8 +22,10 @@ FILES =	main.cpp \
 		config/parsing/parseUtils.cpp \
 		config/validation/configValidate.cpp \
 		config/validation/validatePath.cpp \
+		http/HttpData.cpp \
 		http/HttpStatus.cpp \
 		http/request/HttpRequest.cpp \
+		http/response/HttpResponse.cpp \
 		server/Reactor.cpp \
 		server/connections/AConnection.cpp \
 		server/connections/ClientConnection.cpp \

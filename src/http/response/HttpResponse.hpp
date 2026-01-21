@@ -18,7 +18,6 @@
 #include "http/response/IHttpResponse.hpp"
 #include "http/response/ChunkedStream.hpp"
 #include "http/request/HttpRequest.hpp"
-#include "http/HttpData.hpp"
 
 #include "server/connections/ConnEvent.hpp"
 #include "config/Config.hpp"
@@ -38,9 +37,9 @@ public:
 	~HttpResponse(void);
 
 	// ========== Life Cycle ==========
-	virtual ConnEvent	build(const HttpRequest& pRequest, IWritableNotifier &notifier);
-	void				chunkStream(void);
-	virtual void		reset(void);
+	virtual ConnEvent			build(const HttpRequest& pRequest, IWritableNotifier &notifier);
+	void						chunkStream(void);
+	virtual void				reset(void);
 
 	// ========== Output Production ==========
 	virtual IChunkedStream&		stream(void);
