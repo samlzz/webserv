@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   IHttpResponse.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 10:12:02 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/14 16:55:09 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/21 16:58:01 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 #include "server/connections/IWritableNotifier.hpp"
 
 class HttpRequest;
-class ConnEvent;
+struct ConnEvent;
 
 class IHttpResponse: public IChunkEncoder {
 

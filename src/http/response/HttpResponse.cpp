@@ -3,16 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/21 16:36:37 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/21 17:19:46 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <algorithm>
-#include <fstream>
-#include <sstream>
 #include <string>
 
 #include <sys/types.h>
@@ -26,6 +24,7 @@
 #include "http/response/HttpResponse.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "config/Config.hpp"
+#include "config/validation/configValidate.hpp"
 
 // =========================================================================== //
 //                        CONSTRUCTOR & DESTRUCTOR                             //
@@ -80,18 +79,11 @@ static inline std::string	methodsTOstring(const std::vector<http::e_method> &pMe
 	return (methods.str());
 }
 
-// Create a content-value string for the header "Content-Length"
-static inline std::string	longTOstring(const long pSize) {
-	std::ostringstream stream;
-	stream << pSize;
-	return (stream.str());
-}
-
 // Subsctract the extension part of a URI path or file
 static inline std::string	subExt(const std::string& pPath)
 {
 	std::string		result;
-	ssize_t			start;
+	size_t			start;
 
 	if ((start = pPath.find_last_of('.')) == std::string::npos)
 		return ("");
@@ -103,20 +95,20 @@ static inline std::string	subExt(const std::string& pPath)
 	return (result);
 }
 
-static inline std::string		subCgiDir(const std::string& pPath)
-{
-	std::string		result;
-	ssize_t			end;
+// static inline std::string		subCgiDir(const std::string& pPath)
+// {
+// 	std::string		result;
+// 	size_t			end;
 
-	if ((end = pPath.find_first_of('/', 1)) == std::string::npos)
-		return ("");
+// 	if ((end = pPath.find_first_of('/', 1)) == std::string::npos)
+// 		return ("");
 
-	result = pPath.substr(0, end);
-	if (result.empty())
-		return ("");
+// 	result = pPath.substr(0, end);
+// 	if (result.empty())
+// 		return ("");
 
-	return (result);
-}
+// 	return (result);
+// }
 
 static bool		isRegFile(const std::string& pPath)
 {
@@ -136,22 +128,22 @@ static bool		isDirectory(const std::string& pPath)
 	return (S_ISDIR(st.st_mode));
 }
 
-/// Search every authorized extension in the location config
-/// @return A boolean that authorized or not the uri path extension
-static inline bool		isExtAuth(const std::string &pExt, const Config::t_dict &pExts)
-{
-	Config::t_dict::const_iterator it;
+// /// Search every authorized extension in the location config
+// /// @return A boolean that authorized or not the uri path extension
+// static inline bool		isExtAuth(const std::string &pExt, const Config::t_dict &pExts)
+// {
+// 	Config::t_dict::const_iterator it;
 
-	for (it = pExts.begin(); it != pExts.end(); it++)
-	{
-		std::string	ext = it->first;
-		std::string path = it->second;
-		if (pExt == ext)
-			return (true);
-	}
+// 	for (it = pExts.begin(); it != pExts.end(); it++)
+// 	{
+// 		std::string	ext = it->first;
+// 		std::string path = it->second;
+// 		if (pExt == ext)
+// 			return (true);
+// 	}
 
-	return (false);
-}
+// 	return (false);
+// }
 
 #pragma endregion
 
@@ -162,6 +154,7 @@ static inline bool		isExtAuth(const std::string &pExt, const Config::t_dict &pEx
 
 ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notifier)
 {
+	(void)notifier;
 	_request = pReq;
 	// TODO: Check request error
 
@@ -176,7 +169,7 @@ ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notif
 	if (_location->redirect) {
 		addHeader("Location", _location->redirect.get()->path);
 		_response.setStatusCode(_location->redirect.get()->code); //TODO: check for none
-		return ;
+		return ConnEvent::none();
 	}
 
 	http::e_method	curMethod = _request.getMethod();
@@ -222,12 +215,11 @@ ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notif
 		return ConnEvent::none();
 	}
 
-	if (!_response.body.empty()) {
-		_chunkedStream.push(toString());
-	}
+	_chunkedStream.push(toString(_response));
+	return ConnEvent::none();
 }
 
-void		HttpResponse::chunkStream(void)
+void		HttpResponse::fillStream(void)
 {
 	char	buffer[__SIZE_OF_CHUNK__];
 	while (_chunkedStream.size() <= __MAX_CHUNK__) {
@@ -266,13 +258,9 @@ void		HttpResponse::reset(void)
 
 IChunkedStream	&HttpResponse::stream(void) { return (_chunkedStream); }
 
-bool		HttpResponse::isDone(void) const { return (_isDone);}
+bool		HttpResponse::isDone(void) const { return (_isDone); }
 
-
-bool		HttpResponse::isConnectionClose(void) const
-{
-	
-}
+bool		HttpResponse::shouldCloseConnection(void) const { return (_isConnection); }
 
 #pragma endregion
 
@@ -296,12 +284,12 @@ void	HttpResponse::loadFile(const std::string& pPath)
 	stat(pPath.c_str(), &st);
 	std::string	ext = subExt(pPath);
 
-	if (fd = open(pPath.c_str(), R_OK)) {
+	if ((fd = open(pPath.c_str(), O_RDONLY)) < 0) {
 		setError(http::SC_FORBIDDEN);
 		return;
 	}
 
-	addHeader("Content-Length", longTOstring(st.st_size));
+	addHeader("Content-Length", toString(st.st_size));
 	addHeader("Content-Type", HttpData::getMimeType(ext));
 }
 
@@ -392,7 +380,7 @@ void		HttpResponse::handlePUT(void)
 		return setError(http::SC_INTERNAL_SERVER_ERROR);
 
 	std::string body = _request.getBody();
-	size_t	written = write(fd, body.c_str(), body.length());
+	ssize_t	written = write(fd, body.c_str(), body.length());
 	close(fd);
 
 	if (written < 0)
@@ -401,7 +389,7 @@ void		HttpResponse::handlePUT(void)
 	fileExist ? _response.setStatusCode(http::SC_NO_CONTENT) : _response.setStatusCode(http::SC_CREATED);
 }
 
-// Delete method to remove an existing file
+// Delete method to remove an existing filec
 void	HttpResponse::handleDELETE(void)
 {
 	std::string path = _location->path + _request.getPath();
@@ -426,7 +414,8 @@ void	HttpResponse::setError(int pCode)
 	_response.statusCode.reason = HttpData::getStatusType(pCode);
 
 	std::ostringstream	stream;
-	stream	<< "<html>\r\n"
+	stream	<< "<!DOCTYPE html>"
+			<< "<html>\r\n"
 			<< "<head><title>" << pCode << " " << HttpData::getStatusType(pCode) << "</title></head>\r\n"
 			<< "<body>\r\n"
 			<< "<h1>" << pCode << " " << HttpData::getStatusType(pCode) << "</h1>\r\n"
@@ -436,26 +425,24 @@ void	HttpResponse::setError(int pCode)
 	_response.body = stream.str();
 
 	addHeader("Content-Type", HttpData::getMimeType("text/html"));
-	addHeader("Content-Length", longTOstring(_response.body.length()));
+	addHeader("Content-Length", toString(_response.body.length()));
 }
 
-std::string	HttpResponse::toString(void) const
+std::ostream	&operator<<(std::ostream &pOut, const HttpResponse::Response &pResponse)
 {
-	std::ostringstream	stream;
+	pOut << "HTTP/1.1 " << pResponse.statusCode.code << " " << pResponse.statusCode.code << "\r\n";
 
-	stream	<< "HTTP/1.1 " << _response.statusCode.code << " " << _response.statusCode.reason << "\r\n";
-
-	t_headers	headers = _response.headers;
-	t_headers::const_iterator	it;
+	HttpResponse::t_headers	headers = pResponse.headers;
+	HttpResponse::t_headers::const_iterator	it;
 	for (it = headers.begin(); it != headers.end(); it++) {
-		stream << it->first << ": " << it->second << "\r\n";
+		pOut << it->first << ": " << it->second << "\r\n";
 	}
-	stream << "\r\n";
+	pOut << "\r\n";
 
-	if (!_response.body.empty()) {
-		stream << _response.body;
-		
+	if (!pResponse.body.empty()) {
+		pOut << pResponse.body;
 	}
+	return (pOut);
 }
 
 #pragma endregion
