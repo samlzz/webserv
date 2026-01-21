@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/21 16:36:07 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/21 16:36:37 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -419,7 +419,7 @@ void	HttpResponse::handleDELETE(void)
 	_response.setStatusCode(http::SC_NO_CONTENT);
 }
 
-void	HttpResponse::setError(int pCode)W
+void	HttpResponse::setError(int pCode)
 {
 	_response.body.clear();
 	_response.statusCode.code = pCode;
