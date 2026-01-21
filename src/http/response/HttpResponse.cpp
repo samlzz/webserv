@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/21 17:17:21 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/21 17:19:46 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -380,7 +380,7 @@ void		HttpResponse::handlePUT(void)
 		return setError(http::SC_INTERNAL_SERVER_ERROR);
 
 	std::string body = _request.getBody();
-	size_t	written = write(fd, body.c_str(), body.length());
+	ssize_t	written = write(fd, body.c_str(), body.length());
 	close(fd);
 
 	if (written < 0)

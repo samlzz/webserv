@@ -6,13 +6,18 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 14:21:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/09 14:59:11 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/20 17:53:15 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <cstddef>
+#include <set>
+#include <sys/wait.h>
+
 #include "Reactor.hpp"
 #include "server/Exceptions.hpp"
-#include <cstddef>
+#include "server/connections/ConnEvent.hpp"
+#include "server/connections/IConnection.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -54,7 +59,53 @@ void	Reactor::stop(void)
 	_running = false;
 }
 
-// Main poll listen loop
+static inline void	_reapChildsProcess(void)
+{
+	while (waitpid(-1, 0, WNOHANG));
+}
+
+bool	Reactor::manageConnEvent(ConnEvent ev, size_t idx)
+{
+	switch (ev.type)
+	{
+	case ConnEvent::CE_SPAWN:
+	{
+		addConnection(ev.conn);
+		IConnection	*buddy = ev.conn->buddy();
+		while (buddy)
+		{
+			addConnection(buddy);
+			buddy = buddy->buddy();
+		}
+		break;
+	}
+
+	case ConnEvent::CE_CLOSE:
+	{
+		IConnection	*victim = _connections[idx];
+		IConnection	*buddy = victim->buddy();
+
+		if (buddy)
+		{
+			victim->detachBuddy();
+			if (buddy->buddy() == victim)
+				buddy->detachBuddy();
+			_pendingClose.insert(buddy);
+		}
+		removeConnection(idx);
+		return true;
+	}
+	case ConnEvent::CE_NONE:
+		__attribute__ ((fallthrough));
+	default:
+		break;
+	}
+	return false;
+}
+
+/**
+ * Main poll listen loop
+ */
 void	Reactor::run(void)
 {
 	_running = true;
@@ -64,27 +115,29 @@ void	Reactor::run(void)
 		if (ret < 0)
 			throw SysError("poll");
 
-		for (size_t i = 0; i < _pfds.size(); ++i)
+		size_t	i = 0;
+		while (i < _pfds.size())
 		{
-			if (_pfds[i].revents == 0)
-				continue;
-
 			IConnection	*conn = _connections[i];
-			ConnEvent	ev = conn->handleEvents(_pfds[i].revents);
 
-			if (ev.type == ConnEvent::CE_SPAWN)
+			if (_pendingClose.count(conn))
 			{
-				addConnection(ev.spawned);
-			}
-			else if (ev.type == ConnEvent::CE_CLOSE)
-			{
+				_pendingClose.erase(conn);
 				removeConnection(i);
-				--i;
 				continue;
 			}
-
+			if (_pfds[i].revents == 0)
+			{
+				i++;
+				continue;
+			}
+			if (manageConnEvent(conn->handleEvents(_pfds[i].revents), i))
+				continue;
+			
 			_pfds[i].events = conn->events();
 			_pfds[i].revents = 0;
+			i++;
 		}
+		_reapChildsProcess();
 	}
 }

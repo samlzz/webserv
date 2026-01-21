@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:49:52 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/09 14:36:24 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/20 14:07:05 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 
 #include "AConnection.hpp"
 #include "server/Exceptions.hpp"
+#include "server/connections/IConnection.hpp"
 
 // ============================================================================
 // Construction
@@ -65,3 +66,6 @@ void	AConnection::setNonBlocking(void)
 	if (flags == -1 || fcntl(_fd, F_SETFL, flags | O_NONBLOCK) == -1)
 		throw SysError("fcntl");
 }
+
+IConnection	*AConnection::buddy(void)	{ return 0; }
+void		AConnection::detachBuddy(void) {}

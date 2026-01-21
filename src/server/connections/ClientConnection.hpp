@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/14 09:45:55 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/21 17:25:44 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,15 +19,18 @@
 # include "AConnection.hpp"
 # include "http/request/HttpRequest.hpp"
 # include "IWritableNotifier.hpp"
+#include "http/response/HttpResponse.hpp"
+# include "server/connections/ConnEvent.hpp"
 
-# define RECV_BUF_SIZE	2048
+# ifndef CLIENT_READ_BUF_SIZE
+#  define CLIENT_READ_BUF_SIZE	2048
+# endif
 
 class ClientConnection: public AConnection, public IWritableNotifier {
 
 private:
-	const Config::Server	&_conf;
 	HttpRequest				_req;
-//	HttpResponse			_resp;
+	HttpResponse			_resp;
 	size_t					_offset;
 
 	// forbidden
@@ -35,8 +38,8 @@ private:
 	ClientConnection(const ClientConnection& other);
 	ClientConnection& operator=(const ClientConnection& other);
 
-	bool	handleRead(void);
-	bool	handleWrite(void);
+	ConnEvent	handleRead(void);
+	ConnEvent	handleWrite(void);
 
 public:
 	ClientConnection(int cliSockFd, const Config::Server &config);

@@ -13,6 +13,7 @@
 #ifndef __HTTP_RESPONSE_HPP__
 #define __HTTP_RESPONSE_HPP__
 
+#include <cstddef>
 #include <string>
 
 #include "http/response/IHttpResponse.hpp"
@@ -89,6 +90,9 @@ public:
 	virtual bool				isDone() const;
 	virtual bool				shouldCloseConnection(void) const;
 
+	// ========== Encoder ==========
+	virtual void	encode(const char *pbuf, size_t pBufSize);
+	virtual void	finalize(void);
 };
 
 std::ostream	&operator<<(std::ostream &pOut, const HttpResponse::Response &pResponse);
