@@ -45,6 +45,7 @@ std::ostream	&operator<<(std::ostream &os, e_status_code code)
 		case http::SC_LENGTH_REQUIRED:         os << "411"; break;
 		case http::SC_CONTENT_TOO_LARGE:       os << "413"; break;
 		case http::SC_URI_TOO_LONG:            os << "414"; break;
+		case http::SC_UNSUPPORTED_MEDIA_TYPE:  os << "415"; break;
 		case http::SC_INTERNAL_SERVER_ERROR:   os << "500"; break;
 		case http::SC_NOT_IMPLEMENTED:         os << "501"; break;
 		default:                               os << "NONE"; break;

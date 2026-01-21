@@ -77,7 +77,13 @@ private:
 
 	void		loadFile(const std::string& pPath);
 
-	std::string		toString(void) const;
+	// std::string		toString(void) const;
+
+	void		handleMultipart(void);
+	void		handleUrlEncoded(void);
+	std::string url_decode(const std::string &str);
+	void		handleOctetStream(void);
+	void		handleTextPlain(void);
 };
 
 #endif

@@ -33,6 +33,7 @@ void HttpData::initData(void)
 	statusData[411] = "Length Required";
 	statusData[413] = "Payload Too Large";
 	statusData[414] = "URI Too Long";
+	statusData[415] = "Unsupported Media Type";
 	statusData[431] = "Request Header Fields Too Large";
 
 	statusData[500] = "Internal Server Error";
@@ -43,7 +44,33 @@ void HttpData::initData(void)
 
 	// ====== Mime Init ======
 	mimeData["html"]	= "text/html";
-	mimeData["png"]		= "images/png";
+	mimeData["txt"]		= "text/plain";
+	mimeData["css"]		= "text/css";
+	mimeData["js"]		= "application/javascript";
+
+	mimeData["png"]		= "image/png";
+	mimeData["jpg"]		= "image/jpg";
+	mimeData["jpeg"]	= "image/jpeg";
+	mimeData["gif"]		= "image/gif";
+	mimeData["svg"]		= "image/svg+xml";
+	mimeData["ico"]		= "image/x-icon";
+
+	mimeData["mp4"]		= "video/mp4";
+	mimeData["mp3"]		= "audio/mpeg";	
+	
+	// mimeData["json"]	= "application/json";
+	// mimeData["xml"]		= "application/xml";
+
+	mimeData["pdf"]		= "application/pdf";
+	mimeData["zip"]		= "application/zip";
+	mimeData["x-tar"]	= "application/x-tar";
+	mimeData["gzip"]	= "application/gzip";
+
+	contentTypeData["application/x-www-form-urlencoded"] = CT_APPLICATION_X_WWW_FORM_URLENCODED;
+	contentTypeData["multipart/form-data"] = CT_MULTIPART_FORM_DATA;
+	contentTypeData["application/octet-stream"] = CT_BINARY;
+	contentTypeData["text/plain"] = CT_TEXT_PLAIN;
+
 }
 
 // =========================================================================== //
@@ -64,4 +91,19 @@ std::string	HttpData::getMimeType(const std::string &pExt)
 	if (it != mimeData.end())
 		return (it->second);
 	return ("application/octet-stream");
+}
+
+int HttpData::getContentTypeKind(const std::string &pContentType)
+{
+	// t_contentTypeData::iterator	it = contentTypeData.find(pContentType);
+	// if (it != contentTypeData.end())
+	// 	return (it->second);
+	// return (CT_UNKNOWN);
+
+	for (t_contentTypeData::iterator it = contentTypeData.begin(); it != contentTypeData.end(); ++it)
+	{
+		if (pContentType.find(it->first) != std::string::npos)
+			return it->second;
+	}
+	return CT_UNKNOWN;
 }
