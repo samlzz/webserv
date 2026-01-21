@@ -6,13 +6,15 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/21 18:07:49 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/21 20:05:59 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "HttpRequest.hpp"
 #include <cstdlib>
 #include <iostream>
+#include <algorithm>
+
+#include "HttpRequest.hpp"
 
 #define CURRENT_STATE() _state
 #define UPDATE_STATE(S) _state = S
@@ -27,23 +29,11 @@
 //#                        CONSTRUCTOR & DESTRUCTOR                            #
 //#****************************************************************************#
 
-HttpRequest::HttpRequest(void)
-{
-	UPDATE_STATE(REQ_METHOD);
-
-	_path.clear();
-	_query.clear();
-	_fragment.clear();
-	_body.clear();
-	_headers.clear();
-
-	_contentLength = 0;
-	_transferLength = 0;
-	_status = 200;
+HttpRequest::HttpRequest(void) {
+	reset();
 }
 
-HttpRequest::~HttpRequest(void)
-{
+HttpRequest::~HttpRequest(void) {
 	_buffer.clear();
 }
 
@@ -88,9 +78,10 @@ static int		htod(const std::string& pHex)
 	return (result);
 }
 
-//#****************************************************************************#
-//#                             MEMBER FUNCTION                                #
-//#****************************************************************************#
+// ========================================================================== //
+//                             MEMBER FUNCTION                                //
+// ========================================================================== //
+#pragma region Member Function
 
 /// @brief None-blocking function using a state machine that parse all the incoming request from client to proceed
 /// @param pBuffer Insert the socket incoming buffer string
@@ -111,21 +102,16 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				break;
 			}
 
-			if (_buffer == "GET")			_method = http::MTH_GET;
-			else if (_buffer == "HEAD")		_method = http::MTH_HEAD;
-			else if (_buffer == "POST")		_method = http::MTH_POST;
-			else if (_buffer == "PUT")		_method = http::MTH_PUT;
-			else if (_buffer == "DELETE")	_method = http::MTH_DELETE;
-			else {
-				if (_buffer.empty()) {
-					SEND_ERROR(http::SC_NOT_FOUND);
-				} else {
-					SEND_ERROR(http::SC_NOT_IMPLEMENTED);
-				}
-			}
+			if (_buffer == "GET")			_request.method = http::MTH_GET;
+			else if (_buffer == "HEAD")		_request.method = http::MTH_HEAD;
+			else if (_buffer == "POST")		_request.method = http::MTH_POST;
+			else if (_buffer == "PUT")		_request.method = http::MTH_PUT;
+			else if (_buffer == "DELETE")	_request.method = http::MTH_DELETE;
+			else SEND_ERROR(http::SC_NOT_IMPLEMENTED);
 
 			UPDATE_STATE(REQ_SPACE_BEFORE_URI);
 			_buffer.clear();
+
 			__attribute__ ((fallthrough));
 		}
 
@@ -144,13 +130,13 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case REQ_URI_PATH: {
 			if (ch == ' ') {
-				_path = _buffer;
+				_request.uri.path = _buffer;
 				UPDATE_STATE(REQ_SPACE_BEFORE_VER);
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '?' || ch == '#') {
-				_path = _buffer;
+				_request.uri.path = _buffer;
 				UPDATE_STATE(ch == '?' ? REQ_URI_QUERY : REQ_URI_FRAGMENT);
 				_buffer.clear();
 				break;
@@ -165,13 +151,13 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case REQ_URI_QUERY: {
 			if (ch == ' ') {
-				_query = _buffer;
+				_request.uri.query = _buffer;
 				UPDATE_STATE(REQ_SPACE_BEFORE_VER);
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '#') {
-				_query = _buffer;
+				_request.uri.query = _buffer;
 				UPDATE_STATE(REQ_URI_FRAGMENT);
 				_buffer.clear();
 				break;
@@ -186,7 +172,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case REQ_URI_FRAGMENT: {
 			if (ch == ' ') {
-				_fragment = _buffer;
+				_request.uri.fragment = _buffer;
 				UPDATE_STATE(REQ_SPACE_BEFORE_VER);
 				_buffer.clear();
 				__attribute__ ((fallthrough));
@@ -236,7 +222,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case REQ_HTTP_MAJOR_VER:
 			if (!std::isdigit(ch)) SEND_ERROR(http::SC_BAD_REQUEST);
-			_verMaj = ch;
+			_request.verMaj = ch - '0';
 			UPDATE_STATE(REQ_HTTP_DOT);
 			break;
 
@@ -247,7 +233,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case REQ_HTTP_MINOR_VER:
 			if (!std::isdigit(ch)) SEND_ERROR(http::SC_BAD_REQUEST);
-			_verMin = ch;
+			_request.verMin = ch - '0';
 			UPDATE_STATE(REQ_ALMOST_DONE);
 			_buffer.clear();
 			break;
@@ -307,7 +293,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				_buffer += ch;
 				break;
 			}
-			setLastHeader(_buffer);
+			addHeader(_buffer, "");
 			UPDATE_STATE(HEADER_FIELD_ALMOST_DONE);
 			_buffer.clear();
 			__attribute__ ((fallthrough));
@@ -338,19 +324,19 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				break;
 			}
 			
-			if (hasHeaderName("Transfer-Encoding")) {
+			if (hasHeader("Transfer-Encoding")) {
 				// TODO:
-				// if (hasHeaderName("Content-Length"))
+				// if (hasHeader("Content-Length"))
 				// 	SEND_ERROR(http::SC_BAD_REQUEST);
-				_transferEncoding = getHeaderValue("Transfer-Encoding");
+				_transferEncoding = getHeader("Transfer-Encoding");
 				if (_transferEncoding != "chunked")
 					SEND_ERROR(http::SC_NOT_IMPLEMENTED);
 				UPDATE_STATE(BODY_CHUNKED_SIZE);
 				break;
 			}
 
-			if (hasHeaderName("Content-Length")) {
-				_buffer = getHeaderValue("Content-Length");
+			if (hasHeader("Content-Length")) {
+				_buffer = getHeader("Content-Length");
 				if (!isDec(_buffer))
 					SEND_ERROR(http::SC_BAD_REQUEST);
 				_contentLength = std::atoi(_buffer.c_str());
@@ -400,7 +386,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 
 			if (readbytes > 0) {
-				_body.append(pBuffer + i, readbytes);
+				_request.body.append(pBuffer + i, readbytes);
 				_transferLength -= readbytes;
 				i += readbytes - 1;
 			}
@@ -439,7 +425,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			size_t		available = pSize - i;
 			size_t		readbytes = std::min(remaining, available);
 
-			_body.append(pBuffer + i, readbytes);
+			_request.body.append(pBuffer + i, readbytes);
 			_contentLength -= readbytes;
 
 			i += readbytes;
@@ -462,22 +448,6 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 	}
 }
 
-// Use this function to determine if the socket should be kept for the next request
-bool	HttpRequest::isKeepAlive(void)
-{
-	std::string connection = getHeaderValue("Connection");
-
-	if (!connection.empty()) {
-		if (connection == "close") return (false);
-		if (connection == "keep-alive") return (true);
-	}
-
-	if (_verMaj == "1" && _verMin == "1")
-		return (true);
-
-	return (false);
-}
-
 // Use this function to check is the request has finished parsing at the end
 bool	HttpRequest::isDone(void)
 {
@@ -489,42 +459,54 @@ void	HttpRequest::reset(void)
 {
 	UPDATE_STATE(REQ_METHOD);
 
-	_path.clear();
-	_query.clear();
-	_fragment.clear();
-	_body.clear();
-	_headers.clear();
+	_request.method = http::MTH_UNKNOWN;
+	_request.uri.path.clear();
+	_request.uri.query.clear();
+	_request.uri.fragment.clear();
+	_request.verMaj = -1;
+	_request.verMin = -1;
+	_request.headers.clear();
+	_request.body.clear();
 
 	_contentLength = 0;
 	_transferLength = 0;
 	_status = 200;
+
+	_isDone = false;
 }
+
+#pragma endregion
 
 //#****************************************************************************#
 //#                             GETTER & SETTER                                #
 //#****************************************************************************#
-
-bool	HttpRequest::hasHeaderName(const std::string &pKey) const {
-	for (size_t i = 0; i < _headers.size(); ++i)
-	{
-		if (_headers[i].first == pKey)
-			return (true);
-	}
-	return (false);
-};
-std::string		HttpRequest::getHeaderValue(const std::string& pKey) const {
-	for (size_t i = 0; i < _headers.size(); ++i)
-	{
-		if (_headers[i].first == pKey)
-			return (_headers[i].second);
-	}
-	return ("");
-};
+#pragma region Getter & Setter
 
 void		HttpRequest::addHeader(const std::string& pKey, const std::string& pValue) {
-	_headers.push_back(std::make_pair(pKey, pValue));
+	_request.headers[pKey] = pValue;
 }
-void		HttpRequest::setLastHeader(const std::string& pValue) { _headers.back().second = pValue; }
+
+bool	HttpRequest::hasHeader(const std::string &pKey) const
+{
+	t_headers	headers = _request.headers;
+	t_headers::const_iterator	it = std::find(headers.begin(), headers.end(), it);
+
+	if (it == headers.end())
+		return (false);
+
+	return (true);
+};
+
+std::string		HttpRequest::getHeader(const std::string& pKey) const
+{
+	t_headers	headers = _request.headers;
+	t_headers::const_iterator	it = std::find(headers.begin(), headers.end(), it);
+
+	if (it == headers.end())
+		return ("");
+
+	return (it->second);
+};
 
 //#****************************************************************************#
 //#                            OPERATOR OVERLOAD                               #
@@ -532,15 +514,17 @@ void		HttpRequest::setLastHeader(const std::string& pValue) { _headers.back().se
 
 std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 {
+	pOut << pRequest.getState() << std::endl;
+
 	pOut << pRequest.getMethod() << " ";
 	pOut << pRequest.getPath() << pRequest.getQuery() << pRequest.getFragment() << " ";
 	pOut << pRequest.getVerMaj() << "." << pRequest.getVerMin() << std::endl;
 
-	for (size_t i = 0; i < pRequest.getHeaders().size(); i++)
-	{
-		std::cout << pRequest.getHeaders()[i].first << ": ";
-		std::cout << pRequest.getHeaders()[i].second << std::endl;
-	}
+	// for (size_t i = 0; i < pRequest.getHeaders().size(); i++)
+	// {
+	// 	std::cout << pRequest.getHeaders().[i].first << ": ";
+	// 	std::cout << pRequest.getHeaders().[i].second << std::endl;
+	// }
 
 	std::cout << pRequest.getBody();
 	

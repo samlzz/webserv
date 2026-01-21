@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/21 17:47:19 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/21 19:48:40 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -263,7 +263,20 @@ IChunkedStream	&HttpResponse::stream(void) { return (_chunkedStream); }
 
 bool		HttpResponse::isDone(void) const { return (_isDone); }
 
-bool		HttpResponse::shouldCloseConnection(void) const { return (_isConnection); }
+// Use this function to determine if the socket should be kept for the next request
+bool		HttpResponse::shouldCloseConnection(void) const {
+	// std::string connection = getHeaderValue("Connection");
+
+	// if (!connection.empty()) {
+	// 	if (connection == "close") return (false);
+	// 	if (connection == "keep-alive") return (true);
+	// }
+
+	// if (_verMaj == "1" && _verMin == "1")
+	// 	return (true);
+
+	return (false);
+}
 
 #pragma endregion
 
