@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/21 19:43:54 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/21 20:24:51 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,8 @@ ConnEvent	ClientConnection::handleRead(void)
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
 		<< "Received " << n << " bytes from client on fd " << _fd << std::endl;
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
-		<< WS_LOG_SEP << "\n" << std::string(buf, n)
+		<< "Received buffer:\n"
+		<< WS_LOG_SEP << '\n' << std::string(buf, n)
 		<< WS_LOG_SEP << std::endl;
 
 	_req.feed(buf, static_cast<size_t>(n));
@@ -62,12 +63,13 @@ ConnEvent	ClientConnection::handleRead(void)
 	if (_req.isDone())
 	{
 		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
-			<< WS_LOG_SEP << "\n" << "Parsed request: \n" << _req
+			<< "Parsed request:\n"
+			<< WS_LOG_SEP << '\n' << _req
 			<< WS_LOG_SEP << std::endl;
 		ret = _resp.build(_req, *this);
 		_events = POLLOUT;
 		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
-			<< "Build response for client " << _fd
+			<< "Built response for client " << _fd
 			<< " , wait for POLLOUT..." << std::endl;
 	}
 	return ret;
@@ -92,6 +94,9 @@ ConnEvent	ClientConnection::handleWrite(void)
 
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
 		<< "Send " << n << " bytes to client on fd " << _fd << std::endl;
+	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_TRACE) << "Buffer sent:\n"
+		<< WS_LOG_SEP << '\n' << buf.c_str() + _offset
+		<< WS_LOG_SEP << std::endl;
 
 	_offset += static_cast<size_t>(n);
 
@@ -100,8 +105,6 @@ ConnEvent	ClientConnection::handleWrite(void)
 	{
 		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
 			<< "Current buffer was totally sent" << std::endl;
-		ft_log::log(WS_LOG_SERVER_CLI)
-			<< WS_LOG_SEP << "\n" << buf << WS_LOG_SEP << std::endl;
 		_resp.stream().pop();
 		_offset = 0;
 
@@ -110,7 +113,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 			if (_resp.isDone())
 			{
 				ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
-					<< "Sent response to client " << _fd << std::endl;
+					<< "Response was sent to client " << _fd << std::endl;
 
 				if (_resp.shouldCloseConnection())
 					return ConnEvent::close();
@@ -122,7 +125,11 @@ ConnEvent	ClientConnection::handleWrite(void)
 					<< "Wait for POLLIN..." << std::endl;
 			}
 			else
+			{
 				_events = 0;
+				ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
+					<< "No buffer left in response stream, wait for it..." << std::endl;
+			}
 		}
 	}
 	return ConnEvent::none();

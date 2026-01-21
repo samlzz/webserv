@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/21 18:58:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/21 19:46:49 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/21 20:25:10 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 # endif
 
 # ifndef WS_LOG_SEP_WIDTH
-#  define WS_LOG_SEP_WIDTH		80
+#  define WS_LOG_SEP_WIDTH		40
 # endif
 
 # define WS_LOG_SEP				std::string(WS_LOG_SEP_WIDTH, WS_LOG_SEPARATOR)

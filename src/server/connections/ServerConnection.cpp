@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 08:50:37 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/21 19:59:26 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/21 20:01:18 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ ServerConnection::ServerConnection(const Config::Server &servConfig)
 	ft_log::log(WS_LOG_SERVER, ft_log::LOG_INFO)
 		<< "Server listening on "
 		<< inet_ntoa(_conf.host) << ":" << _conf.port
-		<< "..." << std::endl;
+		<< " ..." << std::endl;
 }
 
 // ============================================================================
