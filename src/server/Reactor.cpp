@@ -61,7 +61,7 @@ void	Reactor::stop(void)
 
 static inline void	_reapChildsProcess(void)
 {
-	while (waitpid(-1, 0, WNOHANG));
+	while (waitpid(-1, 0, WNOHANG) > 0);
 }
 
 bool	Reactor::manageConnEvent(ConnEvent ev, size_t idx)
