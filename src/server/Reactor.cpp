@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 14:21:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/20 17:53:15 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/21 19:53:28 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,10 @@
 #include <sys/wait.h>
 
 #include "Reactor.hpp"
+#include "config/validation/configValidate.hpp"
+#include "ft_log/LogOp.hpp"
+#include "ft_log/level.hpp"
+#include "log.h"
 #include "server/Exceptions.hpp"
 #include "server/connections/ConnEvent.hpp"
 #include "server/connections/IConnection.hpp"
@@ -38,6 +42,9 @@ Reactor::~Reactor()
 
 void	Reactor::removeConnection(size_t idx)
 {
+	ft_log::log(WS_LOG_SERVER, ft_log::LOG_INFO)
+		<< "Close connection on fd " << _connections[idx]->fd() << std::endl;
+
 	delete _connections[idx];
 
 	_connections[idx] = _connections.back();
@@ -50,6 +57,11 @@ void	Reactor::removeConnection(size_t idx)
 
 void	Reactor::addConnection(IConnection* conn)
 {
+	ft_log::log(WS_LOG_SERVER, ft_log::LOG_INFO)
+		<< "New connection on fd " << conn->fd()
+		<< (conn->buddy() ? "(buddy: " + toString(conn->buddy()->fd()) + ")" : "")
+		<< std::endl;
+
 	_connections.push_back(conn);
 	_pfds.push_back(conn->pollFd());
 }

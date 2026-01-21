@@ -6,10 +6,11 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 08:50:37 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/21 18:49:09 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/21 19:59:26 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
@@ -18,6 +19,9 @@
 #include "AConnection.hpp"
 #include "ClientConnection.hpp"
 #include "ConnEvent.hpp"
+#include "ft_log/LogOp.hpp"
+#include "ft_log/level.hpp"
+#include "log.h"
 #include "server/Exceptions.hpp"
 
 // ============================================================================
@@ -40,6 +44,11 @@ ServerConnection::ServerConnection(const Config::Server &servConfig)
 		throw SysError("bind");
 	if (listen(_fd, LISTEN_QUEUE) < 0)
 		throw SysError("listen");
+
+	ft_log::log(WS_LOG_SERVER, ft_log::LOG_INFO)
+		<< "Server listening on "
+		<< inet_ntoa(_conf.host) << ":" << _conf.port
+		<< "..." << std::endl;
 }
 
 // ============================================================================
