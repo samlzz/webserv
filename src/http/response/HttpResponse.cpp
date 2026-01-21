@@ -171,6 +171,13 @@ ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notif
 	if (_location->redirect) {
 		addHeader("Location", _location->redirect.get()->path);
 		_response.setStatusCode(_location->redirect.get()->code); //TODO: check for none
+
+		//Add 301 or 302 redirect // 302 by default
+		if (_location->redirect && _location->redirect.get()->code == http::SC_MOVED_PERMANENTLY) {
+			_response.setStatusCode(_location->redirect.get()->code);
+		} else {
+			//A verifier? MOVE_TEMPORARILY
+			_response.setStatusCode(http::SC_FOUND);
 		return ;
 	}
 
@@ -278,12 +285,12 @@ void		HttpResponse::handleGET(void)
 			std::string redirectPath = _request.getPath() + "/";
 			addHeader("Location", redirectPath);
 
-			//Add 301 or 302 redirect // 302 by default
-			if (_location->redirect && _location->redirect.get()->code == http::SC_MOVED_PERMANENTLY) {
-				_response.setStatusCode(_location->redirect.get()->code);
-			} else {
-				//A verifier? MOVE_TEMPORARILY
-				_response.setStatusCode(http::SC_FOUND);
+			// //Add 301 or 302 redirect // 302 by default
+			// if (_location->redirect && _location->redirect.get()->code == http::SC_MOVED_PERMANENTLY) {
+			// 	_response.setStatusCode(_location->redirect.get()->code);
+			// } else {
+			// 	//A verifier? MOVE_TEMPORARILY
+			// 	_response.setStatusCode(http::SC_FOUND);
 			}
 			return ; //TODO: handle 301 MOVED PERMA
 		}
@@ -336,7 +343,9 @@ void		HttpResponse::handleGET(void)
 
 void		HttpResponse::handleHEAD(void)
 {
-
+	// "The HEAD method is identical to GET except that the server MUST NOT send a message body in the response."
+	handleGET();
+	_response.body.clear();
 }
 
 // TODO: need a Reverse Deque Technique like send but receive instead, might need to redo request 
@@ -373,13 +382,13 @@ void		HttpResponse::handlePOST(void)
 		size_t	boundaryPos = contentType.find("boundary=");
 		if (boundaryPos == std::string::npos)
 			return setError(http::SC_BAD_REQUEST);
-		std::string	boundary = "--" + contentType.substr(boundaryPos + 9);
+		std::string	boundary = contentType.substr(boundaryPos + 9);
 		std::string delimiter = "--" + boundary;
 
 		size_t	pos = 0;
 		std::string	body = _request.getBody();
 
-		while (pos = body.find(delimiter, pos) != std::string::npos)
+		while ((pos = body.find(delimiter, pos)) != std::string::npos)
 		{	
 			size_t	nextPos = body.find(delimiter, pos + delimiter.length());
 			if (nextPos == std::string::npos)
@@ -406,10 +415,12 @@ void		HttpResponse::handlePOST(void)
 						//add random time to filename to avoid overwriting
 						std::string new_filename;
 						size_t ext_pos = filename.find_last_of(".");
+						std::ostringstream oss;
+						oss << std::time(0);
 						if (ext_pos != std::string::npos)
-							new_filename = filename.substr(0, ext_pos) + "_" + std::to_string(std::time(0)) + filename.substr(ext_pos);
+							new_filename = filename.substr(0, ext_pos) + "_" + oss.str() + filename.substr(ext_pos);
 						else
-							new_filename = filename + "_" + std::to_string(std::time(0));
+							new_filename = filename + "_" + oss.str();
 
 						//SAVE FILE TO filePath
 						std::string	filePath = _location->path + "/" + new_filename;
@@ -452,13 +463,17 @@ void		HttpResponse::handlePOST(void)
 		{
 			_response.body << "<li><b>" << it->first << "</b>:" << it->second << "</li>\n";
 		}
+		addHeader("Content-Type", "text/html");
+		_response.body = "<html><body><ul>\n" + _response.body + "</ul></body></html>\n";
 		_response.setStatusCode(http::SC_OK);
 		return;
 	}
 	// If not multipart/form-data, just save the body to a file
 	else
 	{
-		std::string	filePath = _location->path + "/post_data_" + std::to_string(std::time(0)) + ".txt";
+		std::ostringstream oss;
+		oss << std::time(0);
+		std::string	filePath = _location->path + "/post_data_" + oss.str() + ".txt";
 		std::ofstream	outFile(filePath.c_str(), std::ios::binary);
 		if (!outFile)
 			return setError(http::SC_INTERNAL_SERVER_ERROR);
