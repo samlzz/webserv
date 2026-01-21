@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test WebServ</title>
+</head>
+<body>
+    <h1>Serveur de Test C++98</h1>
+    <p>Statut : Connecté au serveur.</p>
+
+    <hr>
+    
+    <h3>Test de POST (Upload de texte)</h3>
+    <form action="/upload" method="post">
+        <textarea name="data" rows="4" cols="50">Tapez quelque chose ici...</textarea><br>
+        <input type="submit" value="Envoyer au serveur">
+    </form>
+
+    <hr>
+
+    <h3>Test de GET (Fichiers)</h3>
+    <ul>
+        <li><a href="/images/test.jpg">Voir une image</a></li>
+        <li><a href="/docs/big_file.txt">Télécharger un gros fichier</a></li>
+        <li><a href="/page_qui_n_existe_pas">Tester la 404</a></li>
+    </ul>
+</body>
+</html>

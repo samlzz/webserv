@@ -69,8 +69,8 @@ private:
 	void		setError(int pCode);
 
 	void		handleGET(void);
-	void		handleHEAD(void);
-	void		handlePOST(void);
+	// void		handleHEAD(void);
+	// void		handlePOST(void);
 	void		handlePUT(void);
 	void		handleDELETE(void);
 

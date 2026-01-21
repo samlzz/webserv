@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/21 17:19:46 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/21 17:47:19 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,6 +152,9 @@ static bool		isDirectory(const std::string& pPath)
 // =========================================================================== //
 #pragma region member function
 
+void	HttpResponse::encode(const char *pbuf, size_t pBufSize) { (void)pbuf; (void)pBufSize; }
+void	HttpResponse::finalize(void) {}
+
 ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notifier)
 {
 	(void)notifier;
@@ -206,8 +209,8 @@ ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notif
 
 	switch (_request.getMethod()) {
 	case http::MTH_GET:		handleGET(); break;
-	case http::MTH_HEAD:	handleHEAD(); break;
-	case http::MTH_POST:	handlePOST(); break;
+	// case http::MTH_HEAD:	handleHEAD(); break;
+	// case http::MTH_POST:	handlePOST(); break;
 	case http::MTH_PUT:		handlePUT(); break;
 	case http::MTH_DELETE:	handleDELETE(); break;
 	default:
@@ -444,5 +447,6 @@ std::ostream	&operator<<(std::ostream &pOut, const HttpResponse::Response &pResp
 	}
 	return (pOut);
 }
+
 
 #pragma endregion

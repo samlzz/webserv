@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ClientConnection.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/21 17:34:59 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/21 18:16:33 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@
 #include "config/Config.hpp"
 #include "AConnection.hpp"
 #include "ConnEvent.hpp"
+
+#include <iostream>
 
 // ============================================================================
 // Construction / Destruction
@@ -38,10 +40,13 @@ ConnEvent	ClientConnection::handleRead(void)
 	char	buf[CLIENT_READ_BUF_SIZE];
 	ssize_t	n = recv(_fd, buf, CLIENT_READ_BUF_SIZE, 0);
 
+	std::cout << buf << std::endl;
+
 	if (n <= 0)
 		return ConnEvent::close();
 
 	_req.feed(buf, static_cast<size_t>(n));
+	std::cout << _req;
 	ConnEvent	ret = ConnEvent::none();
 	if (_req.isDone())
 	{
