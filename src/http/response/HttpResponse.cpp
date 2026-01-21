@@ -277,6 +277,14 @@ void		HttpResponse::handleGET(void)
 		if (path[path.length() - 1] != '/') {
 			std::string redirectPath = _request.getPath() + "/";
 			addHeader("Location", redirectPath);
+
+			//Add 301 or 302 redirect // 302 by default
+			if (_location->redirect && _location->redirect.get()->code == http::SC_MOVED_PERMANENTLY) {
+				_response.setStatusCode(_location->redirect.get()->code);
+			} else {
+				//A verifier? MOVE_TEMPORARILY
+				_response.setStatusCode(http::SC_FOUND);
+			}
 			return ; //TODO: handle 301 MOVED PERMA
 		}
 
@@ -410,6 +418,9 @@ void		HttpResponse::handlePOST(void)
 							return setError(http::SC_INTERNAL_SERVER_ERROR);
 						outFile.write(fileContent.c_str(), fileContent.length());
 						outFile.close();
+
+						//A verifier? location dans le header si upload
+						addHeader("Location", new_filename);
 					}
 				}
 			}
