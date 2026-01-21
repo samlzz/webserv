@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/08 18:07:04 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/12 12:27:38 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/21 19:50:05 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 #include <iostream>
 
 #include "config/Config.hpp"
+#include "ft_log/ft_log.hpp"
+#include "log.h"
 #include "server/Reactor.hpp"
 #include "server/connections/ServerConnection.hpp"
 #include "ftpp/FtppException.hpp"
@@ -26,10 +28,18 @@ int main(int ac, char **av)
 	if (ac != 2)
 		return (std::cerr << ERR_USAGE << std::endl, 2);
 
+	ft_log::setOutputStream(std::cerr);
+	ft_log::enableCategory(WS_LOG);
+	ft_log::enableCategory(WS_LOG_CONFIG);
+	ft_log::enableCategory(WS_LOG_SERVER);
+	ft_log::enableCategory(WS_LOG_SERVER_CLI);
+	ft_log::setLevel(ft_log::LOG_TRACE);
+	ft_log::setShowLevel(true);
+
 	try {
 		Config	conf(av[1]);
 #ifdef WS_CONFIG_DEBUG
-		conf.print(std::cout);
+		conf.print(ft_log::log(WS_LOG_CONFIG, ft_log::LOG_DEBUG));
 #endif
 
 		Reactor								pollManager;
@@ -42,14 +52,14 @@ int main(int ac, char **av)
 	}
 	catch (const FtppException &parseErr)
 	{
-		std::cerr
+		ft_log::log(WS_LOG_CONFIG, ft_log::LOG_ERROR)
 			<< "Failed to parse " << av[1]
 			<< ", check your configuration.\n"
 			<< parseErr.what() << std::endl;
 	}
 	catch (const std::exception &e)
 	{
-		std::cerr << "Exception catch: " << e.what();
+		ft_log::log(WS_LOG, ft_log::LOG_ERROR) << "Exception catch: " << e.what();
 	}
 	return 0;
 }
