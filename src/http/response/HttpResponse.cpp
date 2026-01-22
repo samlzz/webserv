@@ -14,6 +14,7 @@
 #include <sstream>
 #include <string>
 #include <ctime>
+#include <fstream>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -29,7 +30,7 @@
 #include "server/connections/ConnEvent.hpp"
 
 //persistent session storage
-HttpResponse::t_id	HttpResponse::_sessionIds;
+// HttpResponse::t_id	HttpResponse::_sessionIds;
 
 // =========================================================================== //
 //                        CONSTRUCTOR & DESTRUCTOR                             //
@@ -162,29 +163,31 @@ static inline bool		isExtAuth(const std::string &pExt, const Config::t_dict &pEx
 ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notifier)
 {
 	_request = pReq;
+	_cookie.setRequest(_request);
+	_cookie.setResponse(this);
 	// TODO: Check request error
 
-	parseCookies();
-	if (_request.getPath().find("/private") == 0)
-	{
-		if (!checkSession())
-		{
-			setError(http::SC_FORBIDDEN); // ou redirect to login?
-			return ConnEvent::none();
-		}
-	}
+	// parseCookies();
+	// if (_request.getPath().find("/private") == 0)
+	// {
+	// 	if (!checkSession())
+	// 	{
+	// 		setError(http::SC_FORBIDDEN); // ou redirect to login?
+	// 		return ConnEvent::none();
+	// 	}
+	// }
 
-	if (_request.getPath() == "/logout")
-	{
-		std::string sessionId = searchIDInCookies();
-		if (!sessionId.empty())
-		{
-			clearSession(sessionId);
-		}
-		addHeader("Location", "/login.html");
-		_response.setStatusCode(http::SC_FOUND);
-		return ConnEvent::none();
-	}
+	// if (_request.getPath() == "/logout")
+	// {
+	// 	std::string sessionId = searchIDInCookies();
+	// 	if (!sessionId.empty())
+	// 	{
+	// 		clearSession(sessionId);
+	// 	}
+	// 	addHeader("Location", "/login.html");
+	// 	_response.setStatusCode(http::SC_FOUND);
+	// 	return ConnEvent::none();
+	// }
 
 	std::string	path = _request.getPath();
 
@@ -585,7 +588,7 @@ void		HttpResponse::handlePOST(void)
 		// }
 		if (body == "username=admin&password=admin") {
 			_response.setStatusCode(http::SC_OK);
-			createSession("admin");
+			_cookie.createSession("admin");
 
 			_response.body = "<html><body><h1>Login Successful</h1></body></html>";
 			addHeader("Content-Type", "text/html");
@@ -699,195 +702,8 @@ void	HttpResponse::setError(int pCode)
 	addHeader("Content-Length", longTOstring(_response.body.length()));
 }
 
-// Parse the "Cookie" header from the request and store cookies in the _cookies map
-std::map<std::string, std::string>	HttpResponse::parseCookies(void)
-{
-	std::string	cookieHeader = _request.getHeaderValue("Cookie");
-	if (cookieHeader.empty())
-		return std::map<std::string, std::string>();
-	
-	t_cookies cookies;
-	std::istringstream	stream(cookieHeader);
-	std::string			cookiePair;
 
-	while (std::getline(stream, cookiePair, ';'))
-	{
-		size_t	equalPos = cookiePair.find('=');
-		if (equalPos != std::string::npos)
-		{
-			std::string	key = cookiePair.substr(0, equalPos);
-			std::string	value = cookiePair.substr(equalPos + 1);
-	
-			key.erase(0, key.find_first_not_of(" \t"));
-			key.erase(key.find_last_not_of(" \t") + 1);
-			value.erase(0, value.find_first_not_of(" \t"));
-			value.erase(value.find_last_not_of(" \t") + 1);
 
-			// std::cout << "Cookie: " << key << " = " << value << std::endl;
-			cookies[key] = value;
-		}
-	}
-	return cookies;
-}
-std::string HttpResponse::searchIDInCookies(void)
-{
-	std::map<std::string, std::string>	cookies = parseCookies();
-	std::map<std::string, std::string>::const_iterator it = cookies.find("sessionId");
-	if (it != cookies.end())
-		return it->second;
-	return "";
-}
-
-bool HttpResponse::checkSession(void)
-{
-	std::string sessionId = searchIDInCookies();
-	if (sessionId.empty())
-		return false;
-	return checkSession(sessionId);
-}
-
-bool HttpResponse::checkSession(const std::string &pSessionId)
-{
-	t_id::const_iterator it = _sessionIds.find(pSessionId);
-	if (it != _sessionIds.end())
-		return true;
-	return false;
-}
-
-std::string HttpResponse::generateSessionId(void)
-{
-	const char charset[] =
-		"0123456789"
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		"abcdefghijklmnopqrstuvwxyz";
-	const size_t max_index = (sizeof(charset) - 1);
-	std::string sessionId;
-	for (size_t i = 0; i < 16; ++i)
-	{
-		sessionId += charset[rand() % max_index];
-	}
-	return sessionId;
-}
-
-void HttpResponse::createSession(const std::string &username)
-{
-	std::string sessionId = generateSessionId();
-	HttpResponse::SessionData sessionData;
-	sessionData.username = username;
-	sessionData.last_activity = std::time(0);
-	_sessionIds[sessionId] = sessionData;
-	addCookie(sessionId, "sessionId", sessionId);
-	addHeader("Set-Cookie", buildCookieHeader());
-}
-
-// Create the "Set-Cookie" header string from the _cookies map
-//Set-Cookie=sessionId=abc123; lang=fr
-void	HttpResponse::createCookieHeader(const std::string &id)
-{
-	std::ostringstream	cookieStream;
-	t_id::const_iterator itId = _sessionIds.find(id);
-	if (itId == _sessionIds.end())
-		return;
-	const t_cookies		&_cookies = itId->second._cookies;
-
-	for (t_cookies::const_iterator it = _cookies.begin(); it != _cookies.end(); ++it)
-	{
-		cookieStream << it->first << "=" << it->second << "; ";
-	}
-
-	std::string	cookieHeader = cookieStream.str();
-	if (!cookieHeader.empty())
-		cookieHeader.erase(cookieHeader.length() - 2);
-
-	addHeader("Set-Cookie", cookieHeader);
-}
-
-void HttpResponse::addCookie(const std::string &id ,const std::string &pKey, const std::string &pValue)
-{
-	t_id::iterator it = _sessionIds.find(id);
-	if (it != _sessionIds.end())
-	{
-		it->second._cookies[pKey] = pValue;
-	}
-}
-
-std::string HttpResponse::buildCookieHeader(void)
-{
-	std::ostringstream	cookieStream;
-	t_id::const_iterator itId = _sessionIds.find(searchIDInCookies());
-	if (itId == _sessionIds.end())
-		return "";
-	const t_cookies		&_cookies = itId->second._cookies;
-	for (t_cookies::const_iterator it = _cookies.begin(); it != _cookies.end(); ++it)
-	{
-		cookieStream << it->first << "=" << it->second << "; ";
-	}
-
-	std::string	cookieHeader = cookieStream.str();
-	if (!cookieHeader.empty())
-		cookieHeader.erase(cookieHeader.length() - 2);
-
-	return (cookieHeader);
-}
-
-void HttpResponse::appendCookieHeader(const std::string &pHeader)
-{
-	std::string existingHeader = "";
-	t_headers::iterator it = _response.headers.find("Set-Cookie");
-	if (it != _response.headers.end())
-		existingHeader = it->second;
-
-	if (!existingHeader.empty())
-		existingHeader += "; ";
-
-	existingHeader += pHeader;
-	_response.headers["Set-Cookie"] = existingHeader;
-}
-
-void HttpResponse::createCookieHeader()
-{
-	std::string sessionId = searchIDInCookies();
-	if (sessionId.empty())
-		return;
-	createCookieHeader(sessionId);
-}
-
-void HttpResponse::clearSession(const std::string &pSessionId)
-{
-	t_id::iterator it = _sessionIds.find(pSessionId);
-	if (it != _sessionIds.end())
-		_sessionIds.erase(it);
-}
-
-void HttpResponse::clearExpiredSessions(time_t pExpirationTime)
-{
-	time_t currentTime = std::time(0);
-	for (t_id::iterator it = _sessionIds.begin(); it != _sessionIds.end(); )
-	{
-		if (currentTime - it->second.last_activity > pExpirationTime)
-		{
-			t_id::iterator toErase = it;
-			++it;
-			_sessionIds.erase(toErase);
-		}
-		else
-			++it;
-	}
-}
-
-void HttpResponse::addCookieOptions(const std::string &pOptions)
-{
-	std::string existingHeader = "";
-	t_headers::iterator it = _response.headers.find("Set-Cookie");
-	if (it != _response.headers.end())
-		existingHeader = it->second;
-
-	if (!existingHeader.empty())
-		existingHeader += "; ";
-
-	existingHeader += pOptions;
-	_response.headers["Set-Cookie"] = existingHeader;
-}
 
 // std::string	HttpResponse::toString(void) const
 // {
