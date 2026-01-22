@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:44:04 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/20 19:02:12 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 15:02:18 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ ConnEvent	CgiWriteConnection::handleEvents(short revents)
 		_offset += static_cast<size_t>(n);
 		if (_offset == _body.size())
 		{
-			_ctx.onBodyEnd();
+			_ctx.onBodyEnd(_offset);
 			_spawned = false;
 			return ConnEvent::close();
 		}

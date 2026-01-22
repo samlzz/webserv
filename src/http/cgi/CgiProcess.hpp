@@ -6,13 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 13:19:25 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 15:34:05 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __CGI_PROCESS_HPP__
 # define __CGI_PROCESS_HPP__
 
+# include <cstddef>
 # include <ctime>
 # include <string>
 # include <sys/types.h>
@@ -89,7 +90,7 @@ public:
 	void				onTimeout(void);
 
 	// ---- CgiReadConnection events ----
-	void				onBodyEnd(void);
+	void				onBodyEnd(size_t writtenBytes);
 
 private:
 

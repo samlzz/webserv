@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 12:57:48 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 14:58:56 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -278,7 +278,11 @@ void	CgiProcess::onRead(const char *buffer, size_t bufSize)
 	_encoder.encode(buffer, bufSize);
 	_notifier.notifyWritable();
 }
-void	CgiProcess::onBodyEnd(void)
+
+void	CgiProcess::onBodyEnd(size_t writtenBytes)
 {
+	ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
+		<< "CGI-Write body completed pid=" << _pid
+		<< " total_written=" << writtenBytes << std::endl;
 	forgetWrite();
 }
