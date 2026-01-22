@@ -65,7 +65,7 @@ private:
 	};
 
 	typedef std::map<std::string, SessionData>	t_id;
-	t_id _sessionIds;
+	static t_id _sessionIds;
 	
 	void	addHeader(const std::string &pHeader, const std::string &pContent);
 

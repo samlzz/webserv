@@ -28,6 +28,9 @@
 #include "config/Config.hpp"
 #include "server/connections/ConnEvent.hpp"
 
+//persistent session storage
+HttpResponse::t_id	HttpResponse::_sessionIds;
+
 // =========================================================================== //
 //                        CONSTRUCTOR & DESTRUCTOR                             //
 // =========================================================================== //
@@ -162,7 +165,26 @@ ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notif
 	// TODO: Check request error
 
 	parseCookies();
-	createCookieHeader();
+	if (_request.getPath().find("/private") == 0)
+	{
+		if (!checkSession())
+		{
+			setError(http::SC_FORBIDDEN); // ou redirect to login?
+			return ConnEvent::none();
+		}
+	}
+
+	if (_request.getPath() == "/logout")
+	{
+		std::string sessionId = searchIDInCookies();
+		if (!sessionId.empty())
+		{
+			clearSession(sessionId);
+		}
+		addHeader("Location", "/login.html");
+		_response.setStatusCode(http::SC_FOUND);
+		return ConnEvent::none();
+	}
 
 	std::string	path = _request.getPath();
 
@@ -545,6 +567,39 @@ void HttpResponse::handleTextPlain(void)
 // TODO: need a Reverse Deque Technique like send but receive instead, might need to redo request 
 void		HttpResponse::handlePOST(void)
 {
+	if (_request.getPath() == "/login.html")
+	{
+		std::string body = _request.getBody();
+		// std::map<std::string, std::string> data;
+		// std::istringstream stream(body);
+		// std::string line;
+		// while (std::getline(stream, line, '&'))
+		// {
+		// 	size_t pos = line.find('=');
+		// 	if (pos != std::string::npos)
+		// 	{
+		// 		std::string key = url_decode(line.substr(0, pos));
+		// 		std::string value = url_decode(line.substr(pos + 1));
+		// 		data[key] = value;
+		// 	}
+		// }
+		if (body == "username=admin&password=admin") {
+			_response.setStatusCode(http::SC_OK);
+			createSession("admin");
+
+			_response.body = "<html><body><h1>Login Successful</h1></body></html>";
+			addHeader("Content-Type", "text/html");
+			addHeader("Content-Length", longTOstring(_response.body.length()));
+			return;
+		} 
+		else
+		{
+			_response.setStatusCode(http::SC_FORBIDDEN);
+			return;
+		}
+	}
+
+
 	std::string contentType = _request.getHeaderValue("Content-Type");
 	if (contentType.empty())
 		HttpResponse::handleOctetStream();
