@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:13:50 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/20 14:06:14 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 12:16:07 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ public:
 	virtual void			setEvents(short events) = 0;
 	virtual void			addEvent(short event) = 0;
 
+	virtual ConnEvent		checkTimeout(time_t now) = 0;
 	/**
 	 * Handle poll events reported by the Reactor.
 	 *
