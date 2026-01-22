@@ -13,15 +13,19 @@
 #include <cassert>
 #include <cerrno>
 #include <cstdlib>
+#include <cstring>
 #include <ctime>
 #include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include "CgiProcess.hpp"
+#include "ft_log/LogOp.hpp"
+#include "ft_log/level.hpp"
 #include "http/response/IChunkEncoder.hpp"
 #include "http/cgi/CgiReadConnection.hpp"
 #include "http/cgi/CgiWriteConnection.hpp"
+#include "log.h"
 #include "server/connections/IConnection.hpp"
 #include "server/connections/IWritableNotifier.hpp"
 
@@ -142,6 +146,7 @@ IConnection	*CgiProcess::start(const char* scriptPath,
 		int savedErrno = errno;
 		_closeFds(outFds);
 		_closeFds(inFds);
+		ft_log::log(WS_LOG_CGI, ft_log::LOG_ERROR) << "CGI fork failed" << std::endl;
 		errno = savedErrno;
 		return 0;
 	}
@@ -173,6 +178,10 @@ IConnection	*CgiProcess::start(const char* scriptPath,
 			return 0;
 		}
 
+		ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
+			<< "CGI spawn pid=" << pid
+			<< " exec=\"" << scriptPath
+			<< "\" script=\"" << argv[0] << '"' << std::endl;
 		_startTs = std::time(0);
 		_pid = pid;
 		_read = readConn;
@@ -195,7 +204,11 @@ void	CgiProcess::cleanup(bool killChild)
 		return;
 
 	if (killChild)
+	{
 		kill(_pid, SIGKILL);
+		ft_log::log(WS_LOG_CGI, ft_log::LOG_WARN)
+			<< "CGI killed pid=" << _pid << std::endl;
+	}
 
 	int		status = 0;
 	pid_t	r = waitpid(_pid, &status, WNOHANG);
@@ -209,7 +222,13 @@ void	CgiProcess::cleanup(bool killChild)
 			_exitCode = 128 + WTERMSIG(status);
 		else
 			_exitCode = 255;
+
+		ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
+			<< "CGI exited " << _exitCode << " pid=" << _pid << std::endl;
 	}
+	else
+		ft_log::log(WS_LOG_CGI, ft_log::LOG_DEBUG)
+			<< "CGI not terminated yet, let reactor reap it" << std::endl;
 }
 
 // ============================================================================
@@ -226,6 +245,8 @@ void	CgiProcess::onError(void)
 
 void	CgiProcess::onTimeout(void)
 {
+	ft_log::log(WS_LOG_CGI, ft_log::LOG_WARN)
+		<< "CGI timeout pid=" << _pid << std::endl;
 	onError();
 	_notifier.notifyWritable();
 }
@@ -235,6 +256,8 @@ void	CgiProcess::onEof(void)
 	if (_terminated)
 		return;
 	_terminated = true;
+	ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
+		<< "CGI-Read EOF reached pid=" << _pid << std::endl;
 	forgetRead();
 	_encoder.finalize();
 	_notifier.notifyWritable();
@@ -243,6 +266,15 @@ void	CgiProcess::onEof(void)
 
 void	CgiProcess::onRead(const char *buffer, size_t bufSize)
 {
+	static bool	firstBuf = true;
+
+	if (firstBuf)
+	{
+		ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
+			<< "CGI-Read first output pid=" << _pid;
+		firstBuf = false;
+	}
+
 	_encoder.encode(buffer, bufSize);
 	_notifier.notifyWritable();
 }
