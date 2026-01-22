@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/20 18:09:15 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 11:39:35 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 #include <unistd.h>
 
 #include "CgiProcess.hpp"
-#include "http/_response/IChunkEncoder.hpp"
+#include "http/response/IChunkEncoder.hpp"
 #include "http/cgi/CgiReadConnection.hpp"
 #include "http/cgi/CgiWriteConnection.hpp"
 #include "server/connections/IConnection.hpp"

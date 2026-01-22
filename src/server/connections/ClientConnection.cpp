@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ClientConnection.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/21 18:16:33 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/22 11:43:46 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,20 +19,20 @@
 #include "AConnection.hpp"
 #include "ConnEvent.hpp"
 
-#include <iostream>
-
 // ============================================================================
 // Construction / Destruction
 // ============================================================================
 
 ClientConnection::ClientConnection(int cliSockFd, const Config::Server &config)
-	: AConnection(cliSockFd), _req(), _resp(config)
+	: AConnection(cliSockFd)
+	, _req(), _resp(config)
+	, _offset(0), _cgiRead(0)
 {
 	setNonBlocking();
 }
 
 // ============================================================================
-// Methods
+// Private members methods
 // ============================================================================
 
 ConnEvent	ClientConnection::handleRead(void)
@@ -40,17 +40,16 @@ ConnEvent	ClientConnection::handleRead(void)
 	char	buf[CLIENT_READ_BUF_SIZE];
 	ssize_t	n = recv(_fd, buf, CLIENT_READ_BUF_SIZE, 0);
 
-	std::cout << buf << std::endl;
-
 	if (n <= 0)
 		return ConnEvent::close();
 
 	_req.feed(buf, static_cast<size_t>(n));
-	std::cout << _req;
 	ConnEvent	ret = ConnEvent::none();
 	if (_req.isDone())
 	{
 		ret = _resp.build(_req, *this);
+		if (ret.type == ConnEvent::CE_SPAWN)
+			_cgiRead = ret.conn;
 		_events = POLLOUT;
 	}
 	return ret;
@@ -80,6 +79,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 		{
 			if (_resp.isDone())
 			{
+				detachBuddy();
 				if (_resp.shouldCloseConnection())
 					return ConnEvent::close();
 
@@ -94,7 +94,9 @@ ConnEvent	ClientConnection::handleWrite(void)
 	return ConnEvent::none();
 }
 
-
+// ============================================================================
+// Public methods
+// ============================================================================
 
 ConnEvent	ClientConnection::handleEvents(short revents)
 {
@@ -114,3 +116,6 @@ void	ClientConnection::notifyWritable(void)
 {
 	addEvent(POLLOUT);
 }
+
+IConnection	*ClientConnection::buddy(void)		{ return _cgiRead; }
+void		ClientConnection::detachBuddy(void)	{ _cgiRead = 0; }

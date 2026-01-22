@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/20 16:18:31 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 11:37:05 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 # include <sys/types.h>
 # include <stdint.h>
 
-# include "http/_response/IChunkEncoder.hpp"
+# include "http/response/IChunkEncoder.hpp"
 # include "server/connections/IConnection.hpp"
 # include "server/connections/IWritableNotifier.hpp"
 
