@@ -6,17 +6,20 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/08 18:07:04 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/21 19:50:05 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 14:10:43 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
 #include <exception>
 #include <iostream>
+#include <ostream>
 
 #include "config/Config.hpp"
+#include "config/validation/configValidate.hpp"
 #include "ft_log/ft_log.hpp"
 #include "log.h"
+#include "server/Exceptions.hpp"
 #include "server/Reactor.hpp"
 #include "server/connections/ServerConnection.hpp"
 #include "ftpp/FtppException.hpp"
@@ -56,10 +59,26 @@ int main(int ac, char **av)
 			<< "Failed to parse " << av[1]
 			<< ", check your configuration.\n"
 			<< parseErr.what() << std::endl;
+		return 2;
+	}
+	catch (const config_validate::WsConfigError &configErr)
+	{
+		ft_log::log(WS_LOG_CONFIG, ft_log::LOG_ERROR)
+			<< "Invalid configuration detected in " << av[1] << ".\n"
+			<< configErr.what() << std::endl;
+		return 2;
+	}
+	catch (const WsServerError &serverErr)
+	{
+		ft_log::log(WS_LOG_SERVER, ft_log::LOG_ERROR)
+			<< "Server critical error, server stop...\n"
+			<< serverErr.what() << std::endl;
+		return 1;
 	}
 	catch (const std::exception &e)
 	{
 		ft_log::log(WS_LOG, ft_log::LOG_ERROR) << "Exception catch: " << e.what();
+		return 1;
 	}
 	return 0;
 }
