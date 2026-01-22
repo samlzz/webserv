@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:52:27 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/20 17:51:20 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 12:16:38 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ public:
 	CgiReadConnection(int stdoutFd, CgiProcess &ctx);
 
 	virtual ConnEvent	handleEvents(short revents);
+	virtual ConnEvent	checkTimeout(time_t now);
 	virtual IConnection	*buddy(void);
 	virtual void		detachBuddy(void);
 

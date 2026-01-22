@@ -6,27 +6,45 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/20 16:18:31 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 13:19:25 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __CGI_PROCESS_HPP__
 # define __CGI_PROCESS_HPP__
 
+# include <ctime>
 # include <string>
 # include <sys/types.h>
 # include <stdint.h>
 
-# include "http/_response/IChunkEncoder.hpp"
+# include "http/response/IChunkEncoder.hpp"
 # include "server/connections/IConnection.hpp"
 # include "server/connections/IWritableNotifier.hpp"
 
+# ifndef CGI_MAX_EXEC_TIME
+#  define CGI_MAX_EXEC_TIME 30000 // 30 s
+# endif
+
+// ============================================================================
+// Type Utils
+// ============================================================================
+typedef void	t_never;
+
+// ============================================================================
+// Cgi context class
+// It share data between caller and read/write connections
+// ============================================================================
 class CgiProcess {
 
 private:
+	// ============================================================================
+	// Attributes
+	// ============================================================================
 	IChunkEncoder		&_encoder;
 	IWritableNotifier	&_notifier;
 	pid_t				_pid;
+	time_t				_startTs;
 	uint8_t				_exitCode;
 	bool				_terminated;
 	IConnection			*_read;
@@ -49,6 +67,8 @@ public:
 	void				forgetRead(void);
 	void				forgetWrite(void);
 
+	time_t				startTime(void) const;
+
 	bool				isDone(void) const;
 	uint8_t				exitCode(void) const;
 
@@ -61,11 +81,15 @@ public:
 								char* const envp[],
 								const std::string &body = "");
 
-	void				onEof(void);
-	void				onBodyEnd(void);
-
 	void				onError(void);
+
+	// ---- CgiReadConnection events ----
 	void				onRead(const char *buffer, size_t bufSize);
+	void				onEof(void);
+	void				onTimeout(void);
+
+	// ---- CgiReadConnection events ----
+	void				onBodyEnd(void);
 
 private:
 

@@ -6,19 +6,20 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/20 18:09:15 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 12:57:48 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cassert>
 #include <cerrno>
 #include <cstdlib>
+#include <ctime>
 #include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include "CgiProcess.hpp"
-#include "http/_response/IChunkEncoder.hpp"
+#include "http/response/IChunkEncoder.hpp"
 #include "http/cgi/CgiReadConnection.hpp"
 #include "http/cgi/CgiWriteConnection.hpp"
 #include "server/connections/IConnection.hpp"
@@ -47,6 +48,8 @@ IConnection	*CgiProcess::write(void) const		{ return _write; }
 void		CgiProcess::forgetRead(void)		{ _read = 0; }
 void		CgiProcess::forgetWrite(void)		{ _write = 0; }
 
+time_t		CgiProcess::startTime(void) const	{ return _startTs; }
+
 bool		CgiProcess::isDone(void) const		{ return _terminated; }
 
 uint8_t		CgiProcess::exitCode(void) const	{ return _exitCode; }
@@ -69,7 +72,7 @@ static inline void	_closeFds(int fds[2])
 }
 
 // never return
-static void	_execChild(
+static t_never	_execChild(
 	const char* scriptPath,
 	char* const argv[],
 	char* const envp[],
@@ -142,12 +145,12 @@ IConnection	*CgiProcess::start(const char* scriptPath,
 		errno = savedErrno;
 		return 0;
 	}
-	if (pid == 0)
+	if (pid == 0) /* child process */
 	{
 		_closeFds(outFds[0], inFds[1]);
 		_execChild(scriptPath, argv, envp, outFds[1], inFds[0]);
 	}
-	else
+	else /* parent process */
 	{
 		_closeFds(outFds[1], inFds[0]);
 
@@ -170,6 +173,7 @@ IConnection	*CgiProcess::start(const char* scriptPath,
 			return 0;
 		}
 
+		_startTs = std::time(0);
 		_pid = pid;
 		_read = readConn;
 		_write = writeConn;
@@ -212,9 +216,18 @@ void	CgiProcess::cleanup(bool killChild)
 // Events driven methods
 // ============================================================================
 
-void	CgiProcess::onBodyEnd(void)
+void	CgiProcess::onError(void)
 {
-	forgetWrite();
+	if (_terminated)
+		return;
+	_terminated = true;
+	cleanup(true);
+}
+
+void	CgiProcess::onTimeout(void)
+{
+	onError();
+	_notifier.notifyWritable();
 }
 
 void	CgiProcess::onEof(void)
@@ -228,16 +241,12 @@ void	CgiProcess::onEof(void)
 	cleanup(false);
 }
 
-void	CgiProcess::onError(void)
-{
-	if (_terminated)
-		return;
-	_terminated = true;
-	cleanup(true);
-}
-
 void	CgiProcess::onRead(const char *buffer, size_t bufSize)
 {
 	_encoder.encode(buffer, bufSize);
 	_notifier.notifyWritable();
+}
+void	CgiProcess::onBodyEnd(void)
+{
+	forgetWrite();
 }

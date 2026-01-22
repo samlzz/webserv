@@ -6,11 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 14:21:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/21 19:53:28 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 13:56:25 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
+#include <ctime>
 #include <set>
 #include <sys/wait.h>
 
@@ -138,6 +139,8 @@ void	Reactor::run(void)
 				removeConnection(i);
 				continue;
 			}
+			if (manageConnEvent(conn->checkTimeout(std::time(0)), i))
+				continue;
 			if (_pfds[i].revents == 0)
 			{
 				i++;
