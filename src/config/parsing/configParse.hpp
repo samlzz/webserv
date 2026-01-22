@@ -6,18 +6,16 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:10:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/13 13:56:40 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 14:12:03 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __CONFIG_PARSE_HPP__
 # define __CONFIG_PARSE_HPP__
 
-# include <stdexcept>
-# include <stdint.h>
-
 # include "RawConfig.hpp"
 # include "ftpp/AstNode.hpp"
+# include "ftpp/FtppException.hpp"
 
 namespace config_parse
 {
@@ -25,9 +23,9 @@ namespace config_parse
 // ============================================================================
 // Errors
 // ============================================================================
-class WsParseError : public std::runtime_error {
+class WsParseError : public FtppException {
 public:
-	WsParseError(const std::string &msg): std::runtime_error(msg) {}
+	WsParseError(const std::string &msg): FtppException(msg) {}
 };
 
 class ValueError : public WsParseError {
