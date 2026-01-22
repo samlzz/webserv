@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 08:50:37 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/21 20:01:18 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 14:06:44 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ ServerConnection::ServerConnection(const Config::Server &servConfig)
 ConnEvent	ServerConnection::handleEvents(short revents)
 {
 	if (isErrEvent(revents))
-		throw LogicError("poll error on listen socket");
+		throw WsServerError("poll error on listen socket");
 
 	if (revents & POLLIN)
 	{
