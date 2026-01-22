@@ -6,12 +6,13 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 13:57:07 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 14:22:58 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
 #include <ctime>
+#include <ostream>
 #include <sys/poll.h>
 #include <sys/types.h>
 
@@ -187,10 +188,25 @@ ConnEvent	ClientConnection::checkTimeout(time_t now)
 	time_t	timeout = timeoutFromState();
 
 	if (difftime(now, _tsLastActivity) > timeout)
+	{
+		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_WARN)
+			<< "Client on fd " << _fd
+			<< " has timeout when waiting for " << _state << std::endl;
 		return ConnEvent::close();
+	}
 
 	// TODO call _req.checkTimeout(now)
 	return ConnEvent::none();
+}
+
+std::ostream	&operator<<(std::ostream &os, const ClientConnection::e_client_state &state)
+{
+	switch (state) {
+		case ClientConnection::CS_WAIT_FIRST_BYTE:	os << "client first bytes sent"; break;
+		case ClientConnection::CS_WAIT_REQUEST:		os << "client request"; break;
+		case ClientConnection::CS_WAIT_RESPONSE:	os << "client receive"; break;
+	}
+	return os;
 }
 
 void	ClientConnection::notifyWritable(void)

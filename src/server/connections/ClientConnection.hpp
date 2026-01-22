@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 13:19:06 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 14:23:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # include <cstddef>
 # include <ctime>
+#include <ostream>
 
 # include "config/Config.hpp"
 # include "AConnection.hpp"
@@ -61,6 +62,8 @@ public:
 
 	virtual IConnection	*buddy(void);
 	virtual void		detachBuddy(void);
+
+friend std::ostream	&operator<<(std::ostream &os, const e_client_state &state);
 
 private:
 	ConnEvent			handleRead(void);
