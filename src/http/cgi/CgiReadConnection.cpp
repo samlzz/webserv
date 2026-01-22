@@ -6,11 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/20 19:01:59 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 12:58:16 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
+#include <ctime>
 #include <sys/poll.h>
 #include <unistd.h>
 
@@ -34,16 +35,6 @@ CgiReadConnection::CgiReadConnection(int stdoutFd, CgiProcess &ctx)
 // Methods
 // ============================================================================
 
-IConnection	*CgiReadConnection::buddy(void)
-{
-	return _ctx.write();
-}
-
-void	CgiReadConnection::detachBuddy(void)
-{
-	_ctx.forgetWrite();
-}
-
 ConnEvent	CgiReadConnection::handleEvents(short revents)
 {
 	if (isErrEvent(revents))
@@ -63,3 +54,16 @@ ConnEvent	CgiReadConnection::handleEvents(short revents)
 	}
 	return ConnEvent::none();
 }
+
+ConnEvent	CgiReadConnection::checkTimeout(time_t now)
+{
+	if (difftime(now, _ctx.startTime()) > CGI_MAX_EXEC_TIME)
+	{
+		_ctx.onTimeout();
+		return ConnEvent::close();
+	}
+	return ConnEvent::none();
+}
+
+IConnection	*CgiReadConnection::buddy(void)			{ return _ctx.write(); }
+void		CgiReadConnection::detachBuddy(void)	{ _ctx.forgetWrite(); }
