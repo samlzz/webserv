@@ -6,11 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 11:43:46 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/22 13:14:34 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
+#include <ctime>
 #include <sys/poll.h>
 #include <sys/types.h>
 
@@ -27,6 +28,8 @@ ClientConnection::ClientConnection(int cliSockFd, const Config::Server &config)
 	: AConnection(cliSockFd)
 	, _req(), _resp(config)
 	, _offset(0), _cgiRead(0)
+	, _state(CS_WAIT_FIRST_BYTE)
+	, _tsLastActivity(std::time(0))
 {
 	setNonBlocking();
 }
@@ -43,13 +46,20 @@ ConnEvent	ClientConnection::handleRead(void)
 	if (n <= 0)
 		return ConnEvent::close();
 
+	_tsLastActivity = std::time(0);
+	if (_state == CS_WAIT_FIRST_BYTE)
+		_state = CS_WAIT_REQUEST;
+
 	_req.feed(buf, static_cast<size_t>(n));
+
 	ConnEvent	ret = ConnEvent::none();
 	if (_req.isDone())
 	{
 		ret = _resp.build(_req, *this);
 		if (ret.type == ConnEvent::CE_SPAWN)
 			_cgiRead = ret.conn;
+
+		_state = CS_WAIT_RESPONSE;
 		_events = POLLOUT;
 	}
 	return ret;
@@ -67,6 +77,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 	if (n <= 0)
 		return ConnEvent::close();
 
+	_tsLastActivity = std::time(0);
 	_offset += static_cast<size_t>(n);
 
 	// all curent buffer was sent
@@ -85,6 +96,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 
 				_req.reset();
 				_resp.reset();
+				_state = CS_WAIT_REQUEST;
 				_events = POLLIN;
 			}
 			else
@@ -109,6 +121,27 @@ ConnEvent	ClientConnection::handleEvents(short revents)
 	if (revents & POLLOUT)
 		return handleWrite();
 
+	return ConnEvent::none();
+}
+
+time_t	ClientConnection::timeoutFromState(void)
+{
+	switch (_state) {
+		case CS_WAIT_FIRST_BYTE:	return CLIENT_TIMEOUT_ACCEPT;
+		case CS_WAIT_REQUEST:		return CLIENT_TIMEOUT_REQ;
+		case CS_WAIT_RESPONSE:		return CLIENT_TIMEOUT_RESP;
+		default:					return 0;
+	}
+}
+
+ConnEvent	ClientConnection::checkTimeout(time_t now)
+{
+	time_t	timeout = timeoutFromState();
+
+	if (difftime(now, _tsLastActivity) > timeout)
+		return ConnEvent::close();
+
+	// TODO call _req.checkTimeout(now)
 	return ConnEvent::none();
 }
 
