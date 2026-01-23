@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 13:14:34 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 19:52:59 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,6 @@ ConnEvent	ClientConnection::handleRead(void)
 		_state = CS_WAIT_REQUEST;
 
 	_req.feed(buf, static_cast<size_t>(n));
-
 	ConnEvent	ret = ConnEvent::none();
 	if (_req.isDone())
 	{

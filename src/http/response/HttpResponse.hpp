@@ -13,7 +13,6 @@
 #ifndef __HTTP_RESPONSE_HPP__
 #define __HTTP_RESPONSE_HPP__
 
-#include <cstddef>
 #include <string>
 
 #include "http/response/IHttpResponse.hpp"
@@ -33,7 +32,8 @@
 
 class HttpResponse : public IHttpResponse {
 
-public:
+private:
+
 	// ========== Response Reply ==========
 	typedef std::map<std::string, std::string>	t_headers;
 	struct Response
@@ -50,31 +50,34 @@ public:
 	};
 
 private:
-
-	void	addHeader(const std::string &pHeader, const std::string &pContent);
-
-	// ========== Response Config ==========
 	HttpRequest							_request;
 	const Config::Server				&_server;
 	const Config::Server::Location		*_location;
 
-	Response		_response;
+	Response							_response;
 
-	bool				_isDone;
-	bool				_isConnection;
-	ChunkedStream		_chunkedStream;
+	bool								_isDone;
+	bool								_isConnection;
+	ChunkedStream						_chunkedStream;
+	int									fd;
 
-	int			fd;
-
+	// ========== Helpers methods ==========
 	void		setError(int pCode);
+	void		loadFile(const std::string& pPath);
+	void		addHeader(const std::string &pHeader, const std::string &pContent);
 
+	// ========== ContentType handler (for POST/PUT) ==========
+	void		handleMultipart(void);
+	void		handleUrlEncoded(void);
+	void		handleOctetStream(void);
+	void		handleTextPlain(void);
+
+	// ========== Methods handler ==========
 	void		handleGET(void);
-	// void		handleHEAD(void);
-	// void		handlePOST(void);
+	void		handleHEAD(void);
+	void		handlePOST(void);
 	void		handlePUT(void);
 	void		handleDELETE(void);
-
-	void		loadFile(const std::string& pPath);
 
 public:
 	HttpResponse(const Config::Server& pServer);
@@ -91,10 +94,10 @@ public:
 	virtual bool				shouldCloseConnection(void) const;
 
 	// ========== Encoder ==========
-	virtual void	encode(const char *pbuf, size_t pBufSize);
-	virtual void	finalize(void);
-};
+	virtual void				encode(const char *pbuf, size_t pBufSize);
+	virtual void				finalize(void);
 
-std::ostream	&operator<<(std::ostream &pOut, const HttpResponse::Response &pResponse);
+friend std::ostream	&operator<<(std::ostream &pOut, const HttpResponse::Response &pResponse);
+};
 
 #endif

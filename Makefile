@@ -2,7 +2,7 @@
 #* >> USER CONFIGURATION (MANDATORY)
 # =============================================================================
 
-NAME      ?= webserv
+NAME      = webserv
 ifeq ($(NAME),)
     $(error NAME is empty: please define executable name)
 endif

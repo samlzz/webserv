@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 21:09:01 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/10 16:34:00 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 18:25:34 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,15 +45,23 @@ bool	Config::Server::Location::operator<(const Location &other) const
 // Accessors
 // ============================================================================
 
+// longest prefix match (location was already sorted by decreasing length)
 const Config::Server::Location	*
 Config::Server::findLocation(const std::string &path) const
 {
 	for (size_t i = 0; i < locations.size(); ++i)
 	{
-		const Location &loc = locations[i];
+		const Location		&loc = locations[i];
+		const std::string	&lp = loc.path;
 
-		// Longest prefix match (locations already sorted by decreasing length)
-		if (path.compare(0, loc.path.size(), loc.path) == 0)
+		// always last location bc of pre sort
+		if (lp == "/")
+			return &loc;
+
+		if (
+			path.compare(0, lp.size(), lp) == 0
+			&& (path.size() == lp.size() || path[lp.size()] == '/')
+		)
 			return &loc;
 	}
 	return 0;

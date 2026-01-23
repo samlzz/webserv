@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpStatus.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 22:31:56 by achu              #+#    #+#             */
-/*   Updated: 2026/01/14 04:09:24 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/23 19:11:09 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,17 +43,31 @@ namespace http
 		, SC_FORBIDDEN = 403
 		, SC_NOT_FOUND = 404
 		, SC_METHOD_NOT_ALLOWED = 405
+		, SC_REQUEST_TIMEOUT = 408
+		, SC_CONFLICT = 409
 		, SC_LENGTH_REQUIRED = 411
 		, SC_CONTENT_TOO_LARGE = 413
 		, SC_URI_TOO_LONG = 414
+		, SC_UNSUPPORTED_MEDIA_TYPE = 415
 		, SC_HEADER_FIELDS_TOO_LARGE = 431
 
 		, SC_INTERNAL_SERVER_ERROR = 500
 		, SC_NOT_IMPLEMENTED = 501
 		, SC_BAD_GATEWAY = 502
 		, SC_GATEWAY_TIMEOUT = 504
+		, SC_VERSION_NOT_SUPPORTED = 505
+		, SC_INSUFFICIENT_STORAGE = 507
 	};
 	std::ostream	&operator<<(std::ostream &os, e_status_code code);
+
+	enum e_body_kind
+	{
+		CT_UNKNOWN = 0
+		, CT_APPLICATION_X_WWW_FORM_URLENCODED
+		, CT_MULTIPART_FORM_DATA
+		, CT_BINARY
+		, CT_TEXT_PLAIN
+	};
 }
 
 #endif /* __HTTP_STATUS_HPP__ */
