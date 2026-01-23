@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 02:45:48 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/23 18:38:41 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,24 +44,6 @@ HttpResponse::~HttpResponse(void) {
 //                            STATIC FUNCTION                                  //
 // =========================================================================== //
 #pragma region static function
-
-// Subsctract the location part of a URI path
-static inline std::string	subLocaPath(const std::string &pPath)
-{
-	if (pPath.empty())
-		return ("");
-
-	std::string	dirPath;
-
-	if (pPath[0] != '/')
-		dirPath += "/";
-
-	size_t	lastSlash = pPath.find_last_of('/');
-	if (lastSlash != std::string::npos)
-		dirPath.append(pPath.substr(0, lastSlash));
-
-	return (dirPath);
-}
 
 // Create a content-value string for the header "Allow"
 static inline std::string	methodsTOstring(const std::vector<http::e_method> &pMethods)
@@ -162,12 +144,12 @@ ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notif
 	_request = pReq;
 	if (_request.getStatusCode() != 200) {
 		setError(_request.getStatusCode());
-		return ConnEvent::none();		
+		return ConnEvent::none();
 	}
 
 	std::string	path = _request.getPath();
 
-	_location =	_server.findLocation(subLocaPath(path));
+	_location = _server.findLocation(path);
 	if (!_location) {
 		setError(http::SC_NOT_FOUND);
 		return ConnEvent::none();
