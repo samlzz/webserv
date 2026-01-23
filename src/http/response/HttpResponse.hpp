@@ -59,7 +59,7 @@ private:
 	bool								_isDone;
 	bool								_isConnection;
 	ChunkedStream						_chunkedStream;
-	int									fd;
+	int									_fd;
 
 	// ========== Helpers methods ==========
 	void		setError(int pCode);
