@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 20:04:04 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 21:37:21 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,8 @@ HttpRequest::HttpRequest(void)
 	reset();
 }
 
-HttpRequest::~HttpRequest(void) {
+HttpRequest::~HttpRequest(void)
+{
 	_buffer.clear();
 }
 
@@ -476,7 +477,8 @@ void	HttpRequest::checkTimeout(time_t now)
 		timeout = REQ_TIMEOUT_HEADER;
 	else
 		timeout = REQ_TIMEOUT_BODY;
-	if (difftime(now, _tsStart) > timeout)
+
+	if (_tsStart && difftime(now, _tsStart) > timeout)
 		setError(http::SC_REQUEST_TIMEOUT);
 }
 
