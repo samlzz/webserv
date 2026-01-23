@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 21:09:10 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/12 17:25:41 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 20:15:00 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include "parsing/RawConfig.hpp"
 #include "parsing/configParse.hpp"
 #include "validation/configValidate.hpp"
+#include "http/HttpData.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -46,6 +47,7 @@ Config::Config(const std::string &configPath): _servs()
 		throw;
 	}
 	delete ast;
+	http::Data::initData();
 }
 
 Config::~Config() {}
