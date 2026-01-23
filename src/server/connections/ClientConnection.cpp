@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 14:22:58 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 20:12:49 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,6 @@ ConnEvent	ClientConnection::handleRead(void)
 		_state = CS_WAIT_REQUEST;
 
 	_req.feed(buf, static_cast<size_t>(n));
-
 	ConnEvent	ret = ConnEvent::none();
 	if (_req.isDone())
 	{
@@ -195,7 +194,7 @@ ConnEvent	ClientConnection::checkTimeout(time_t now)
 		return ConnEvent::close();
 	}
 
-	// TODO call _req.checkTimeout(now)
+	_req.checkTimeout(now);
 	return ConnEvent::none();
 }
 

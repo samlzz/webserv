@@ -3,25 +3,29 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/21 18:07:31 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/23 20:05:10 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_REQUEST_HPP__
 #define __HTTP_REQUEST_HPP__
 
-#include "../HttpStatus.hpp"
+#include <map>
 #include <string>
-#include <vector>
-#include <exception>
+
+#include "http/request/IHttpRequest.hpp"
+#include "http/HttpStatus.hpp"
 
 #define MAX_METHOD_LENGTH		8
 #define MAX_URI_LENGTH			2048
 #define MAX_HEADER_LENGTH		2048
 #define MAX_BODY_LENGTH			1048576
+
+#define REQ_TIMEOUT_HEADER		10000   // 10 s
+#define REQ_TIMEOUT_BODY		120000 // 120 s
 
 enum	e_request_state
 	{ REQ_METHOD
@@ -64,57 +68,67 @@ enum	e_request_state
 	, PARSING_ERROR
 };
 
-class HttpRequest {
-
+class HttpRequest : public IHttpRequest {
 private:
+	typedef std::map<std::string, std::string>	t_headers;
+	struct Request {
+		// ====== Response Line ======
+		http::e_method	method;
+		struct Uri {
+			std::string	path;
+			std::string	query;
+			std::string	fragment;
+		};
+		Uri		uri;
+		int		verMaj;
+		int		verMin;
 
+		t_headers	headers;
+		std::string	body;
+	};
+	
 	e_request_state		_state;
+	time_t				_tsStart;
 	std::string			_buffer;
+	std::string			_valueBuf;
 
-	http::e_method		_method;
-	std::string			_path;
-	std::string			_query;
-	std::string			_fragment;
-	std::string			_verMaj;
-	std::string			_verMin;
+	Request				_request;
 
-	std::vector<std::pair<std::string, std::string> >		_headers;
-
-	std::string			_body;
 	std::string			_transferEncoding;
 	int					_transferLength;
 	int					_contentLength;
 
-	int					_status;
+	http::e_status_code	_status;
 
-private:
-
-	void		addHeader(const std::string& pKey, const std::string& pValue);
-	void		setLastHeader(const std::string& pValue);
+	void	setError(const http::e_status_code pCode);
 
 public:
-
-	HttpRequest(void);	
+	HttpRequest(void);
 	~HttpRequest(void);
 
-	void	feed(char *pBuffer, size_t pSize);
-	bool	isDone(void);
-	bool	isKeepAlive(void);
-	void	reset(void);
+	// ====== Lifecycle ======
+	virtual void		feed(char *pBuffer, size_t pSize);
+	virtual void		reset(void);
+	void				checkTimeout(time_t now);
 
-	http::e_method		getMethod(void) const		{ return (_method);   };
-	std::string			getPath(void) const  		{ return (_path);     };
-	std::string			getQuery(void) const		{ return (_query);    };
-	std::string			getFragment(void) const		{ return (_fragment); };
-	std::string			getVerMaj(void) const		{ return (_verMaj);   };
-	std::string			getVerMin(void) const		{ return (_verMin);   };
+	// ====== Request state ======
+	virtual bool		isDone(void) const;
 
-	std::vector<std::pair<std::string, std::string> >		getHeaders(void) const { return (_headers); };
+	// ========== Getter / Setter ==========
+	int	getState(void) const {return (_state); }
+	http::e_method		getMethod(void) const		{ return (_request.method);       };
+	std::string			getPath(void) const  		{ return (_request.uri.path);     };
+	std::string			getQuery(void) const		{ return (_request.uri.query);    };
+	std::string			getFragment(void) const		{ return (_request.uri.fragment); };
+	int					getVerMaj(void) const		{ return (_request.verMaj);       };
+	int					getVerMin(void) const		{ return (_request.verMin);       };
 
-	bool				hasHeaderName(const std::string& pKey) const;
-	std::string			getHeaderValue(const std::string& pKey) const;
+	t_headers			getHeaders(void) const { return (_request.headers); };
+	void				addHeader(const std::string& pHeader, const std::string& pContent);
+	bool				hasHeader(const std::string& pHeader) const;
+	std::string			getHeader(const std::string& pHeader) const;
 
-	std::string			getBody(void) const			{ return (_body);   };
+	std::string			getBody(void) const			{ return (_request.body); };
 
 	int					getStatusCode(void) const	{ return (_status); };
 };
