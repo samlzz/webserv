@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 02:02:00 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/23 20:05:10 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,9 @@
 #define MAX_URI_LENGTH			2048
 #define MAX_HEADER_LENGTH		2048
 #define MAX_BODY_LENGTH			1048576
+
+#define REQ_TIMEOUT_HEADER		10000   // 10 s
+#define REQ_TIMEOUT_BODY		120000 // 120 s
 
 enum	e_request_state
 	{ REQ_METHOD
@@ -85,29 +88,31 @@ private:
 	};
 	
 	e_request_state		_state;
+	time_t				_tsStart;
 	std::string			_buffer;
 	std::string			_valueBuf;
 
-	Request		_request;
+	Request				_request;
 
 	std::string			_transferEncoding;
 	int					_transferLength;
 	int					_contentLength;
 
-	http::e_status_code		_status;
+	http::e_status_code	_status;
 
 	void	setError(const http::e_status_code pCode);
 
 public:
-	HttpRequest(void);	
+	HttpRequest(void);
 	~HttpRequest(void);
 
 	// ====== Lifecycle ======
-	virtual void	feed(char *pBuffer, size_t pSize);
-	virtual void	reset(void);
+	virtual void		feed(char *pBuffer, size_t pSize);
+	virtual void		reset(void);
+	void				checkTimeout(time_t now);
 
 	// ====== Request state ======
-	virtual bool	isDone(void) const;
+	virtual bool		isDone(void) const;
 
 	// ========== Getter / Setter ==========
 	int	getState(void) const {return (_state); }

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/23 19:52:59 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 19:53:50 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,7 +140,7 @@ ConnEvent	ClientConnection::checkTimeout(time_t now)
 	if (difftime(now, _tsLastActivity) > timeout)
 		return ConnEvent::close();
 
-	// TODO call _req.checkTimeout(now)
+	_req.checkTimeout(now);
 	return ConnEvent::none();
 }
 

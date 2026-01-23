@@ -3,18 +3,20 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 02:43:50 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/23 20:04:04 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstdlib>
+#include <ctime>
 #include <iostream>
 #include <algorithm>
 
 #include "HttpRequest.hpp"
+#include "http/HttpStatus.hpp"
 
 #define CURRENT_STATE() _state
 #define UPDATE_STATE(S) _state = S
@@ -25,7 +27,7 @@
 
 HttpRequest::HttpRequest(void)
 {
-    reset();
+	reset();
 }
 
 HttpRequest::~HttpRequest(void) {
@@ -90,6 +92,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 		ch = pBuffer[i];
 		switch (CURRENT_STATE()) {
 		case REQ_METHOD: {
+			_tsStart = std::time(0);
 			if (ch != ' ') {
 				if (_buffer.length() > MAX_METHOD_LENGTH)
 					return setError(http::SC_BAD_REQUEST);
@@ -449,6 +452,7 @@ bool	HttpRequest::isDone(void) const
 void	HttpRequest::reset(void)
 {
 	UPDATE_STATE(REQ_METHOD);
+	_tsStart = 0;
 
 	_request.method = http::MTH_UNKNOWN;
 	_request.uri.path.clear();
@@ -462,6 +466,18 @@ void	HttpRequest::reset(void)
 	_contentLength = 0;
 	_transferLength = 0;
 	_status = http::SC_OK;
+}
+
+void	HttpRequest::checkTimeout(time_t now)
+{
+	time_t timeout;
+
+	if (_state < HEADER_END)
+		timeout = REQ_TIMEOUT_HEADER;
+	else
+		timeout = REQ_TIMEOUT_BODY;
+	if (difftime(now, _tsStart) > timeout)
+		setError(http::SC_REQUEST_TIMEOUT);
 }
 
 void HttpRequest::setError(const http::e_status_code pCode)
