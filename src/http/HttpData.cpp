@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 03:48:58 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 19:25:56 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 20:15:59 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,9 @@
 namespace http
 {
 
-Data::t_statusData Data::statusData;
-Data::t_mimeData   Data::mimeData;
+Data::t_statusData 		Data::statusData;
+Data::t_mimeData 		Data::mimeData;
+Data::t_contentTypeData	Data::contentTypeData;
 
 void Data::initData(void)
 {
