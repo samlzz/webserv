@@ -23,7 +23,7 @@ FILES =	main.cpp \
 		config/validation/configValidate.cpp \
 		config/validation/validatePath.cpp \
 		http/HttpData.cpp \
-		http/HttpStatus.cpp \
+		http/HttpTypes.cpp \
 		http/request/HttpRequest.cpp \
 		http/response/HttpResponse.cpp \
 		server/Reactor.cpp \

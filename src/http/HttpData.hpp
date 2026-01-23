@@ -6,14 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 03:48:58 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 19:25:57 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 20:42:39 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_DATA_HPP__
 #define __HTTP_DATA_HPP__
 
-#include "http/HttpStatus.hpp"
+#include "http/HttpTypes.hpp"
 #include <string>
 #include <map>
 

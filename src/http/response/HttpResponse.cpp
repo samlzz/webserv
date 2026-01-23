@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 19:42:13 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 20:42:46 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 
 #include "config/validation/configValidate.hpp"
 #include "http/HttpData.hpp"
-#include "http/HttpStatus.hpp"
+#include "http/HttpTypes.hpp"
 #include "http/response/HttpResponse.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "config/Config.hpp"
