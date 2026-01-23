@@ -89,7 +89,7 @@ static inline std::string	subExt(const std::string& pPath)
 	if ((start = pPath.find_last_of('.')) == std::string::npos)
 		return ("");
 
-	result = pPath.substr(start, pPath.length() - start);
+	result = pPath.substr(start + 1, pPath.length() - start);
 	if (result.empty())
 		return ("");
 
