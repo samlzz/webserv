@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/21 18:16:33 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/23 02:44:55 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,13 +40,10 @@ ConnEvent	ClientConnection::handleRead(void)
 	char	buf[CLIENT_READ_BUF_SIZE];
 	ssize_t	n = recv(_fd, buf, CLIENT_READ_BUF_SIZE, 0);
 
-	std::cout << buf << std::endl;
-
 	if (n <= 0)
 		return ConnEvent::close();
 
 	_req.feed(buf, static_cast<size_t>(n));
-	std::cout << _req;
 	ConnEvent	ret = ConnEvent::none();
 	if (_req.isDone())
 	{

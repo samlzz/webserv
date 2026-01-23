@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 02:23:49 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/23 02:45:48 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -210,7 +210,7 @@ ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notif
 		//TODO: CGI stuff
 		return ConnEvent::none();
 	}
-
+ 
 	switch (_request.getMethod()) {
 	case http::MTH_GET:		handleGET(); break;
 	// case http::MTH_HEAD:	handleHEAD(); break;
@@ -316,7 +316,9 @@ void	HttpResponse::loadFile(const std::string& pPath)
 void		HttpResponse::handleGET(void)
 {
 	struct stat	st;
-	std::string	path = _location->path + _request.getPath();
+	std::string	path = _location->root + _request.getPath();
+
+	std::cout << "hello:" << path << std::endl;
 
 	if (stat(path.c_str(), &st) != 0)
 		return setError(http::SC_NOT_FOUND);

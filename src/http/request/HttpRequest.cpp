@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 02:18:13 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/23 02:43:50 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -307,16 +307,15 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 		case HEADER_END: {
 			if (ch != '\n')
 				return setError(http::SC_BAD_REQUEST);
+			if (getMethod() == http::MTH_GET || getMethod() == http::MTH_HEAD || getMethod() == http::MTH_DELETE) {
+				UPDATE_STATE(PARSING_DONE);
+				break;
+			}
 			UPDATE_STATE(BODY_MESSAGE_START);
 			break;
 		}
 
 		case BODY_MESSAGE_START: {
-			if (getMethod() == http::MTH_GET || getMethod() == http::MTH_HEAD || getMethod() == http::MTH_DELETE) {
-				UPDATE_STATE(PARSING_DONE);
-				break;
-			}
-			
 			if (hasHeader("Transfer-Encoding")) {
 				// TODO:
 				// if (hasHeader("Content-Length"))
@@ -510,6 +509,7 @@ std::string		HttpRequest::getHeader(const std::string& pKey) const
 
 std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 {
+	pOut << "State:" <<pRequest.getState() << std::endl;
 	pOut << pRequest.getMethod() << " ";
 	pOut << pRequest.getPath() << pRequest.getQuery() << pRequest.getFragment() << " ";
 	pOut << pRequest.getVerMaj() << "." << pRequest.getVerMin() << std::endl;
