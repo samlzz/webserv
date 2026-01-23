@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/23 20:12:49 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 21:29:27 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ ConnEvent	ClientConnection::handleRead(void)
 
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
 		<< "Received " << n << " bytes from client on fd " << _fd << std::endl;
-	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
+	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_TRACE)
 		<< "Received buffer:\n"
 		<< WS_LOG_SEP << '\n' << std::string(buf, n)
 		<< WS_LOG_SEP << std::endl;
@@ -159,7 +159,7 @@ ConnEvent	ClientConnection::handleEvents(short revents)
 	if (isErrEvent(revents))
 	{
 		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_ERROR)
-			<< "Poll error occurs on fd " << _fd;
+			<< "Poll error occurs on fd " << _fd << std::endl;
 		return ConnEvent::close();
 	}
 
