@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 19:42:13 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 21:41:48 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 
 #include "config/validation/configValidate.hpp"
 #include "http/HttpData.hpp"
-#include "http/HttpStatus.hpp"
+#include "http/HttpTypes.hpp"
 #include "http/response/HttpResponse.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "config/Config.hpp"
@@ -37,12 +37,14 @@
 // =========================================================================== //
 
 HttpResponse::HttpResponse(const Config::Server& pServer)
-	: _server(pServer) {
+	: _server(pServer)
+{
 	reset();
 }
 
-HttpResponse::~HttpResponse(void) {
-	close(fd);
+HttpResponse::~HttpResponse(void)
+{
+	close(_fd);
 }
 
 // =========================================================================== //
@@ -247,7 +249,7 @@ void		HttpResponse::fillStream(void)
 {
 	char	buffer[__SIZE_OF_CHUNK__];
 	while (_chunkedStream.size() <= __MAX_CHUNK__) {
-		ssize_t	rd = read(fd, buffer, sizeof(buffer));
+		ssize_t	rd = read(_fd, buffer, sizeof(buffer));
 
 		if (rd < 0) {
 			_isConnection = false;
@@ -256,7 +258,7 @@ void		HttpResponse::fillStream(void)
 
 		if (rd == 0) {
 			_isDone = true;
-			fd = -1;
+			_fd = -1;
 			return ;
 		}
 		_chunkedStream.push(std::string(buffer, rd));
@@ -275,7 +277,7 @@ void		HttpResponse::reset(void)
 
 	_isDone = false;
 	_isConnection = true;
-	fd = -1;
+	_fd = -1;
 
 	//clear chunked stream too
 }
@@ -321,7 +323,7 @@ void	HttpResponse::loadFile(const std::string& pPath)
 	stat(pPath.c_str(), &st);
 	std::string	ext = subExt(pPath);
 
-	if ((fd = open(pPath.c_str(), O_RDONLY)) < 0) {
+	if ((_fd = open(pPath.c_str(), O_RDONLY)) < 0) {
 		setError(http::SC_FORBIDDEN);
 		return;
 	}
@@ -675,9 +677,9 @@ void	HttpResponse::setError(int pCode)
 			<< "</html>\r\n";
 	_response.body = stream.str();
 
-	addHeader("Content-Type", http::Data::getMimeType("text/html"));
+	addHeader("Content-Type", http::Data::getMimeType("html"));
 	addHeader("Content-Length", toString(_response.body.length()));
-	_chunkedStream.push(toString(_response));
+	_isDone = true;
 }
 
 std::ostream	&operator<<(std::ostream &pOut, const HttpResponse::Response &pResponse)

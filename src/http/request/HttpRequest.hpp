@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 20:05:10 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 20:42:44 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <string>
 
 #include "http/request/IHttpRequest.hpp"
-#include "http/HttpStatus.hpp"
+#include "http/HttpTypes.hpp"
 
 #define MAX_METHOD_LENGTH		8
 #define MAX_URI_LENGTH			2048

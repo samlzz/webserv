@@ -1,17 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HttpStatus.hpp                                     :+:      :+:    :+:   */
+/*   HttpTypes.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 22:31:56 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 19:11:09 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 20:40:56 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __HTTP_STATUS_HPP__
-#define __HTTP_STATUS_HPP__
+#ifndef __HTTP_TYPES_HPP__
+#define __HTTP_TYPES_HPP__
 
 # include <ostream>
 
@@ -68,6 +68,7 @@ namespace http
 		, CT_BINARY
 		, CT_TEXT_PLAIN
 	};
-}
 
-#endif /* __HTTP_STATUS_HPP__ */
+} // namespace http
+
+#endif /* __HTTP_TYPES_HPP__ */
