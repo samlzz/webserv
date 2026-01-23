@@ -6,10 +6,11 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/21 19:48:40 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/23 02:23:49 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <iostream>
 #include <algorithm>
 #include <string>
 
@@ -159,7 +160,10 @@ ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notif
 {
 	(void)notifier;
 	_request = pReq;
-	// TODO: Check request error
+	if (_request.getStatusCode() != 200) {
+		setError(_request.getStatusCode());
+		return ConnEvent::none();		
+	}
 
 	std::string	path = _request.getPath();
 
@@ -425,16 +429,18 @@ void	HttpResponse::handleDELETE(void)
 
 void	HttpResponse::setError(int pCode)
 {
+	std::string		reason = HttpData::getStatusType(pCode);
+
 	_response.body.clear();
 	_response.statusCode.code = pCode;
-	_response.statusCode.reason = HttpData::getStatusType(pCode);
+	_response.statusCode.reason = reason;
 
 	std::ostringstream	stream;
 	stream	<< "<!DOCTYPE html>"
 			<< "<html>\r\n"
-			<< "<head><title>" << pCode << " " << HttpData::getStatusType(pCode) << "</title></head>\r\n"
+			<< "<head><title>" << pCode << " " << reason << "</title></head>\r\n"
 			<< "<body>\r\n"
-			<< "<h1>" << pCode << " " << HttpData::getStatusType(pCode) << "</h1>\r\n"
+			<< "<h1>" << pCode << " " << reason << "</h1>\r\n"
 			<< "<p> An error has occured. </p>\r\n"
 			<< "</body>\r\n"
 			<< "</html>\r\n";
@@ -442,11 +448,12 @@ void	HttpResponse::setError(int pCode)
 
 	addHeader("Content-Type", HttpData::getMimeType("text/html"));
 	addHeader("Content-Length", toString(_response.body.length()));
+	_chunkedStream.push(toString(_response));
 }
 
 std::ostream	&operator<<(std::ostream &pOut, const HttpResponse::Response &pResponse)
 {
-	pOut << "HTTP/1.1 " << pResponse.statusCode.code << " " << pResponse.statusCode.code << "\r\n";
+	pOut << "HTTP/1.1 " << pResponse.statusCode.code << " " << pResponse.statusCode.reason << "\r\n";
 
 	HttpResponse::t_headers	headers = pResponse.headers;
 	HttpResponse::t_headers::const_iterator	it;

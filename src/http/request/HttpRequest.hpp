@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/21 20:05:11 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/23 02:02:00 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,15 +86,17 @@ private:
 	
 	e_request_state		_state;
 	std::string			_buffer;
+	std::string			_valueBuf;
 
 	Request		_request;
-	bool		_isDone;
 
 	std::string			_transferEncoding;
 	int					_transferLength;
 	int					_contentLength;
 
-	int					_status;
+	http::e_status_code		_status;
+
+	void	setError(const http::e_status_code pCode);
 
 public:
 	HttpRequest(void);	
@@ -105,7 +107,7 @@ public:
 	virtual void	reset(void);
 
 	// ====== Request state ======
-	virtual bool	isDone(void);
+	virtual bool	isDone(void) const;
 
 	// ========== Getter / Setter ==========
 	int	getState(void) const {return (_state); }
