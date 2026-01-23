@@ -6,12 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 03:48:58 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 20:15:59 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 20:42:33 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpData.hpp"
-#include "http/HttpStatus.hpp"
+#include "http/HttpTypes.hpp"
 
 // =========================================================================== //
 //                        CONSTRUCTOR & DESTRUCTOR                             //

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:21:48 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/13 13:58:05 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/23 20:42:26 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 # include <string>
 # include <vector>
 
-# include "http/HttpStatus.hpp"
+# include "http/HttpTypes.hpp"
 
 namespace config_parse
 {
