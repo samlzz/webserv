@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:44:04 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/20 19:02:12 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/24 15:09:19 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ CgiWriteConnection::CgiWriteConnection(
 	: AConnection(stdinFd, POLLOUT)
 	, _body(body), _offset(0), _ctx(ctx), _spawned(false)
 {
-	setNonBlocking();
+	setFdFlags();
 }
 
 // ============================================================================
