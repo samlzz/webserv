@@ -65,7 +65,7 @@ private:
 	void		setError(int pCode);
 	void		loadFile(const std::string& pPath);
 	void		addHeader(const std::string &pHeader, const std::string &pContent);
-
+	bool		validUploadPath(std::string& path);
 	// ========== ContentType handler (for POST/PUT) ==========
 	void		handleMultipart(void);
 	void		handleUrlEncoded(void);

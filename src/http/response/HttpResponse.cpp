@@ -404,17 +404,71 @@ void		HttpResponse::handleHEAD(void)
 	_response.body.clear();
 }
 
+bool HttpResponse::validUploadPath(std::string& path)
+{
+	if (!_location->uploadPath.isSome())
+	{
+		setError(http::SC_METHOD_NOT_ALLOWED);
+		return false;
+	}
+
+	path = *_location->uploadPath;
+
+	if (access(path.c_str(), W_OK) != 0)
+	{
+		setError(http::SC_FORBIDDEN);
+		return false;
+	}
+
+	if (path[0] == '/')
+		path = "." + path;
+	return true;
+}
+
+std::string createFilename(std::string& filename, http::e_body_kind expression)
+{
+	std::string new_filename;
+
+	switch (expression)
+	{
+	case http::CT_BINARY:
+		new_filename = "raw_post_" + toString(std::time(0));
+		break;
+	
+	case http::CT_TEXT_PLAIN:
+		new_filename = "text_post_" + toString(std::time(0)) + ".txt";
+		break;
+
+	case http::CT_APPLICATION_X_WWW_FORM_URLENCODED:
+		break;
+
+	case http::CT_MULTIPART_FORM_DATA:
+	{
+		size_t ext_pos = filename.find_last_of(".");
+		if (ext_pos != std::string::npos)
+			new_filename = filename.substr(0, ext_pos) + "_" + toString(std::time(0)) + filename.substr(ext_pos);
+		else
+			new_filename = filename + "_" + toString(std::time(0));
+		break;
+	}
+	case http::CT_UNKNOWN:
+		new_filename = "";
+		break;
+
+	default:
+		new_filename = "";
+		break;
+	}
+	return new_filename;
+}
+
 void HttpResponse::handleMultipart(void)
 {
 	std::string	contentType = _request.getHeader("Content-Type");
 	std::string	uploadDir;
-	if (_location->uploadPath.isSome())
-		uploadDir = *_location->uploadPath;
-	else
-		return setError(http::SC_METHOD_NOT_ALLOWED);
-
-	if (access(uploadDir.c_str(), W_OK) != 0)
-		return setError(http::SC_FORBIDDEN);
+	std::string new_filename;
+	if (!validUploadPath(uploadDir))
+		return;
 
 	//SEARCH BOUNDARY
 	size_t	boundaryPos = contentType.find("boundary=");
@@ -428,10 +482,12 @@ void HttpResponse::handleMultipart(void)
 
 	while ((pos = body.find(delimiter, pos)) != std::string::npos)
 	{	
+		std::cout << "Delimiter found at position: " << pos << std::endl;
+		//FIND NEXT DELIMITER
 		size_t	nextPos = body.find(delimiter, pos + delimiter.length());
 		if (nextPos == std::string::npos)
 			break;
-
+		std::cout << "Next Delimiter found at position: " << nextPos << std::endl;
 		//EXTRACT FILENAME AND CONTENT
 		std::string	part = body.substr(pos + delimiter.length(), nextPos - pos - delimiter.length());
 		size_t	filenamePos = part.find("filename=\"");
@@ -460,12 +516,7 @@ void HttpResponse::handleMultipart(void)
 					std::string	fileContent = part.substr(contentPos + 4, part.length() - contentPos - 6); // -6 to remove trailing \r\n
 
 					//add random time to filename to avoid overwriting
-					std::string new_filename;
-					size_t ext_pos = filename.find_last_of(".");
-					if (ext_pos != std::string::npos)
-						new_filename = filename.substr(0, ext_pos) + "_" + toString(std::time(0)) + filename.substr(ext_pos);
-					else
-						new_filename = filename + "_" + toString(std::time(0));
+					new_filename = createFilename(filename, http::CT_MULTIPART_FORM_DATA);
 
 					//SAVE FILE TO filePath
 					std::string		filePath = uploadDir + "/" + new_filename;
@@ -488,6 +539,7 @@ void HttpResponse::handleMultipart(void)
 	}
 	//code 201 Created
 	_response.setStatusCode(http::SC_CREATED);
+	std::cout << "Finished handling multipart/form-data POST request." << std::endl;
 	return;
 }
 
@@ -522,16 +574,12 @@ void HttpResponse::handleUrlEncoded(void)
 void HttpResponse::handleOctetStream(void)
 {
 	std::string	uploadDir;
-	if (_location->uploadPath.isSome())
-		uploadDir = *_location->uploadPath;
-	else
-		return setError(http::SC_METHOD_NOT_ALLOWED);
-
-	if (access(uploadDir.c_str(), W_OK) != 0)
-		return setError(http::SC_FORBIDDEN);
+	std::string	filename;
+	if (validUploadPath(uploadDir) == false)
+		return;
 
 	//SAVE FILE TO filePath
-	std::string	filename = "raw_post_" + toString(std::time(0));
+	filename = createFilename(filename, http::CT_BINARY);
 	std::string	filePath = uploadDir + "/" + filename;
 	std::ofstream	outFile(filePath.c_str(), std::ios::binary);
 	if (!outFile)
@@ -551,16 +599,12 @@ void HttpResponse::handleTextPlain(void)
 {
 	// Just save the body to a file
 	std::string	uploadDir;
-	if (_location->uploadPath.isSome())
-		uploadDir = *_location->uploadPath;
-	else
-		return setError(http::SC_METHOD_NOT_ALLOWED);
-
-	if (access(uploadDir.c_str(), W_OK) != 0)
-		return setError(http::SC_FORBIDDEN);
+	std::string	filename;
+	if (validUploadPath(uploadDir) == false)
+		return;
 
 	//SAVE FILE TO filePath
-	std::string	filename = "raw_post_" + toString(std::time(0)) + ".txt";
+	filename = createFilename(filename, http::CT_TEXT_PLAIN);
 	std::string	filePath = uploadDir + "/" + filename;
 	std::ofstream	outFile(filePath.c_str(), std::ios::binary);
 	if (!outFile)
@@ -579,6 +623,7 @@ void HttpResponse::handleTextPlain(void)
 // TODO: need a Reverse Deque Technique like send but receive instead, might need to redo request 
 void		HttpResponse::handlePOST(void)
 {
+	std::cout << "Handling POST request..." << std::endl;
 	std::string contentType = _request.getHeader("Content-Type");
 	if (contentType.empty())
 		handleOctetStream();
@@ -610,7 +655,8 @@ void		HttpResponse::handlePOST(void)
 void		HttpResponse::handlePUT(void)
 {
 	struct stat		st;
-	std::string		path = _request.getPath();
+	// std::string		path = _request.getPath();
+	std::string		path = _location->root + _request.getPath();
 
 	bool	fileExist = (stat(path.c_str(), &st) == 0);
 
@@ -643,18 +689,20 @@ void		HttpResponse::handlePUT(void)
 // Delete method to remove an existing filec
 void	HttpResponse::handleDELETE(void)
 {
-	std::string path = _location->path + _request.getPath();
+	// std::string path = _location->path + _request.getPath();
+	std::string path = _location->root + _request.getPath();
 	struct stat st;
+
+	//Check si le path commence par /
+	if (path[0] == '/')
+		path = "." + path;
 
 	if (stat(path.c_str(), &st) != 0)
 		return setError(http::SC_NOT_FOUND);
-
 	if (S_ISDIR(st.st_mode))
 		return setError(http::SC_FORBIDDEN);
-
 	if (unlink(path.c_str()) != 0)
 		return setError(http::SC_INTERNAL_SERVER_ERROR);
-
 	_response.setStatusCode(http::SC_NO_CONTENT);
 }
 
