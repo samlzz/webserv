@@ -358,7 +358,7 @@ void		HttpResponse::handleGET(void)
 		}
 
 		if (_location->autoindex)
-		{
+		{			
 			DIR *dir = opendir(path.c_str());
 			if (!dir)
 				return setError(http::SC_FORBIDDEN);
@@ -367,9 +367,12 @@ void		HttpResponse::handleGET(void)
 			std::vector<std::string>	folders;
 			std::vector<std::string>	files;
 
-			while ((entry = readdir(dir)) != NULL) {
+			while ((entry = readdir(dir)) != NULL)
+			{
 				struct stat s;
-				if (stat(entry->d_name, &s) == 0) {
+				std::string fullEntryPath = path + "/" + entry->d_name;
+				if (stat(fullEntryPath.c_str(), &s) == 0)
+				{
 					if (S_ISDIR(s.st_mode))
 						folders.push_back(entry->d_name);
 					if (S_ISREG(s.st_mode))
