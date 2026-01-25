@@ -160,6 +160,36 @@ static inline std::string url_decode(const std::string &str)
 	}
 	return result;
 }
+//Remove /../ and /./ in path
+std::string normalizePath(const std::string &path)
+{
+	std::string newPath;
+	size_t length = path.length();
+
+	for (size_t i = 0; i < length; )
+	{
+		// Handle "/../"
+		if (i + 3 < length && path[i] == '/' && path[i + 1] == '.' && path[i + 2] == '.' && path[i + 3] == '/')
+		{
+
+			size_t pos = newPath.find_last_of('/');
+			if (pos != std::string::npos)
+				newPath.erase(pos);
+			i += 3;
+		}
+		// Handle "/./"
+		else if (i + 2 < length && path[i] == '/' && path[i + 1] == '.' && path[i + 2] == '/')
+		{
+			i += 2;
+		}
+		else
+		{
+			newPath += path[i];
+			i++;
+		}
+	}
+	return newPath;
+}
 
 #pragma endregion
 
@@ -180,6 +210,9 @@ ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notif
 		return ConnEvent::none();
 	}
 
+	std::string normalizedPath = normalizePath(_request.getPath());
+	_request.setPath(normalizedPath);
+	
 	std::string	path = _request.getPath();
 
 	_location = _server.findLocation(path);
@@ -558,7 +591,7 @@ void HttpResponse::handleMultipart(	http::e_method curMethod)
 
 					ssize_t written = write(fd, fileContent.c_str(), fileContent.length());
 					close(fd);
-					
+
 					if (written < 0)
 						return setError(http::SC_INTERNAL_SERVER_ERROR);
 					

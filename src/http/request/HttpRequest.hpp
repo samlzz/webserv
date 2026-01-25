@@ -118,6 +118,7 @@ public:
 	int	getState(void) const {return (_state); }
 	http::e_method		getMethod(void) const		{ return (_request.method);       };
 	std::string			getPath(void) const  		{ return (_request.uri.path);     };
+	void				setPath(const std::string &path)	{ _request.uri.path = path;       };
 	std::string			getQuery(void) const		{ return (_request.uri.query);    };
 	std::string			getFragment(void) const		{ return (_request.uri.fragment); };
 	int					getVerMaj(void) const		{ return (_request.verMaj);       };
