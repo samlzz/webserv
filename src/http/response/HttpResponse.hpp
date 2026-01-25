@@ -66,11 +66,12 @@ private:
 	void		loadFile(const std::string& pPath);
 	void		addHeader(const std::string &pHeader, const std::string &pContent);
 	bool		validUploadPath(std::string& path);
+	std::string buildUploadPath(std::string &filename,http::e_body_kind expression);
 	// ========== ContentType handler (for POST/PUT) ==========
-	void		handleMultipart(void);
-	void		handleUrlEncoded(void);
-	void		handleOctetStream(void);
-	void		handleTextPlain(void);
+	void		handleMultipart(http::e_method curMethod);
+	void		handleUrlEncoded(http::e_method curMethod);
+	void		handleOctetStream(http::e_method curMethod);
+	void		handleTextPlain(http::e_method curMethod);
 
 	// ========== Methods handler ==========
 	void		handleGET(void);

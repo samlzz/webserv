@@ -462,13 +462,40 @@ std::string createFilename(std::string& filename, http::e_body_kind expression)
 	return new_filename;
 }
 
-void HttpResponse::handleMultipart(void)
+std::string HttpResponse::buildUploadPath(std::string &filename, http::e_body_kind expression)
+{
+	std::string uploadDir;
+	http::e_method	method = _request.getMethod();
+
+	if (method != http::MTH_POST && method != http::MTH_PUT)
+		return "";
+
+	if (method == http::MTH_POST)
+	{
+		if (!validUploadPath(uploadDir))
+			return "";
+		filename = createFilename(filename, expression);
+	}
+
+	else if (method == http::MTH_PUT)
+	{
+		uploadDir = _location->root;
+		filename = _request.getPath();
+		if (!filename.empty() && filename[0] == '/')
+			filename = filename.substr(1);
+	}
+
+	std::string	filePath = uploadDir + "/" + filename;
+
+	if (filePath[0] == '/')
+		filePath = "." + filePath;
+
+	return filePath;
+}
+
+void HttpResponse::handleMultipart(	http::e_method curMethod)
 {
 	std::string	contentType = _request.getHeader("Content-Type");
-	std::string	uploadDir;
-	std::string new_filename;
-	if (!validUploadPath(uploadDir))
-		return;
 
 	//SEARCH BOUNDARY
 	size_t	boundaryPos = contentType.find("boundary=");
@@ -513,21 +540,30 @@ void HttpResponse::handleMultipart(void)
 				if (contentPos != std::string::npos)
 				{
 					//EXTRACT CONTENT AND SAVE TO FILE
-					std::string	fileContent = part.substr(contentPos + 4, part.length() - contentPos - 6); // -6 to remove trailing \r\n
+					std::string	fileContent = part.substr(contentPos + 4, part.length() - contentPos - 6);
+					std::string filePath = buildUploadPath(filename, http::CT_MULTIPART_FORM_DATA);
+					if (filePath.empty())
+						return;
 
-					//add random time to filename to avoid overwriting
-					new_filename = createFilename(filename, http::CT_MULTIPART_FORM_DATA);
+					int fd = -1;
+					if (curMethod == http::MTH_PUT)
+						fd = open(filePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+					else if (curMethod == http::MTH_POST)
+						fd = open(filePath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0644);
+					else
+						return setError(http::SC_BAD_REQUEST);
 
-					//SAVE FILE TO filePath
-					std::string		filePath = uploadDir + "/" + new_filename;
-					std::ofstream	outFile(filePath.c_str(), std::ios::binary);
-					if (!outFile)
+					if (fd < 0)
 						return setError(http::SC_INTERNAL_SERVER_ERROR);
-					outFile.write(fileContent.c_str(), fileContent.length());
-					outFile.close();
+
+					ssize_t written = write(fd, fileContent.c_str(), fileContent.length());
+					close(fd);
+					
+					if (written < 0)
+						return setError(http::SC_INTERNAL_SERVER_ERROR);
 					
 					//A verifier? location dans le header si upload
-					addHeader("Location", "/" + new_filename);
+					addHeader("Location", "/" + filename);
 				}
 				else
 				{
@@ -543,8 +579,9 @@ void HttpResponse::handleMultipart(void)
 	return;
 }
 
-void HttpResponse::handleUrlEncoded(void)
+void HttpResponse::handleUrlEncoded(http::e_method curMethod)
 {
+	(void)curMethod;
 	std::istringstream stream(_request.getBody());
 	std::string line;
 	std::map<std::string, std::string> data;
@@ -571,21 +608,28 @@ void HttpResponse::handleUrlEncoded(void)
 	return;
 }
 
-void HttpResponse::handleOctetStream(void)
+void HttpResponse::handleOctetStream(http::e_method curMethod)
 {
-	std::string	uploadDir;
 	std::string	filename;
-	if (validUploadPath(uploadDir) == false)
+	std::string filePath = buildUploadPath(filename, http::CT_BINARY);
+	if (filePath.empty())
 		return;
 
-	//SAVE FILE TO filePath
-	filename = createFilename(filename, http::CT_BINARY);
-	std::string	filePath = uploadDir + "/" + filename;
-	std::ofstream	outFile(filePath.c_str(), std::ios::binary);
-	if (!outFile)
+	int fd = -1;
+	if (curMethod == http::MTH_PUT)
+		fd = open(filePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	else if (curMethod == http::MTH_POST)
+		fd = open(filePath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0644);
+	else
+	 	return setError(http::SC_BAD_REQUEST);
+	if (fd < 0)
 		return setError(http::SC_INTERNAL_SERVER_ERROR);
-	outFile.write(_request.getBody().c_str(), _request.getBody().length());
-	outFile.close();
+
+	ssize_t written = write(fd, _request.getBody().c_str(), _request.getBody().length());
+	close(fd);
+
+	if (written < 0)
+		return setError(http::SC_INTERNAL_SERVER_ERROR);
 
 	//A verifier? location dans le header si upload
 	addHeader("Location", "/" + filename);
@@ -595,22 +639,32 @@ void HttpResponse::handleOctetStream(void)
 	return;
 }
 
-void HttpResponse::handleTextPlain(void)
+void HttpResponse::handleTextPlain(http::e_method curMethod)
 {
 	// Just save the body to a file
-	std::string	uploadDir;
+	// std::string	uploadDir;
 	std::string	filename;
-	if (validUploadPath(uploadDir) == false)
+	std::string filePath = buildUploadPath(filename, http::CT_TEXT_PLAIN);
+	if (filePath.empty())
 		return;
 
-	//SAVE FILE TO filePath
-	filename = createFilename(filename, http::CT_TEXT_PLAIN);
-	std::string	filePath = uploadDir + "/" + filename;
-	std::ofstream	outFile(filePath.c_str(), std::ios::binary);
-	if (!outFile)
+	// std::ofstream	outFile(filePath.c_str(), std::ios::binary);
+	int fd = -1;
+	if (curMethod == http::MTH_PUT)
+		fd = open(filePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	else if (curMethod == http::MTH_POST)
+		fd = open(filePath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0644);
+	else
+		return setError(http::SC_BAD_REQUEST);
+
+	if (fd < 0)
 		return setError(http::SC_INTERNAL_SERVER_ERROR);
-	outFile.write(_request.getBody().c_str(), _request.getBody().length());
-	outFile.close();
+
+	ssize_t written = write(fd, _request.getBody().c_str(), _request.getBody().length());
+	close(fd);
+
+	if (written < 0)
+		return setError(http::SC_INTERNAL_SERVER_ERROR);
 
 	//A verifier? location dans le header si upload
 	addHeader("Location", "/" + filename);
@@ -626,24 +680,26 @@ void		HttpResponse::handlePOST(void)
 	std::cout << "Handling POST request..." << std::endl;
 	std::string contentType = _request.getHeader("Content-Type");
 	if (contentType.empty())
-		handleOctetStream();
+		contentType = "application/octet-stream";
+
+	http::e_method curMethod = _request.getMethod();
 
 	switch (http::Data::getContentTypeKind(contentType))
 	{
 		case http::CT_APPLICATION_X_WWW_FORM_URLENCODED:
-			handleUrlEncoded();
+			handleUrlEncoded(curMethod);
 			break;
 
 		case http::CT_MULTIPART_FORM_DATA:
-			handleMultipart();
+			handleMultipart(curMethod);
 			break;
 
 		case http::CT_BINARY:
-			handleOctetStream();
+			handleOctetStream(curMethod);
 			break;
 
 		case http::CT_TEXT_PLAIN:
-			handleTextPlain();
+			handleTextPlain(curMethod);
 			break;
 
 		default:
@@ -672,16 +728,18 @@ void		HttpResponse::handlePUT(void)
 			return setError(http::SC_FORBIDDEN);
 	}
 
-	int		fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-	if (fd < 0)
-		return setError(http::SC_INTERNAL_SERVER_ERROR);
+	// int		fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	// if (fd < 0)
+	// 	return setError(http::SC_INTERNAL_SERVER_ERROR);
 
-	std::string body = _request.getBody();
-	ssize_t	written = write(fd, body.c_str(), body.length());
-	close(fd);
+	// std::string body = _request.getBody();
+	// ssize_t	written = write(fd, body.c_str(), body.length());
+	// close(fd);
 
-	if (written < 0)
-		return setError(http::SC_INTERNAL_SERVER_ERROR);
+	// if (written < 0)
+	// 	return setError(http::SC_INTERNAL_SERVER_ERROR);
+
+	handlePOST();
 
 	fileExist ? _response.setStatusCode(http::SC_NO_CONTENT) : _response.setStatusCode(http::SC_CREATED);
 }
