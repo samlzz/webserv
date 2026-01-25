@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/23 21:29:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/25 17:30:22 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ ConnEvent	ClientConnection::handleRead(void)
 	{
 		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_ERROR)
 			<< "Fail to read " << CLIENT_READ_BUF_SIZE
-			<< " bytes from fd " << _fd << std::endl;
+			<< " bytes from fd " << _fd << (n == 0 ? " bc EOF" : "") << std::endl;
 		return ConnEvent::close();
 	}
 
