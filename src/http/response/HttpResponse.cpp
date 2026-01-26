@@ -377,10 +377,10 @@ void		HttpResponse::handleGET(void)
 
 	if (S_ISDIR(st.st_mode)) {
 		//TODO: access folder
-
 		if (path[path.length() - 1] != '/') {
 			std::string redirectPath = _request.getPath() + "/";
 			addHeader("Location", redirectPath);
+			setError(http::SC_MOVED_PERMANENTLY);
 			return ; //TODO: handle 301 MOVED PERMA
 		}
 
@@ -391,7 +391,7 @@ void		HttpResponse::handleGET(void)
 		}
 
 		if (_location->autoindex)
-		{
+		{			
 			DIR *dir = opendir(path.c_str());
 			if (!dir)
 				return setError(http::SC_FORBIDDEN);
@@ -400,15 +400,22 @@ void		HttpResponse::handleGET(void)
 			std::vector<std::string>	folders;
 			std::vector<std::string>	files;
 
-			while ((entry = readdir(dir)) != NULL) {
+			while ((entry = readdir(dir)) != NULL)
+			{
 				struct stat s;
-				if (stat(entry->d_name, &s) == 0) {
+				std::string fullEntryPath = path + "/" + entry->d_name;
+				if (stat(fullEntryPath.c_str(), &s) == 0)
+				{
 					if (S_ISDIR(s.st_mode))
 						folders.push_back(entry->d_name);
 					if (S_ISREG(s.st_mode))
 						files.push_back(entry->d_name);
 				}
 			}
+
+			_response.body = "<html><head><title>Index of " + _request.getPath() + "</title></head><body>";
+			_response.body += "<h1>Index of " + _request.getPath() + "</h1><hr><pre>";
+
 			std::sort(folders.begin(), folders.end());
 			std::sort(files.begin(), files.end());
 
@@ -416,6 +423,12 @@ void		HttpResponse::handleGET(void)
 				_response.body += "<a href=\"" + folders[i] + "\">" + folders[i] + "</a><br>\n";
 			for (size_t i = 0; i < files.size(); ++i)
 				_response.body += "<a href=\"" + files[i] + "\">" + files[i] + "</a><br>\n";
+
+			_response.body += "</pre><hr></body></html>";
+
+			_response.setStatusCode(http::SC_OK);
+			addHeader("Content-Type", http::Data::getMimeType("html"));
+			addHeader("Content-Length", toString(_response.body.size()));
 
 			closedir(dir);
 			return;
