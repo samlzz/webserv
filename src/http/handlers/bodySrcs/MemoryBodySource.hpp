@@ -18,7 +18,7 @@
 
 # include "http/response/interfaces/IBodySource.hpp"
 
-class MemoryBodySource : IBodySource {
+class MemoryBodySource : public IBodySource {
 
 private:
 	std::string	_data;

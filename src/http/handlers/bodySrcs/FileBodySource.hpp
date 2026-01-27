@@ -17,7 +17,7 @@
 
 # include "http/response/interfaces/IBodySource.hpp"
 
-class FileBodySource: IBodySource {
+class FileBodySource: public IBodySource {
 
 private:
 	int			_fd;
