@@ -17,11 +17,11 @@
 
 #include "BuffStream.hpp"
 #include "interfaces/IFifoStream.hpp"
-#include "interfaces/IHttpResponse.hpp"
 #include "http/request/HttpRequest.hpp"
 
 #include "server/connections/ConnEvent.hpp"
 #include "config/Config.hpp"
+#include "server/connections/IWritableNotifier.hpp"
 
 # ifndef __MAX_CHUNK__
 # define __MAX_CHUNK__	3
@@ -31,7 +31,7 @@
 # define __SIZE_OF_CHUNK__	32000
 # endif
 
-class HttpResponse : public IHttpResponse {
+class HttpResponse {
 
 private:
 
