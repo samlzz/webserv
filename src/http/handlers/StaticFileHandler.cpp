@@ -5,6 +5,7 @@
 #include "http/HttpData.hpp"
 #include "config/validation/configValidate.hpp"
 #include "bodySrcs/MemoryBodySource.hpp"
+#include "bodySrcs/FileBodySource.hpp"
 
 
 #include "sys/stat.h"
@@ -70,7 +71,11 @@ ResponsePlan	StaticFileHandler::handle(
 			}
 			plan.headers["Content-Length"] = toString(st.st_size);
 			plan.headers["Content-Type"] = http::Data::getMimeType(ext);
-			// plan.fileDescriptor = _fd;
+			
+			plan.body = new FileBodySource(_fd);
+
+			plan.status = http::SC_OK;
+			return (plan);
 		}
 
 		if (route.location->autoindex)
