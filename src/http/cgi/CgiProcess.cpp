@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 12:57:48 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 17:57:03 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,8 @@
 
 CgiProcess::CgiProcess(IOutputSink &sink, IWritableNotifier &notifier)
 	: _sink(sink), _notifier(notifier)
-	, _pid(-1), _exitCode(0), _terminated(false)
+	, _pid(-1), _exitCode(0)
+	, _terminated(false), _errOccur(false)
 	, _read(0), _write(0)
 {}
 
@@ -42,17 +43,18 @@ CgiProcess::~CgiProcess()
 // Accessors
 // ============================================================================
 
-IConnection	*CgiProcess::read(void) const		{ return _read; }
-IConnection	*CgiProcess::write(void) const		{ return _write; }
+IConnection	*CgiProcess::read(void) const			{ return _read; }
+IConnection	*CgiProcess::write(void) const			{ return _write; }
 
-void		CgiProcess::forgetRead(void)		{ _read = 0; }
-void		CgiProcess::forgetWrite(void)		{ _write = 0; }
+void		CgiProcess::forgetRead(void)			{ _read = 0; }
+void		CgiProcess::forgetWrite(void)			{ _write = 0; }
 
-time_t		CgiProcess::startTime(void) const	{ return _startTs; }
+time_t		CgiProcess::startTime(void) const		{ return _startTs; }
 
-bool		CgiProcess::isDone(void) const		{ return _terminated; }
+bool		CgiProcess::isTerminated(void) const	{ return _terminated; }
+bool		CgiProcess::isError(void) const			{ return _errOccur; }
 
-uint8_t		CgiProcess::exitCode(void) const	{ return _exitCode; }
+uint8_t		CgiProcess::exitCode(void) const		{ return _exitCode; }
 
 // ============================================================================
 // Helpers for start()
@@ -221,13 +223,14 @@ void	CgiProcess::onError(void)
 	if (_terminated)
 		return;
 	_terminated = true;
+	_errOccur = true;
 	cleanup(true);
+	_notifier.notifyWritable();
 }
 
 void	CgiProcess::onTimeout(void)
 {
 	onError();
-	_notifier.notifyWritable();
 }
 
 void	CgiProcess::onEof(void)

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 13:19:25 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 16:13:43 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,8 +45,11 @@ private:
 	IWritableNotifier	&_notifier;
 	pid_t				_pid;
 	time_t				_startTs;
+
 	uint8_t				_exitCode;
 	bool				_terminated;
+	bool				_errOccur;
+
 	IConnection			*_read;
 	IConnection			*_write;
 
@@ -69,7 +72,8 @@ public:
 
 	time_t				startTime(void) const;
 
-	bool				isDone(void) const;
+	bool				isTerminated(void) const;
+	bool				isError(void) const;
 	uint8_t				exitCode(void) const;
 
 	// ============================================================================
