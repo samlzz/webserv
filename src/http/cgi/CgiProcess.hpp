@@ -18,7 +18,7 @@
 # include <sys/types.h>
 # include <stdint.h>
 
-# include "http/response/IChunkEncoder.hpp"
+# include "http/cgi/IOutputSink.hpp"
 # include "server/connections/IConnection.hpp"
 # include "server/connections/IWritableNotifier.hpp"
 
@@ -41,7 +41,7 @@ private:
 	// ============================================================================
 	// Attributes
 	// ============================================================================
-	IChunkEncoder		&_encoder;
+	IOutputSink			&_sink;
 	IWritableNotifier	&_notifier;
 	pid_t				_pid;
 	time_t				_startTs;
@@ -55,7 +55,7 @@ public:
 	// ============================================================================
 	// Construction
 	// ============================================================================
-	CgiProcess(IChunkEncoder &encoder, IWritableNotifier &notifier);
+	CgiProcess(IOutputSink &sink, IWritableNotifier &notifier);
 	~CgiProcess();
 
 	// ============================================================================

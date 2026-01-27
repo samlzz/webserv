@@ -19,9 +19,9 @@
 #include <unistd.h>
 
 #include "CgiProcess.hpp"
-#include "http/response/IChunkEncoder.hpp"
 #include "http/cgi/CgiReadConnection.hpp"
 #include "http/cgi/CgiWriteConnection.hpp"
+#include "http/cgi/IOutputSink.hpp"
 #include "server/connections/IConnection.hpp"
 #include "server/connections/IWritableNotifier.hpp"
 
@@ -29,8 +29,8 @@
 // Construction / Destruction
 // ============================================================================
 
-CgiProcess::CgiProcess(IChunkEncoder &encoder, IWritableNotifier &notifier)
-	: _encoder(encoder), _notifier(notifier)
+CgiProcess::CgiProcess(IOutputSink &sink, IWritableNotifier &notifier)
+	: _sink(sink), _notifier(notifier)
 	, _pid(-1), _exitCode(0), _terminated(false)
 	, _read(0), _write(0)
 {}
@@ -236,14 +236,16 @@ void	CgiProcess::onEof(void)
 		return;
 	_terminated = true;
 	forgetRead();
-	_encoder.finalize();
+	_sink.finalize();
 	_notifier.notifyWritable();
 	cleanup(false);
 }
 
 void	CgiProcess::onRead(const char *buffer, size_t bufSize)
 {
-	_encoder.encode(buffer, bufSize);
+	if (_terminated)
+		return ;
+	_sink.append(buffer, bufSize);
 	_notifier.notifyWritable();
 }
 void	CgiProcess::onBodyEnd(void)
