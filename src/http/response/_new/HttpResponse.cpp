@@ -6,16 +6,17 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:30:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 13:55:10 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 18:08:47 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#include <sstream>
 
 #include "HttpResponse.hpp"
 #include "http/HttpData.hpp"
 #include "http/HttpTypes.hpp"
 #include "http/response/ResponsePlan.hpp"
 #include "http/response/interfaces/IMetaSource.hpp"
-#include <sstream>
 
 // ============================================================================
 // Construction / Destruction
@@ -49,6 +50,7 @@ bool						HttpResponse::shouldCloseConnection(void) const
 // Methods
 // ============================================================================
 
+// TODO: handle _body.hasError()
 void	HttpResponse::fillStream(void)
 {
 	if (!_commited)
