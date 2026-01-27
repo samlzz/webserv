@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/26 14:48:42 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 10:57:20 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 12:56:49 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,13 +14,8 @@
 # define __RESPONSE_PLAN_HPP__
 
 # include "http/HttpTypes.hpp"
-
-// ============================================================================
-// Forward declarations
-// ============================================================================
-
-class IBodySource;
-struct ConnEvent;
+# include "http/response/interfaces/IBodySource.hpp"
+# include "server/connections/ConnEvent.hpp"
 
 // ============================================================================
 // Immutable plan for HttpResponse
@@ -30,11 +25,11 @@ struct ResponsePlan {
 
 	http::e_status_code	status;
 	http::t_headers		headers;
-	// may be null:
-	IBodySource			*body;
-	ConnEvent			*event;
+	IBodySource			*body; // ? raw pointer, may be null, ownership transfert
+	ConnEvent			event; // ? default to CE_NONE
 
-	ResponsePlan(): status(http::SC_OK), headers(), body(0), event(0)
+	ResponsePlan()
+		: status(http::SC_OK), headers(), body(0), event(ConnEvent::none())
 	{}
 };
 
