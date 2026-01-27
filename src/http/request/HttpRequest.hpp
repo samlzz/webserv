@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 20:42:44 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 11:44:38 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,7 +131,7 @@ public:
 
 	std::string			getBody(void) const			{ return (_request.body); };
 
-	int					getStatusCode(void) const	{ return (_status); };
+	http::e_status_code	getStatusCode(void) const	{ return (_status); };
 };
 
 std::ostream&		operator<<(std::ostream& pOut, const HttpRequest& pRequest);
