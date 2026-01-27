@@ -6,14 +6,13 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/27 11:44:38 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 12:04:34 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_REQUEST_HPP__
 #define __HTTP_REQUEST_HPP__
 
-#include <map>
 #include <string>
 
 #include "http/request/IHttpRequest.hpp"
@@ -70,7 +69,6 @@ enum	e_request_state
 
 class HttpRequest : public IHttpRequest {
 private:
-	typedef std::map<std::string, std::string>	t_headers;
 	struct Request {
 		// ====== Response Line ======
 		http::e_method	method;
@@ -83,8 +81,8 @@ private:
 		int		verMaj;
 		int		verMin;
 
-		t_headers	headers;
-		std::string	body;
+		http::t_headers	headers;
+		std::string		body;
 	};
 	
 	e_request_state		_state;
@@ -124,7 +122,7 @@ public:
 	int					getVerMaj(void) const		{ return (_request.verMaj);       };
 	int					getVerMin(void) const		{ return (_request.verMin);       };
 
-	t_headers			getHeaders(void) const { return (_request.headers); };
+	http::t_headers		getHeaders(void) const { return (_request.headers); };
 	void				addHeader(const std::string& pHeader, const std::string& pContent);
 	bool				hasHeader(const std::string& pHeader) const;
 	std::string			getHeader(const std::string& pHeader) const;

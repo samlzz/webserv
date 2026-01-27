@@ -36,7 +36,6 @@ class HttpResponse : public IHttpResponse {
 private:
 
 	// ========== Response Reply ==========
-	typedef std::map<std::string, std::string>	t_headers;
 	struct Response
 	{
 		struct StatusCode {
@@ -46,7 +45,7 @@ private:
 		void	setStatusCode(const int &pCode);
 
 		StatusCode			statusCode;
-		t_headers			headers;
+		http::t_headers		headers;
 		std::string			body;
 	};
 

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/27 11:46:50 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 12:05:31 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -837,8 +837,8 @@ std::ostream	&operator<<(std::ostream &pOut, const HttpResponse::Response &pResp
 		<< pResponse.statusCode.code << " " << pResponse.statusCode.reason
 		<< "\r\n";
 
-	HttpResponse::t_headers					headers = pResponse.headers;
-	HttpResponse::t_headers::const_iterator	it;
+	http::t_headers					headers = pResponse.headers;
+	http::t_headers::const_iterator	it;
 	for (it = headers.begin(); it != headers.end(); it++) {
 		pOut << it->first << ": " << it->second << "\r\n";
 	}

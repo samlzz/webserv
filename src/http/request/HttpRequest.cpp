@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 21:39:17 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 12:03:28 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -501,8 +501,8 @@ void		HttpRequest::addHeader(const std::string& pKey, const std::string& pValue)
 
 bool	HttpRequest::hasHeader(const std::string &pKey) const
 {
-	t_headers	headers = _request.headers;
-	t_headers::const_iterator	it = headers.find(pKey);
+	http::t_headers	headers = _request.headers;
+	http::t_headers::const_iterator	it = headers.find(pKey);
 
 	if (it == headers.end())
 		return (false);
@@ -512,8 +512,8 @@ bool	HttpRequest::hasHeader(const std::string &pKey) const
 
 std::string		HttpRequest::getHeader(const std::string& pKey) const
 {
-	t_headers	headers = _request.headers;
-	t_headers::const_iterator	it = headers.find(pKey);
+	http::t_headers	headers = _request.headers;
+	http::t_headers::const_iterator	it = headers.find(pKey);
 
 	if (it == headers.end())
 		return ("");

@@ -13,8 +13,6 @@ private:
 	HttpRequest	*_request;
 	HttpResponse	*_response_;
 
-	typedef std::map<std::string, std::string>	t_headers;
-
 	typedef std::map<std::string, std::string>	t_cookies;
 	struct SessionData
 	{
