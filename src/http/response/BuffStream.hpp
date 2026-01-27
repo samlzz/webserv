@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 11:25:15 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 11:43:24 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 11:55:40 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 # include <string>
 # include <vector>
 
-# include "http/response/IFifoStream.hpp"
+# include "interfaces/IFifoStream.hpp"
 
 typedef std::vector<char>	t_bytes;
 

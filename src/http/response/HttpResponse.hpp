@@ -15,9 +15,9 @@
 
 #include <string>
 
-#include "http/response/BuffStream.hpp"
-#include "http/response/IFifoStream.hpp"
-#include "http/response/IHttpResponse.hpp"
+#include "BuffStream.hpp"
+#include "interfaces/IFifoStream.hpp"
+#include "interfaces/IHttpResponse.hpp"
 #include "http/request/HttpRequest.hpp"
 
 #include "server/connections/ConnEvent.hpp"

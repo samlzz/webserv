@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 10:12:02 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 11:46:01 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 11:56:11 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 # define __IHTTP_RESPONSE_HPP__
 
 # include "http/response/BuffStream.hpp"
-# include "http/response/IFifoStream.hpp"
+# include "IFifoStream.hpp"
 # include "server/connections/IWritableNotifier.hpp"
 
 class HttpRequest;
