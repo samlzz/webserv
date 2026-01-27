@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 11:25:15 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 11:55:40 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 13:40:40 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,10 @@ public:
 	// Producer side
 	// ============================================================================
 	void					push(const t_bytes &buff)	{_stream.push_back(buff); }
+	void					push(const char *buff, size_t size)
+	{
+		push(t_bytes(buff, buff + size));
+	}
 	void					push(const std::string &data)
 	{
 		push(t_bytes(data.begin(), data.end()));
