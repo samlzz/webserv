@@ -3,19 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/27 12:04:34 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 19:29:23 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_REQUEST_HPP__
 #define __HTTP_REQUEST_HPP__
 
-#include <string>
+#include "http/request/IHttpRequest.hpp"s
 
-#include "http/request/IHttpRequest.hpp"
+#include <string>
+#include <vector>
+
 #include "http/HttpTypes.hpp"
 
 #define MAX_METHOD_LENGTH		8
@@ -81,8 +83,8 @@ private:
 		int		verMaj;
 		int		verMin;
 
-		http::t_headers	headers;
-		std::string		body;
+		http::t_headers		headers;
+		std::vector<char>	body;
 	};
 	
 	e_request_state		_state;
@@ -127,7 +129,7 @@ public:
 	bool				hasHeader(const std::string& pHeader) const;
 	std::string			getHeader(const std::string& pHeader) const;
 
-	std::string			getBody(void) const			{ return (_request.body); };
+	std::vector<char>		getBody(void) const			{ return (_request.body); };
 
 	http::e_status_code	getStatusCode(void) const	{ return (_status); };
 };

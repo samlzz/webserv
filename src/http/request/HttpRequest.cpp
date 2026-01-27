@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/27 12:03:28 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 19:46:48 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -321,9 +321,6 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case BODY_MESSAGE_START: {
 			if (hasHeader("Transfer-Encoding")) {
-				// TODO:
-				// if (hasHeader("Content-Length"))
-				// 	SEND_ERROR(http::SC_BAD_REQUEST);
 				_transferEncoding = getHeader("Transfer-Encoding");
 				if (_transferEncoding != "chunked")
 					return setError(http::SC_NOT_IMPLEMENTED);
@@ -357,7 +354,6 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 			_transferLength = htod(_buffer);
 			UPDATE_STATE(BODY_CHUNKED_SIZE_ALMOST_DONE);
-			_buffer.clear();
 			__attribute__ ((fallthrough));
 		}
 
@@ -382,9 +378,9 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 
 			if (readbytes > 0) {
-				_request.body.append(pBuffer + i, readbytes);
+				_request.body.insert(_request.body.end(), pBuffer + i, pBuffer + i + readbytes);
 				_transferLength -= readbytes;
-				i += readbytes - 1;
+				i += readbytes;
 			}
 
 			if (_transferLength == 0)
@@ -392,9 +388,6 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 			break;
 		}
-
-		//TODO: 0 \r\n
-		//		\r\n
 
 		case BODY_CHUNKED_DATA_ALMOST_DONE:
 			if (ch != '\r') return setError(http::SC_BAD_REQUEST);
@@ -407,12 +400,14 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			break;
 			
 		case BODY_CHUNKED_ALMOST_DONE:
-			if (ch != '\r') return setError(http::SC_BAD_REQUEST);
+			if (_buffer == "0") {
+				UPDATE_STATE(BODY_CHUNKED_SIZE);
+				break;
+			}
 			UPDATE_STATE(BODY_CHUNKED_DONE);
-			break;
+			__attribute__ ((fallthrough));
 
 		case BODY_CHUNKED_DONE:
-			if (ch != '\n') return setError(http::SC_BAD_REQUEST);
 			UPDATE_STATE(PARSING_DONE);
 			break;
 
@@ -421,15 +416,16 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			size_t		available = pSize - i;
 			size_t		readbytes = std::min(remaining, available);
 
-			_request.body.append(pBuffer + i, readbytes);
-			_contentLength -= readbytes;
+			_request.body.insert(_request.body.end(), pBuffer + i, pBuffer + i + readbytes);
 
+			_contentLength -= readbytes;
 			i += readbytes;
 
 			if (_contentLength == 0)
 				UPDATE_STATE(PARSING_DONE);
 
-			if (readbytes > 0) i--;
+			if (readbytes > 0)
+				i--;
 
 			break;
 		}
@@ -501,8 +497,8 @@ void		HttpRequest::addHeader(const std::string& pKey, const std::string& pValue)
 
 bool	HttpRequest::hasHeader(const std::string &pKey) const
 {
-	http::t_headers	headers = _request.headers;
-	http::t_headers::const_iterator	it = headers.find(pKey);
+	t_headers	headers = _request.headers;
+	t_headers::const_iterator	it = headers.find(pKey);
 
 	if (it == headers.end())
 		return (false);
@@ -512,8 +508,8 @@ bool	HttpRequest::hasHeader(const std::string &pKey) const
 
 std::string		HttpRequest::getHeader(const std::string& pKey) const
 {
-	http::t_headers	headers = _request.headers;
-	http::t_headers::const_iterator	it = headers.find(pKey);
+	t_headers	headers = _request.headers;
+	t_headers::const_iterator	it = headers.find(pKey);
 
 	if (it == headers.end())
 		return ("");
