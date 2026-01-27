@@ -15,8 +15,9 @@
 
 #include <string>
 
+#include "http/response/BuffStream.hpp"
+#include "http/response/IFifoStream.hpp"
 #include "http/response/IHttpResponse.hpp"
-#include "http/response/ChunkedStream.hpp"
 #include "http/request/HttpRequest.hpp"
 
 #include "server/connections/ConnEvent.hpp"
@@ -58,7 +59,7 @@ private:
 
 	bool								_isDone;
 	bool								_isConnection;
-	ChunkedStream						_chunkedStream;
+	BuffStream							_outputStream;
 	int									_fd;
 
 	// ========== Helpers methods ==========
@@ -85,18 +86,14 @@ public:
 	~HttpResponse(void);
 
 	// ========== Life Cycle ==========
-	virtual ConnEvent			build(const HttpRequest& pRequest, IWritableNotifier &notifier);
-	void						fillStream(void);
-	virtual void				reset(void);
+	virtual ConnEvent					build(const HttpRequest& pRequest, IWritableNotifier &notifier);
+	void								fillStream(void);
+	virtual void						reset(void);
 
 	// ========== Output Production ==========
-	virtual IChunkedStream&		stream(void);
-	virtual bool				isDone() const;
-	virtual bool				shouldCloseConnection(void) const;
-
-	// ========== Encoder ==========
-	virtual void				encode(const char *pbuf, size_t pBufSize);
-	virtual void				finalize(void);
+	virtual IFifoStreamView<t_bytes>&	stream(void);
+	virtual bool						isDone() const;
+	virtual bool						shouldCloseConnection(void) const;
 
 friend std::ostream	&operator<<(std::ostream &pOut, const HttpResponse::Response &pResponse);
 };

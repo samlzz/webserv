@@ -6,11 +6,10 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 21:29:38 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 11:46:50 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <fstream>
 #include <iostream>
 #include <algorithm>
 #include <sstream>
@@ -30,6 +29,7 @@
 #include "http/request/HttpRequest.hpp"
 #include "config/Config.hpp"
 #include "config/validation/configValidate.hpp"
+#include "http/response/BuffStream.hpp"
 #include "server/connections/ConnEvent.hpp"
 
 // =========================================================================== //
@@ -198,9 +198,6 @@ std::string normalizePath(const std::string &path)
 // =========================================================================== //
 #pragma region member function
 
-void	HttpResponse::encode(const char *pbuf, size_t pBufSize) { (void)pbuf; (void)pBufSize; }
-void	HttpResponse::finalize(void) {}
-
 ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notifier)
 {
 	(void)notifier;
@@ -274,14 +271,14 @@ ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notif
 		return ConnEvent::none();
 	}
 
-	_chunkedStream.push(toString(_response));
+	_outputStream.push(toString(_response));
 	return ConnEvent::none();
 }
 
 void		HttpResponse::fillStream(void)
 {
 	char	buffer[__SIZE_OF_CHUNK__];
-	while (_chunkedStream.size() <= __MAX_CHUNK__) {
+	while (_outputStream.size() <= __MAX_CHUNK__) {
 		ssize_t	rd = read(_fd, buffer, sizeof(buffer));
 
 		if (rd < 0) {
@@ -294,7 +291,7 @@ void		HttpResponse::fillStream(void)
 			_fd = -1;
 			return ;
 		}
-		_chunkedStream.push(std::string(buffer, rd));
+		_outputStream.push(std::string(buffer, rd));
 	}
 }
 
@@ -315,9 +312,9 @@ void		HttpResponse::reset(void)
 	//clear chunked stream too
 }
 
-IChunkedStream	&HttpResponse::stream(void) { return (_chunkedStream); }
+IFifoStreamView<t_bytes>	&HttpResponse::stream(void)			{ return (_outputStream); }
 
-bool		HttpResponse::isDone(void) const { return (_isDone); }
+bool						HttpResponse::isDone(void) const	{ return (_isDone); }
 
 // Use this function to determine if the socket should be kept for the next request
 bool		HttpResponse::shouldCloseConnection(void) const {
