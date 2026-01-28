@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 13:05:16 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/09 12:07:29 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 12:39:55 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,23 +15,28 @@
 
 # include "AConnection.hpp"
 # include "config/Config.hpp"
+# include "http/dispatch/HttpDispatcher.hpp"
+# include "server/ServerCtx.hpp"
 
 # define LISTEN_QUEUE	5
 
 class ServerConnection: public AConnection {
 
 private:
-	const Config::Server		&_conf;
+	ServerCtx	_ctx;
 
+public:
+	ServerConnection(const Config::Server &config,
+					const HttpDispatcher &dispatch);
+
+	virtual ConnEvent	handleEvents(short revents);
+
+private:
 	// forbidden
 	ServerConnection();
 	ServerConnection(const ServerConnection& other);
 	ServerConnection& operator=(const ServerConnection& other);
 
-public:
-	ServerConnection(const Config::Server &config);
-
-	virtual ConnEvent	handleEvents(short revents);
 };
 
 #endif /* __SERVERCONNECTION_HPP__ */

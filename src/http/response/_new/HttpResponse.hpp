@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:03:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 13:50:43 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 12:43:20 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,15 +48,15 @@ public:
 	// Life Cycle
 	// ========================================================================
 
-	virtual void						fillStream(void);
+	void						fillStream(void);
 
 	// ========================================================================
 	// Output Production
 	// ========================================================================
 
-	virtual IFifoStreamView<t_bytes>&	stream(void);
-	virtual bool						isDone() const;
-	virtual bool						shouldCloseConnection(void) const;
+	IFifoStreamView<t_bytes>&	stream(void);
+	bool						isDone() const;
+	bool						shouldCloseConnection(void) const;
 
 private:
 

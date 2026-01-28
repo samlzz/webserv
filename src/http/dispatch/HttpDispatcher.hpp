@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 11:19:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 12:29:49 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 12:48:34 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,8 @@
 # include "http/handlers/UploadFileHandler.hpp"
 # include "http/request/HttpRequest.hpp"
 # include "http/response/ResponsePlan.hpp"
-# include "http/routing/Router.hpp"
+
+namespace routing { struct Context; }
 
 class HttpDispatcher {
 
