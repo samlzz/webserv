@@ -1,6 +1,6 @@
 #include "http/handlers/DeleteHandler.hpp"
 #include "http/HttpTypes.hpp"
-#include "http/handlers/ErrorHandler.hpp"
+#include "http/dispatch/ErrorBuilder.hpp"
 #include "http/response/ResponsePlan.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/routing/Router.hpp"
@@ -23,11 +23,11 @@ ResponsePlan	DeleteHandler::handle(
 		path = "." + path;
 
 	if (stat(path.c_str(), &st) != 0)
-		return ErrorHandler::build(http::SC_NOT_FOUND, route.location);
+		return ErrorBuilder::build(http::SC_NOT_FOUND, route.location);
 	else if (S_ISDIR(st.st_mode))
-		return ErrorHandler::build(http::SC_FORBIDDEN, route.location);
+		return ErrorBuilder::build(http::SC_FORBIDDEN, route.location);
 	else if (unlink(path.c_str()) != 0)
-		return ErrorHandler::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
+		return ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
 	else
 		plan.status = http::SC_NO_CONTENT;
 
