@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 16:07:39 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 18:04:03 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 15:50:29 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,15 @@
 
 CgiBodySource::CgiBodySource(CgiProcess *proc, CgiOutputParser *parser)
 	: _parser(parser), _process(proc)
-{}
+{
+	_process->retain();
+}
 
 CgiBodySource::~CgiBodySource()
-{}
+{
+	_process->release();
+	delete _parser;
+}
 
 // ============================================================================
 // Methods
@@ -49,7 +54,7 @@ bool CgiBodySource::hasError(void) const
 
 bool CgiBodySource::terminated() const
 {
-	return _process->isTerminated() && !_parser->bodyHasData();
+	return _process->isTerminated() && _parser->eof();
 }
 
 size_t CgiBodySource::read(char* dst, size_t max)
