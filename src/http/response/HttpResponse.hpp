@@ -1,100 +1,75 @@
-  /* ************************************************************************** */
+/* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/11/02 23:32:03 by achu              #+#    #+#             */
-/*   Updated: 2026/01/12 20:02:38 by achu             ###   ########.fr       */
+/*   Created: 2026/01/27 13:03:18 by sliziard          #+#    #+#             */
+/*   Updated: 2026/01/28 12:43:20 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_RESPONSE_HPP__
-#define __HTTP_RESPONSE_HPP__
+# define __HTTP_RESPONSE_HPP__
 
-#include <string>
+# include "http/HttpTypes.hpp"
+# include "http/response/BuffStream.hpp"
+# include "http/response/ResponsePlan.hpp"
+# include "http/response/interfaces/IBodySource.hpp"
 
-#include "BuffStream.hpp"
-#include "interfaces/IFifoStream.hpp"
-#include "http/request/HttpRequest.hpp"
+# define RESP_MAX_BUF_COUNT		8
 
-#include "server/connections/ConnEvent.hpp"
-#include "config/Config.hpp"
-#include "server/connections/IWritableNotifier.hpp"
-
-# ifndef __MAX_CHUNK__
-# define __MAX_CHUNK__	3
-# endif
-
-# ifndef __SIZE_OF_CHUNK__
-# define __SIZE_OF_CHUNK__	32000
+# ifndef RESP_MAX_STREAM_SIZE
+#  define RESP_BUFFER_SIZE		16 * 1024
+# else
+#  define RESP_BUFFER_SIZE RESP_MAX_STREAM_SIZE / RESP_MAX_BUF_COUNT
 # endif
 
 class HttpResponse {
 
 private:
+	http::e_status_code	_status;
+	http::t_headers		_headers;
+	IBodySource			*_body;
+	BuffStream			_out;
 
-	// ========== Response Reply ==========
-	struct Response
-	{
-		struct StatusCode {
-			int				code;
-			std::string		reason;
-		};
-		void	setStatusCode(const int &pCode);
-
-		StatusCode			statusCode;
-		http::t_headers		headers;
-		std::string			body;
-	};
-
-private:
-	HttpRequest							_request;
-	const Config::Server				&_server;
-	const Config::Server::Location		*_location;
-
-	Response							_response;
-
-	bool								_isDone;
-	bool								_isConnection;
-	BuffStream							_outputStream;
-	int									_fd;
-
-	// ========== Helpers methods ==========
-	void		setError(int pCode);
-	void		loadFile(const std::string& pPath);
-	void		addHeader(const std::string &pHeader, const std::string &pContent);
-	bool		validUploadPath(std::string& path);
-	std::string buildUploadPath(std::string &filename,http::e_body_kind expression);
-	// ========== ContentType handler (for POST/PUT) ==========
-	void		handleMultipart(http::e_method curMethod);
-	void		handleUrlEncoded(http::e_method curMethod);
-	void		handleOctetStream(http::e_method curMethod);
-	void		handleTextPlain(http::e_method curMethod);
-
-	// ========== Methods handler ==========
-	void		handleGET(void);
-	void		handleHEAD(void);
-	void		handlePOST(void);
-	void		handlePUT(void);
-	void		handleDELETE(void);
+	bool				_commited;
+	bool				_done;
 
 public:
-	HttpResponse(const Config::Server& pServer);
-	~HttpResponse(void);
+	// ============================================================================
+	// Construction / Destruction
+	// ============================================================================
+	HttpResponse(const ResponsePlan &plan);
+	~HttpResponse();
 
-	// ========== Life Cycle ==========
-	virtual ConnEvent					build(const HttpRequest& pRequest, IWritableNotifier &notifier);
-	void								fillStream(void);
-	virtual void						reset(void);
+	// ========================================================================
+	// Life Cycle
+	// ========================================================================
 
-	// ========== Output Production ==========
-	virtual IFifoStreamView<t_bytes>&	stream(void);
-	virtual bool						isDone() const;
-	virtual bool						shouldCloseConnection(void) const;
+	void						fillStream(void);
 
-friend std::ostream	&operator<<(std::ostream &pOut, const HttpResponse::Response &pResponse);
+	// ========================================================================
+	// Output Production
+	// ========================================================================
+
+	IFifoStreamView<t_bytes>&	stream(void);
+	bool						isDone() const;
+	bool						shouldCloseConnection(void) const;
+
+private:
+
+	// ========================================================================
+	// Helpers
+	// ========================================================================
+	void								commitMeta(void);
+	
+	// forbidden
+	HttpResponse();
+	HttpResponse(const HttpResponse &other);
+	HttpResponse& operator=(const HttpResponse &other);
+
 };
 
-#endif
+#endif /* __HTTP_RESPONSE_HPP__ */

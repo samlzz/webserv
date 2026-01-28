@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 12:57:29 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 13:03:51 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 #include "ClientConnection.hpp"
 #include "AConnection.hpp"
 #include "ConnEvent.hpp"
-#include "http/response/_new/HttpResponse.hpp"
+#include "http/response/HttpResponse.hpp"
 #include "http/response/BuffStream.hpp"
 #include "http/response/ResponsePlan.hpp"
 #include "http/response/interfaces/IFifoStream.hpp"

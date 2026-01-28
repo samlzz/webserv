@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 12:51:24 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 13:03:47 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 # include "AConnection.hpp"
 # include "http/request/HttpRequest.hpp"
 # include "IWritableNotifier.hpp"
-# include "http/response/_new/HttpResponse.hpp"
+# include "http/response/HttpResponse.hpp"
 # include "server/ServerCtx.hpp"
 # include "server/connections/ConnEvent.hpp"
 # include "server/connections/IConnection.hpp"
