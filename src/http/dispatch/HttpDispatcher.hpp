@@ -6,13 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 11:19:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 14:02:52 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 17:55:25 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_DISPATCHER_HPP__
 # define __HTTP_DISPATCHER_HPP__
 
+# include "http/handlers/CgiHandler.hpp"
 # include "http/handlers/DeleteHandler.hpp"
 # include "http/handlers/FormHandler.hpp"
 # include "http/handlers/IHttpHandler.hpp"
@@ -33,7 +34,7 @@ private:
 	UploadFileHandler	_uploadHandler;
 	FormHandler			_formHandler;
 	DeleteHandler		_deleteHandler;
-	// TODO: CgiHandler
+	CgiHandler			_cgiHandler;
 
 public:
 	HttpDispatcher();

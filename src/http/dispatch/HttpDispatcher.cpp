@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 14:21:53 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 17:55:34 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,7 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 	if ((method == http::MTH_GET || method == http::MTH_POST)
 		&& loca.cgiExts.find(subExt(route.normalizedPath)) != loca.cgiExts.end()
 	)
-		return NULL; // TODO: &_cgiHandler
+		return &_cgiHandler;
 	
 	if (method == http::MTH_GET || method == http::MTH_HEAD)
 		return &_staticHandler;
