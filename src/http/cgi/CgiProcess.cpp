@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 15:45:41 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 17:36:02 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,8 @@
 // Construction / Destruction
 // ============================================================================
 
-CgiProcess::CgiProcess(IOutputSink &sink, IWritableNotifier &notifier)
-	: _sink(sink), _notifier(notifier)
+CgiProcess::CgiProcess(IOutputSink &sink)
+	: _sink(sink), _notifier(0)
 	, _pid(-1), _exitCode(0)
 	, _terminated(false), _errOccur(false)
 	, _read(0), _write(0), _refCount(0)
@@ -65,6 +65,11 @@ bool		CgiProcess::isTerminated(void) const	{ return _terminated; }
 bool		CgiProcess::isError(void) const			{ return _errOccur; }
 
 uint8_t		CgiProcess::exitCode(void) const		{ return _exitCode; }
+
+void		CgiProcess::setDataNotify(IWritableNotifier *notifier)
+{
+	_notifier = notifier;
+}
 
 // ============================================================================
 // Helpers for start()
@@ -235,7 +240,8 @@ void	CgiProcess::onError(void)
 	_terminated = true;
 	_errOccur = true;
 	cleanup(true);
-	_notifier.notifyWritable();
+	if (_notifier)
+		_notifier->notifyWritable();
 }
 
 void	CgiProcess::onTimeout(void)
@@ -250,7 +256,8 @@ void	CgiProcess::onEof(void)
 	_terminated = true;
 	forgetRead();
 	_sink.finalize();
-	_notifier.notifyWritable();
+	if (_notifier)
+		_notifier->notifyWritable();
 	cleanup(false);
 }
 
@@ -259,7 +266,8 @@ void	CgiProcess::onRead(const char *buffer, size_t bufSize)
 	if (_terminated)
 		return ;
 	_sink.append(buffer, bufSize);
-	_notifier.notifyWritable();
+	if (_notifier)
+		_notifier->notifyWritable();
 }
 void	CgiProcess::onBodyEnd(void)
 {

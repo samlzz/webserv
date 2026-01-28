@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 16:07:39 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 15:50:29 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 17:46:45 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,4 +83,11 @@ http::e_status_code CgiBodySource::status() const
 const http::t_headers& CgiBodySource::headers() const
 {
 	return _parser->headers();
+}
+
+// ---- INeedsNotifier ----
+
+void	CgiBodySource::setNotifier(IWritableNotifier &notifier)
+{
+	_process->setDataNotify(&notifier);
 }

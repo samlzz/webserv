@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 15:06:00 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 18:03:24 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 17:42:03 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,10 +18,14 @@
 
 # include "http/cgi/CgiOutputParser.hpp"
 # include "http/cgi/CgiProcess.hpp"
+# include "http/cgi/INeedsNotifier.hpp"
 # include "http/response/interfaces/IBodySource.hpp"
 # include "http/response/interfaces/IMetaSource.hpp"
 
-class CgiBodySource : public IBodySource, public IMetaSource {
+class CgiBodySource
+	: public IBodySource
+	, public IMetaSource
+	, public INeedsNotifier {
 private:
 	CgiOutputParser	*_parser; // owned
 	CgiProcess		*_process; // observed
@@ -41,6 +45,9 @@ public:
 	virtual bool					metaReady() const;
 	virtual http::e_status_code		status() const;
 	virtual const http::t_headers&	headers() const;
+
+	// INeedsNotifier
+	virtual void					setNotifier(IWritableNotifier &notifier);
 
 private:
 	// forbidden#

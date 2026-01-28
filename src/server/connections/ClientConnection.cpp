@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 13:03:51 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 17:45:16 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include "ClientConnection.hpp"
 #include "AConnection.hpp"
 #include "ConnEvent.hpp"
+#include "http/cgi/INeedsNotifier.hpp"
 #include "http/response/HttpResponse.hpp"
 #include "http/response/BuffStream.hpp"
 #include "http/response/ResponsePlan.hpp"
@@ -47,11 +48,12 @@ ConnEvent	ClientConnection::buildResponse(void)
 {
 	routing::Context	route = routing::resolve(_req, _serv);
 	ResponsePlan		plan = _serv.dispatcher.dispatch(_req, route);
+	INeedsNotifier		*needs = dynamic_cast<INeedsNotifier *>(plan.body);
 
+	if (needs)
+		needs->setNotifier(*this);
 	if (plan.event.conn && plan.event.type == ConnEvent::CE_SPAWN)
-	{
 		_cgiRead = plan.event.conn;
-	}
 	_resp = new HttpResponse(plan);
 	return plan.event;
 }

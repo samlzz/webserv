@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 16:00:11 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 17:33:47 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ private:
 	// Attributes
 	// ============================================================================
 	IOutputSink			&_sink;
-	IWritableNotifier	&_notifier;
+	IWritableNotifier	*_notifier;
 	pid_t				_pid;
 	time_t				_startTs;
 
@@ -60,7 +60,7 @@ public:
 	// ============================================================================
 	// Construction
 	// ============================================================================
-	CgiProcess(IOutputSink &sink, IWritableNotifier &notifier);
+	CgiProcess(IOutputSink &sink);
 	~CgiProcess();
 
 	// ============================================================================
@@ -80,6 +80,8 @@ public:
 	bool				isTerminated(void) const;
 	bool				isError(void) const;
 	uint8_t				exitCode(void) const;
+
+	void				setDataNotify(IWritableNotifier *notifier);
 
 	// ============================================================================
 	// Methods
