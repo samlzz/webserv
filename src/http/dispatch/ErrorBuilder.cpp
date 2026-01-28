@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ErrorHandler.cpp                                   :+:      :+:    :+:   */
+/*   ErrorBuilder.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:49:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 12:30:45 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 14:01:29 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,24 +15,14 @@
 #include <unistd.h>
 
 #include "config/Config.hpp"
-#include "ErrorHandler.hpp"
+#include "ErrorBuilder.hpp"
 #include "config/validation/configValidate.hpp"
 #include "http/HttpData.hpp"
 #include "http/handlers/bodySrcs/FileBodySource.hpp"
 #include "http/handlers/bodySrcs/MemoryBodySource.hpp"
-#include "http/request/HttpRequest.hpp"
 #include "http/response/ResponsePlan.hpp"
-#include "http/routing/Router.hpp"
 
-ErrorHandler::ErrorHandler()
-{}
-
-ResponsePlan	ErrorHandler::handle(const HttpRequest &req, const routing::Context &route) const
-{
-	return build(req.getStatusCode(), route.location);
-}
-
-ResponsePlan	ErrorHandler::build(
+ResponsePlan	ErrorBuilder::build(
 	http::e_status_code status,
 	const Config::Server::Location *location
 )
@@ -49,7 +39,7 @@ ResponsePlan	ErrorHandler::build(
 	return buildDefault(status);
 }
 
-ResponsePlan	ErrorHandler::buildDefault(http::e_status_code status)
+ResponsePlan	ErrorBuilder::buildDefault(http::e_status_code status)
 {
 	std::string			reason = http::Data::getStatusType(status);
 	std::ostringstream	stream;
@@ -72,7 +62,7 @@ ResponsePlan	ErrorHandler::buildDefault(http::e_status_code status)
 	return plan;
 }
 
-ResponsePlan	ErrorHandler::buildFromErrorPage(
+ResponsePlan	ErrorBuilder::buildFromErrorPage(
 	http::e_status_code status,
 	const std::string& path
 )
