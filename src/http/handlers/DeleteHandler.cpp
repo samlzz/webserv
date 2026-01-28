@@ -1,4 +1,6 @@
 #include "http/handlers/DeleteHandler.hpp"
+#include "http/HttpTypes.hpp"
+#include "http/handlers/ErrorHandler.hpp"
 #include "http/response/ResponsePlan.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/routing/Router.hpp"
@@ -11,26 +13,24 @@ ResponsePlan	DeleteHandler::handle(
 								const routing::Context &route)
 {
 	(void)req;
-	(void)route;
 
 	ResponsePlan	plan;
 
-	std::string path = route.location->root + req.getPath();
-	struct stat st;
+	std::string	path = route.location->root + route.normalizedPath;
+	struct stat	st;
 
 	if (path[0] == '/')
 		path = "." + path;
 
 	if (stat(path.c_str(), &st) != 0)
-		plan.status = http::SC_NOT_FOUND;
+		return ErrorHandler::build(http::SC_NOT_FOUND, route.location);
 	else if (S_ISDIR(st.st_mode))
-		plan.status = http::SC_FORBIDDEN;
+		return ErrorHandler::build(http::SC_FORBIDDEN, route.location);
 	else if (unlink(path.c_str()) != 0)
-		plan.status = http::SC_INTERNAL_SERVER_ERROR;
+		return ErrorHandler::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
 	else
 		plan.status = http::SC_NO_CONTENT;
 
 	plan.headers["Content-Length"] = "0";
-	
 	return (plan);
 }
