@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/27 19:46:48 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/28 23:47:01 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,42 @@ HttpRequest::~HttpRequest(void)
 }
 
 //#****************************************************************************#
+//#                             GETTER & SETTER                                #
+//#****************************************************************************#
+#pragma region Getter & Setter
+
+void	HttpRequest::setField(const std::string& pKey, const std::string& pValue) {
+	_request.headers[pKey] = pValue;
+}
+
+bool	HttpRequest::hasField(const std::string &pKey) const
+{
+	http::t_headers	headers = _request.headers;
+	http::t_headers::const_iterator	it = headers.find(pKey);
+
+	if (it == headers.end())
+		return (false);
+
+	return (true);
+};
+
+std::string		HttpRequest::getField(const std::string& pKey) const
+{
+	http::t_headers	headers = _request.headers;
+	http::t_headers::const_iterator	it = headers.find(pKey);
+
+	if (it == headers.end())
+		return ("");
+
+	return (it->second);
+};
+
+#pragma endregion
+
+//#****************************************************************************#
 //#                             STATIC FUNCTION                                #
 //#****************************************************************************#
+#pragma region Static Function
 
 static bool		isDec(const std::string& pStr)
 {
@@ -88,11 +122,11 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 {
 	char	ch;
 
-	for (size_t i = 0; i < pSize; i++)
+	for (size_t i = 0; i < pSize; ++i)
 	{
 		ch = pBuffer[i];
 		switch (CURRENT_STATE()) {
-		case REQ_METHOD: {
+		case LINE_METHOD: {
 			_tsStart = std::time(0);
 			if (ch != ' ') {
 				if (_buffer.length() > MAX_METHOD_LENGTH)
@@ -108,34 +142,34 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			else if (_buffer == "DELETE")	_request.method = http::MTH_DELETE;
 			else return setError(http::SC_NOT_IMPLEMENTED);
 
-			UPDATE_STATE(REQ_SPACE_BEFORE_URI);
+			UPDATE_STATE(LINE_SPACE_BEFORE_URI);
 			_buffer.clear();
 
 			__attribute__ ((fallthrough));
 		}
 
-		case REQ_SPACE_BEFORE_URI:
+		case LINE_SPACE_BEFORE_URI:
 			if (ch != ' ')
 				return setError(http::SC_BAD_REQUEST);
-			UPDATE_STATE(REQ_URI_SLASH);
+			UPDATE_STATE(LINE_URI_SLASH);
 			break;
 
-		case REQ_URI_SLASH:
+		case LINE_URI_SLASH:
 			if (ch != '/') return setError(http::SC_BAD_REQUEST);
 			_buffer += ch;
-			UPDATE_STATE(REQ_URI_PATH);
+			UPDATE_STATE(LINE_URI_PATH);
 			break;
 
-		case REQ_URI_PATH: {
+		case LINE_URI_PATH: {
 			if (ch == ' ') {
 				_request.uri.path = _buffer;
-				UPDATE_STATE(REQ_SPACE_BEFORE_VER);
+				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '?' || ch == '#') {
 				_request.uri.path = _buffer;
-				UPDATE_STATE(ch == '?' ? REQ_URI_QUERY : REQ_URI_FRAGMENT);
+				UPDATE_STATE(ch == '?' ? LINE_URI_QUERY : LINE_URI_FRAGMENT);
 				_buffer.clear();
 				break;
 			}
@@ -147,16 +181,16 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 		}
 
-		case REQ_URI_QUERY: {
+		case LINE_URI_QUERY: {
 			if (ch == ' ') {
 				_request.uri.query = _buffer;
-				UPDATE_STATE(REQ_SPACE_BEFORE_VER);
+				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '#') {
 				_request.uri.query = _buffer;
-				UPDATE_STATE(REQ_URI_FRAGMENT);
+				UPDATE_STATE(LINE_URI_FRAGMENT);
 				_buffer.clear();
 				break;
 			}
@@ -168,10 +202,10 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 		}
 
-		case REQ_URI_FRAGMENT: {
+		case LINE_URI_FRAGMENT: {
 			if (ch == ' ') {
 				_request.uri.fragment = _buffer;
-				UPDATE_STATE(REQ_SPACE_BEFORE_VER);
+				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
@@ -183,65 +217,65 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 		}
 
-		case REQ_SPACE_BEFORE_VER:
+		case LINE_SPACE_BEFORE_VER:
 			if (ch != ' ') return setError(http::SC_BAD_REQUEST);
-			UPDATE_STATE(REQ_HTTP_H);
+			UPDATE_STATE(LINE_HTTP_H);
 			break;
 
-		case REQ_HTTP_H:
+		case LINE_HTTP_H:
 			if (ch != 'H') return setError(http::SC_BAD_REQUEST);
 			_buffer += ch;
-			UPDATE_STATE(REQ_HTTP_HT);
+			UPDATE_STATE(LINE_HTTP_HT);
 			break;
 
-		case REQ_HTTP_HT:
+		case LINE_HTTP_HT:
 			if (ch != 'T') return setError(http::SC_BAD_REQUEST);
 			_buffer += ch;
-			UPDATE_STATE(REQ_HTTP_HTT);
+			UPDATE_STATE(LINE_HTTP_HTT);
 			break;
 
-		case REQ_HTTP_HTT:
+		case LINE_HTTP_HTT:
 			if (ch != 'T') return setError(http::SC_BAD_REQUEST);
 			_buffer += ch;
-			UPDATE_STATE(REQ_HTTP_HTTP);
+			UPDATE_STATE(LINE_HTTP_HTTP);
 			break;
 
-		case REQ_HTTP_HTTP:
+		case LINE_HTTP_HTTP:
 			if (ch != 'P') return setError(http::SC_BAD_REQUEST);
 			_buffer += ch;
-			UPDATE_STATE(REQ_HTTP_SLASH);
+			UPDATE_STATE(LINE_HTTP_SLASH);
 			break;
 
-		case REQ_HTTP_SLASH:
+		case LINE_HTTP_SLASH:
 			if (ch != '/') return setError(http::SC_BAD_REQUEST);
 			_buffer += ch;
-			UPDATE_STATE(REQ_HTTP_MAJOR_VER);
+			UPDATE_STATE(LINE_HTTP_MAJOR_VER);
 			break;
 
-		case REQ_HTTP_MAJOR_VER:
+		case LINE_HTTP_MAJOR_VER:
 			if (!std::isdigit(ch)) return setError(http::SC_BAD_REQUEST);
 			_request.verMaj = ch - '0';
-			UPDATE_STATE(REQ_HTTP_DOT);
+			UPDATE_STATE(LINE_HTTP_DOT);
 			break;
 
-		case REQ_HTTP_DOT:
+		case LINE_HTTP_DOT:
 			if (ch != '.') return setError(http::SC_BAD_REQUEST);
-			UPDATE_STATE(REQ_HTTP_MINOR_VER);
+			UPDATE_STATE(LINE_HTTP_MINOR_VER);
 			break;
 
-		case REQ_HTTP_MINOR_VER:
+		case LINE_HTTP_MINOR_VER:
 			if (!std::isdigit(ch)) return setError(http::SC_BAD_REQUEST);
 			_request.verMin = ch - '0';
-			UPDATE_STATE(REQ_ALMOST_DONE);
+			UPDATE_STATE(LINE_ALMOST_DONE);
 			_buffer.clear();
 			break;
 
-		case REQ_ALMOST_DONE:
+		case LINE_ALMOST_DONE:
 			if (ch != '\r') return setError(http::SC_BAD_REQUEST);
-			UPDATE_STATE(REQ_DONE);
+			UPDATE_STATE(LINE_DONE);
 			break;
 
-		case REQ_DONE:
+		case LINE_DONE:
 			if (ch != '\n') return setError(http::SC_BAD_REQUEST);
 			UPDATE_STATE(HEADER_START);
 			break;
@@ -251,58 +285,58 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				UPDATE_STATE(HEADER_END);
 				break;
 			}
-			UPDATE_STATE(HEADER_FIELD_NAME_START);
+			UPDATE_STATE(HEADER_FIELD_START);
 			__attribute__ ((fallthrough));
 		}
 
-		case HEADER_FIELD_NAME_START: {
+		case HEADER_FIELD_START: {
 			if (!std::isalpha(ch)) return setError(http::SC_BAD_REQUEST);
-			UPDATE_STATE(HEADER_FIELD_NAME);
+			UPDATE_STATE(HEADER_FIELD);
 			__attribute__ ((fallthrough));
 		}
 
-		case HEADER_FIELD_NAME: {
+		case HEADER_FIELD: {
 			if (ch != ':') {
 				if (_buffer.length() > MAX_HEADER_LENGTH) return setError(http::SC_HEADER_FIELDS_TOO_LARGE);
 				_buffer += ch;
 				break;
 			}
-			UPDATE_STATE(HEADER_FIELD_COLON);
+			UPDATE_STATE(HEADER_COLON);
 			__attribute__ ((fallthrough));
 		}
 
-		case HEADER_FIELD_COLON:
+		case HEADER_COLON:
 			if (ch != ':')
 				return setError(http::SC_BAD_REQUEST);
-			UPDATE_STATE(HEADER_FIELD_VALUE_START);
+			UPDATE_STATE(HEADER_VALUE_START);
 			break;
 
-		case HEADER_FIELD_VALUE_START:
+		case HEADER_VALUE_START:
 			if (ch == ' ') break;
-			UPDATE_STATE(HEADER_FIELD_VALUE);
+			UPDATE_STATE(HEADER_VALUE);
 			__attribute__ ((fallthrough));
 
-		case HEADER_FIELD_VALUE: {
+		case HEADER_VALUE: {
 			if (ch != '\r') {
-				if (_valueBuf.length() > MAX_HEADER_LENGTH)
+				if (_temp.length() > MAX_HEADER_LENGTH)
 					return setError(http::SC_HEADER_FIELDS_TOO_LARGE);
-				_valueBuf += ch;
+				_temp += ch;
 				break;
 			}
-			addHeader(_buffer, _valueBuf);
-			UPDATE_STATE(HEADER_FIELD_ALMOST_DONE);
+			setField(_buffer, _temp);
+			UPDATE_STATE(HEADER_VALUE_ALMOST_DONE);
 			_buffer.clear();
-			_valueBuf.clear();
+			_temp.clear();
 			__attribute__ ((fallthrough));
 		}
 
-		case HEADER_FIELD_ALMOST_DONE:
+		case HEADER_VALUE_ALMOST_DONE:
 			if (ch != '\r')
 				return setError(http::SC_BAD_REQUEST);
-			UPDATE_STATE(HEADER_FIELD_DONE);
+			UPDATE_STATE(HEADER_VALUE_DONE);
 			break;
 
-		case HEADER_FIELD_DONE:
+		case HEADER_VALUE_DONE:
 			if (ch != '\n')
 				return setError(http::SC_BAD_REQUEST);
 			UPDATE_STATE(HEADER_START);
@@ -315,36 +349,36 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				UPDATE_STATE(PARSING_DONE);
 				break;
 			}
-			UPDATE_STATE(BODY_MESSAGE_START);
-			break;
+			UPDATE_STATE(BODY_START);
+			__attribute__ ((fallthrough));
 		}
 
-		case BODY_MESSAGE_START: {
-			if (hasHeader("Transfer-Encoding")) {
-				_transferEncoding = getHeader("Transfer-Encoding");
-				if (_transferEncoding != "chunked")
+		case BODY_START: {
+			if (hasField("Transfer-Encoding")) {
+				if (getField("Transfer-Encoding") != "chunked")
 					return setError(http::SC_NOT_IMPLEMENTED);
-				UPDATE_STATE(BODY_CHUNKED_SIZE);
-				break;
+				UPDATE_STATE(BODY_TRANSFER_HEXA);
 			}
 
-			if (hasHeader("Content-Length")) {
-				_buffer = getHeader("Content-Length");
+			if (hasField("Content-Length") && !hasField("Transfer-Encoding")) {
+				_buffer = getField("Content-Length");
 				if (!isDec(_buffer))
 					return setError(http::SC_BAD_REQUEST);
 				_contentLength = std::atoi(_buffer.c_str());
 				if (_contentLength > MAX_BODY_LENGTH)
 					return setError(http::SC_CONTENT_TOO_LARGE);
 				UPDATE_STATE(BODY_CONTENT);
-				_buffer.clear();
-				break;
 			}
 
-			return setError(http::SC_LENGTH_REQUIRED);
+			if (!hasField("Content-Length") && !hasField("Transfer-Encoding"))
+				return setError(http::SC_LENGTH_REQUIRED);
+
+			_buffer.clear();
+			break;
 		}
 
-		case BODY_CHUNKED_SIZE: {
-			if (ch != '\r') {
+		case BODY_TRANSFER_HEXA: {
+			if (std::isalnum(ch)) {
 				_buffer += ch;
 				break;
 			}
@@ -353,102 +387,97 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				return setError(http::SC_BAD_REQUEST);
 
 			_transferLength = htod(_buffer);
-			UPDATE_STATE(BODY_CHUNKED_SIZE_ALMOST_DONE);
+			UPDATE_STATE(BODY_TRANSFER_HEXA_ALMOST_DONE);
 			__attribute__ ((fallthrough));
 		}
 
-		case BODY_CHUNKED_SIZE_ALMOST_DONE:
+		case BODY_TRANSFER_HEXA_ALMOST_DONE:
 			if (ch != '\r') return setError(http::SC_BAD_REQUEST);
-			UPDATE_STATE(BODY_CHUNKED_SIZE_DONE);
+			UPDATE_STATE(BODY_TRANSFER_HEXA_DONE);
 			break;
 
-		case BODY_CHUNKED_SIZE_DONE:
+		case BODY_TRANSFER_HEXA_DONE:
 			if (ch != '\n') return setError(http::SC_BAD_REQUEST);
-			UPDATE_STATE(BODY_CHUNKED_DATA);
-			break;
+			if (_transferLength == 0)
+				UPDATE_STATE(BODY_TRANSFER_END);
+    		else
+				UPDATE_STATE(BODY_TRANSFER_DATA);
+    		break;
 
-		case BODY_CHUNKED_DATA: {
-			size_t		remaining = _transferLength;
+		case BODY_TRANSFER_DATA: {
 			size_t		available = pSize - i;
-			size_t		readbytes = std::min(remaining, available);
-
-			if (_transferLength == 0) {
-				UPDATE_STATE(BODY_CHUNKED_ALMOST_DONE);
-				break;
-			}
+			size_t		readbytes = std::min(_transferLength, available);
 
 			if (readbytes > 0) {
 				_request.body.insert(_request.body.end(), pBuffer + i, pBuffer + i + readbytes);
 				_transferLength -= readbytes;
-				i += readbytes;
+				i += readbytes - 1;
 			}
 
 			if (_transferLength == 0)
-				UPDATE_STATE(BODY_CHUNKED_DATA_ALMOST_DONE);
+				UPDATE_STATE(BODY_TRANSFER_DATA_ALMOST_DONE);
 
 			break;
 		}
 
-		case BODY_CHUNKED_DATA_ALMOST_DONE:
+		case BODY_TRANSFER_DATA_ALMOST_DONE:
 			if (ch != '\r') return setError(http::SC_BAD_REQUEST);
-			UPDATE_STATE(BODY_CHUNKED_DATA_DONE);
+			UPDATE_STATE(BODY_TRANSFER_DATA_DONE);
 			break;
 
-		case BODY_CHUNKED_DATA_DONE:
+		case BODY_TRANSFER_DATA_DONE:
 			if (ch != '\n') return setError(http::SC_BAD_REQUEST);
-			UPDATE_STATE(BODY_CHUNKED_SIZE);
-			break;
+			UPDATE_STATE(BODY_TRANSFER_END);
+			__attribute__ ((fallthrough));
 			
-		case BODY_CHUNKED_ALMOST_DONE:
-			if (_buffer == "0") {
-				UPDATE_STATE(BODY_CHUNKED_SIZE);
+		case BODY_TRANSFER_END:
+			if (!htod(_buffer) == 0) {
+				UPDATE_STATE(BODY_TRANSFER_HEXA);
+				_buffer.clear();
 				break;
 			}
-			UPDATE_STATE(BODY_CHUNKED_DONE);
-			__attribute__ ((fallthrough));
-
-		case BODY_CHUNKED_DONE:
 			UPDATE_STATE(PARSING_DONE);
 			break;
 
 		case BODY_CONTENT: {
-			size_t		remaining = _contentLength;
 			size_t		available = pSize - i;
-			size_t		readbytes = std::min(remaining, available);
+			size_t		readbytes = std::min(_contentLength, available);
 
-			_request.body.insert(_request.body.end(), pBuffer + i, pBuffer + i + readbytes);
-
-			_contentLength -= readbytes;
-			i += readbytes;
+			if (readbytes > 0) {
+				_request.body.insert(_request.body.end(), pBuffer + i, pBuffer + i + readbytes);
+				_contentLength -= readbytes;
+				i += readbytes - 1;
+			}
 
 			if (_contentLength == 0)
 				UPDATE_STATE(PARSING_DONE);
 
-			if (readbytes > 0)
-				i--;
-
 			break;
 		}
 
-		case PARSING_DONE:
+		case PARSING_ERROR:
 			break;
 
-		case PARSING_ERROR:
+		case PARSING_DONE:
 			break;
 		}
 	}
 }
 
-// Use this function to check is the request has finished parsing at the end
 bool	HttpRequest::isDone(void) const
 {
 	return (CURRENT_STATE() == PARSING_DONE || CURRENT_STATE() == PARSING_ERROR);
 }
 
+bool	HttpRequest::isError() const
+{
+	return (CURRENT_STATE() == PARSING_ERROR);
+}
+
 // Use this function to reset after the request and response has been send, and the connection is keep-alive
 void	HttpRequest::reset(void)
 {
-	UPDATE_STATE(REQ_METHOD);
+	UPDATE_STATE(LINE_METHOD);
 	_tsStart = 0;
 
 	_request.method = http::MTH_UNKNOWN;
@@ -462,7 +491,7 @@ void	HttpRequest::reset(void)
 
 	_contentLength = 0;
 	_transferLength = 0;
-	_status = http::SC_OK;
+	_code = http::SC_OK;
 }
 
 void	HttpRequest::checkTimeout(time_t now)
@@ -480,42 +509,13 @@ void	HttpRequest::checkTimeout(time_t now)
 
 void HttpRequest::setError(const http::e_status_code pCode)
 {
-	_status = pCode;
+	_code = pCode;
 	UPDATE_STATE(PARSING_ERROR);
 }
 
 #pragma endregion
 
-//#****************************************************************************#
-//#                             GETTER & SETTER                                #
-//#****************************************************************************#
-#pragma region Getter & Setter
 
-void		HttpRequest::addHeader(const std::string& pKey, const std::string& pValue) {
-	_request.headers[pKey] = pValue;
-}
-
-bool	HttpRequest::hasHeader(const std::string &pKey) const
-{
-	t_headers	headers = _request.headers;
-	t_headers::const_iterator	it = headers.find(pKey);
-
-	if (it == headers.end())
-		return (false);
-
-	return (true);
-};
-
-std::string		HttpRequest::getHeader(const std::string& pKey) const
-{
-	t_headers	headers = _request.headers;
-	t_headers::const_iterator	it = headers.find(pKey);
-
-	if (it == headers.end())
-		return ("");
-
-	return (it->second);
-};
 
 //#****************************************************************************#
 //#                            OPERATOR OVERLOAD                               #
@@ -523,17 +523,25 @@ std::string		HttpRequest::getHeader(const std::string& pKey) const
 
 std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 {
-	pOut << "State:" <<pRequest.getState() << std::endl;
 	pOut << pRequest.getMethod() << " ";
 	pOut << pRequest.getPath() << pRequest.getQuery() << pRequest.getFragment() << " ";
-	pOut << pRequest.getVerMaj() << "." << pRequest.getVerMin() << std::endl;
+	pOut << "HTTP/" << pRequest.getVerMaj() << "." << pRequest.getVerMin();
+	pOut << "\r\n";
 
-	const std::map<std::string, std::string> headers = pRequest.getHeaders();
-	for (std::map<std::string, std::string>::const_iterator it = headers.begin();  it != headers.end(); ++it) {
-        pOut << it->first << ": " << it->second << "\n";
+	http::t_headers headers = pRequest.getHeaders();
+	for (http::t_headers::const_iterator it = headers.begin();  it != headers.end(); ++it) {
+        pOut << it->first << ": " << it->second << "\r\n";
     }
+	pOut << "\r\n";
 
-	std::cout << pRequest.getBody();
+	const std::vector<char>& body = pRequest.getBody();
+	if (!body.empty()) {
+		pOut.write(body.data(), body.size());
+	}
+	pOut << "\r\n";
+
+	pOut << pRequest.isDone() ? "is done" : "is not done";
+	pOut << pRequest.isError() ? "is error" : "is not error";
 	
 	return (pOut);
 }
