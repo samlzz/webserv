@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 12:00:19 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 12:42:47 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 21:35:33 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,17 +72,20 @@ Context	resolve(const HttpRequest &req,
 	uri = _normalizeUri(uri);
 
 	ctx.location = config.findLocation(uri);
-	const std::string	&lp = ctx.location->path;
+	if (ctx.location)
+	{
+		const std::string	&lp = ctx.location->path;
 
-	// suffixe URI
-	std::string suffix;
-	if (lp != "/")
-		suffix = uri.substr(lp.size());
-	else
-		suffix = uri;
+		// suffixe URI
+		std::string suffix;
+		if (lp != "/")
+			suffix = uri.substr(lp.size());
+		else
+			suffix = uri;
 
-	ctx.normalizedPath = lp + suffix;
-
+		ctx.normalizedPath = lp + suffix;
+	}
+	
 	return ctx;
 }
 
