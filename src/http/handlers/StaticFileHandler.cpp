@@ -1,4 +1,5 @@
 #include "http/handlers/StaticFileHandler.hpp"
+#include "http/handlers/ErrorHandler.hpp"
 #include "http/response/ResponsePlan.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/routing/Router.hpp"
@@ -40,16 +41,16 @@ ResponsePlan	StaticFileHandler::handle(
 	ResponsePlan	plan;
 
 	struct stat st;
-	std::string path = route.location->root + req.getPath();
+	std::string path = route.location->root + route.normalizedPath;
 
 	if (stat(path.c_str(), &st) != 0)
-		plan.status = http::SC_NOT_FOUND;
+		return (ErrorHandler::build(http::SC_NOT_FOUND, route.location));
 
 	if (S_ISDIR(st.st_mode))
 	{
 		if (path[path.length() - 1] != '/')
 		{
-			std::string redirectPath = req.getPath() + "/";
+			std::string redirectPath = route.normalizedPath + "/";
 			plan.headers["Location"] = redirectPath;
 			plan.headers["Content-Length"] = "0";
 			plan.status = http::SC_MOVED_PERMANENTLY;
@@ -66,8 +67,7 @@ ResponsePlan	StaticFileHandler::handle(
 			int _fd;
 			if ((_fd = open(path.c_str(), O_RDONLY)) < 0)
 			{
-				plan.status = http::SC_FORBIDDEN;
-				return (plan);
+				return (ErrorHandler::build(http::SC_FORBIDDEN, route.location));
 			}
 			plan.headers["Content-Length"] = toString(st.st_size);
 			plan.headers["Content-Type"] = http::Data::getMimeType(ext);
@@ -83,8 +83,7 @@ ResponsePlan	StaticFileHandler::handle(
 			DIR *dir = opendir(path.c_str());
 			if (!dir)
 			{
-				plan.status = http::SC_FORBIDDEN;
-				return (plan);
+				return (ErrorHandler::build(http::SC_FORBIDDEN, route.location));
 			}
 	
 			struct dirent				*entry;
@@ -104,8 +103,8 @@ ResponsePlan	StaticFileHandler::handle(
 				}
 			}
 			std::string body;
-			body = "<html><head><title>Index of " + req.getPath() + "</title></head><body>";
-			body += "<h1>Index of " + req.getPath() + "</h1><hr><pre>";
+			body = "<html><head><title>Index of " + route.normalizedPath + "</title></head><body>";
+			body += "<h1>Index of " + route.normalizedPath + "</h1><hr><pre>";
 
 			std::sort(folders.begin(), folders.end());
 			std::sort(files.begin(), files.end());
@@ -127,7 +126,6 @@ ResponsePlan	StaticFileHandler::handle(
 			return (plan);
 		}
 	}
-
 
 	return (plan);
 }
