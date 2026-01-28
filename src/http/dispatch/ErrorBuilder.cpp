@@ -6,18 +6,18 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:49:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 14:01:29 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 14:57:11 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <fcntl.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 #include "config/Config.hpp"
 #include "ErrorBuilder.hpp"
 #include "config/validation/configValidate.hpp"
 #include "http/HttpData.hpp"
+#include "http/fileSystemUtils.hpp"
 #include "http/handlers/bodySrcs/FileBodySource.hpp"
 #include "http/handlers/bodySrcs/MemoryBodySource.hpp"
 #include "http/response/ResponsePlan.hpp"
@@ -67,18 +67,16 @@ ResponsePlan	ErrorBuilder::buildFromErrorPage(
 	const std::string& path
 )
 {
-	struct stat	st;
-	if (stat(path.c_str(), &st))
-		return buildDefault(status);
-	int fd = open(path.c_str(), O_RDONLY);
+	int		fd = fs::openReadOnly(path);
+	ssize_t	size = fs::size(path);
 
-	if (fd < 0)
+	if (fd < 0 || size < 0)
 		return buildDefault(status);
 
 	ResponsePlan plan;
 	plan.status = status;
 	plan.headers["Content-Type"] = "text/html";
-	plan.headers["Content-Length"] = toString(st.st_size);
+	plan.headers["Content-Length"] = toString(size);
 	plan.body = new FileBodySource(fd);
 
 	return plan;
