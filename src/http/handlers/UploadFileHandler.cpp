@@ -5,7 +5,7 @@
 
 ResponsePlan	UploadFileHandler::handle(
 								const HttpRequest &req,
-								const routing::Context &route)
+								const routing::Context &route) const
 {
 	(void)req;
 	(void)route;

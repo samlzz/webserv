@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/26 14:53:58 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 10:58:46 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 12:30:28 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ public:
 
 	virtual ResponsePlan	handle(
 								const HttpRequest &req,
-								const routing::Context &route) = 0;
+								const routing::Context &route) const = 0;
 };
 
 #endif /* __IHTTP_HANDLER_HPP__ */

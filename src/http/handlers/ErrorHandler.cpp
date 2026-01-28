@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:49:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 11:02:05 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 12:30:45 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@
 ErrorHandler::ErrorHandler()
 {}
 
-ResponsePlan	ErrorHandler::handle(const HttpRequest &req, const routing::Context &route)
+ResponsePlan	ErrorHandler::handle(const HttpRequest &req, const routing::Context &route) const
 {
 	return build(req.getStatusCode(), route.location);
 }

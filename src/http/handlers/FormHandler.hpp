@@ -7,7 +7,7 @@ class FormHandler : public IHttpHandler
 {
 	ResponsePlan	handle(
 						const HttpRequest &req,
-						const routing::Context &route);
+						const routing::Context &route) const;
 
 };
 

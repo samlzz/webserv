@@ -10,7 +10,7 @@
 
 ResponsePlan	DeleteHandler::handle(
 								const HttpRequest &req,
-								const routing::Context &route)
+								const routing::Context &route) const
 {
 	(void)req;
 

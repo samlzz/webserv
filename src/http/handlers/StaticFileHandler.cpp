@@ -31,7 +31,7 @@ static inline std::string	subExt(const std::string& pPath)
 
 ResponsePlan	StaticFileHandler::handle(
 								const HttpRequest &req,
-								const routing::Context &route)
+								const routing::Context &route) const
 {
 	(void)req;
 	(void)route;
