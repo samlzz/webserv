@@ -1,49 +1,38 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   HandlersRegistry.cpp                               :+:      :+:    :+:   */
+/*   HttpDispatcher.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/01/27 20:22:12 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 20:30:34 by sliziard         ###   ########.fr       */
+/*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
+/*   Updated: 2026/01/28 12:22:26 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "HandlersRegistry.hpp"
-#include <stdexcept>
+#include "HttpDispatcher.hpp"
+#include "http/request/HttpRequest.hpp"
+#include "http/response/ResponsePlan.hpp"
+#include "http/routing/Router.hpp"
 
 // ============================================================================
 // Construction / Destruction
 // ============================================================================
 
-HandlersRegistry::HandlersRegistry()
+HttpDispatcher::HttpDispatcher()
 {}
 
-HandlersRegistry::~HandlersRegistry()
+HttpDispatcher::~HttpDispatcher()
 {}
 
 // ============================================================================
 // Methods
 // ============================================================================
 
-void	HandlersRegistry::registerHandler(
-	e_handler_kind key,
-	const IHttpHandler* handler
-)
+ResponsePlan	HttpDispatcher::dispatch(
+									const HttpRequest &req,
+									const routing::Context &route
+								)
 {
-	if (!handler)
-		throw std::runtime_error("HandlerRegistry: null handler");
-
-	_registry[key] = handler;
-}
-
-const IHttpHandler*	HandlersRegistry::getHandler(e_handler_kind key) const
-{
-	t_handlers::const_iterator	it;
-	
-	it = _registry.find(key);
-	if (it == _registry.end())
-		return 0;
-	return it->second;
+	// TODO: fin handler then return handler.handle()
 }
