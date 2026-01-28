@@ -7,7 +7,9 @@
 #include "config/validation/configValidate.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/HttpData.hpp"
+#include "http/fileSystemUtils.hpp"
 
+#include <cstddef>
 #include <ctime>
 #include <string>
 #include <fcntl.h>
@@ -119,7 +121,18 @@ bool			UploadFileHandler::writeFile(
 	if (fd < 0)
 		return (false);
 
-	ssize_t written = write(fd, data.c_str(), data.length());
+	ssize_t totalWritten = 0;
+	ssize_t written;
+	while (totalWritten < static_cast<ssize_t>(data.length()))
+	{
+		written = write(fd, data.c_str() + totalWritten, data.length() - totalWritten);
+		if (written < 0)
+		{
+			close(fd);
+			return (false);
+		}
+		totalWritten += written;
+	}
 	close(fd);
 	if (written < 0)
 		return (false);
@@ -135,6 +148,8 @@ ResponsePlan	UploadFileHandler::handleTextPlain(
 	std::string fullPath = generateFilePath(route, filename,
 			http::CT_TEXT_PLAIN, req.getMethod());
 
+	// std::string body(req.vec.data(), req.vec.size());
+
 	if (!writeFile(fullPath, req.getBody(), req.getMethod()))
 		return ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
 
@@ -146,7 +161,6 @@ ResponsePlan	UploadFileHandler::handleTextPlain(
 
 	return (plan);
 }
-
 ResponsePlan	UploadFileHandler::handleOctetStream(
 								const HttpRequest &req,
 								const routing::Context &route)
@@ -156,6 +170,8 @@ ResponsePlan	UploadFileHandler::handleOctetStream(
 	std::string filename = route.normalizedPath;
 	std::string fullPath = generateFilePath(route, filename,
 			http::CT_BINARY, req.getMethod());
+
+	// std::string body(req.vec.data(), req.vec.size());
 
 	if (!writeFile(fullPath, req.getBody(), req.getMethod()))
 		return ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
@@ -186,6 +202,8 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 	std::string delimiter = "--" + boundary;
 
 	size_t	pos = 0;
+
+	// std::string body(req.vec.data(), req.vec.size());
 	std::string	body = req.getBody();
 
 	while ((pos = body.find(delimiter, pos)) != std::string::npos)
@@ -217,8 +235,13 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 				size_t	contentPos = part.find("\r\n\r\n");
 				if (contentPos != std::string::npos)
 				{
+					size_t headerSize = contentPos + 4;
+					size_t endSize = 2;
+					if (part.length() >= headerSize + endSize)
+						return ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
+					
 					// Extract content and save to file
-					std::string	fileContent = part.substr(contentPos + 4, part.length() - contentPos - 6);
+					std::string	fileContent = part.substr(contentPos + 4, part.length() - contentPos);
 
 					std::string fullPath = generateFilePath(route, filename,
 							http::CT_MULTIPART_FORM_DATA, req.getMethod());
@@ -260,7 +283,7 @@ ResponsePlan	UploadFileHandler::handleContentType(
 	switch(http::Data::getContentTypeKind(contentType))
 	{
 		case http::CT_APPLICATION_X_WWW_FORM_URLENCODED:
-			// plan = handleUrlEncoded(req, route);
+			//check return erreur bad request???
 			break;
 
 		case http::CT_MULTIPART_FORM_DATA:
