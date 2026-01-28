@@ -7,14 +7,6 @@
 class UploadFileHandler : public IHttpHandler
 {
 private:
-	ResponsePlan 	handlePUT(
-						const HttpRequest &req,
-						const routing::Context &route);
-	
-	ResponsePlan 	handlePOST(
-						const HttpRequest &req,
-						const routing::Context &route);
-	
 	bool			writeFile(
 						const std::string &path,
 						const std::string &data,

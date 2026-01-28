@@ -3,7 +3,7 @@
 #include "http/response/ResponsePlan.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/routing/Router.hpp"
-#include "http/handlers/ErrorHandler.hpp"
+#include "http/dispatch/ErrorBuilder.hpp"
 #include "config/validation/configValidate.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/HttpData.hpp"
@@ -19,8 +19,6 @@ std::string 	UploadFileHandler::generateFilename(
 						const std::string &filename,
 						http::e_body_kind contentType)
 {
-	(void)filename;
-	(void)contentType;
 	std::string new_filename = "";
 
 	switch(contentType)
@@ -63,11 +61,6 @@ std::string 	UploadFileHandler::generateFilePath(
 						http::e_body_kind contentType,
 						http::e_method method)
 {
-	(void)route;
-	(void)filename;
-	(void)contentType;
-	(void)method;
-
 	std::string uploadDir;
 	std::string new_filename = filename;
 	if (method == http::MTH_POST)
@@ -117,10 +110,6 @@ bool			UploadFileHandler::writeFile(
 						const std::string &data,
 						http::e_method method)
 {
-	(void)path;
-	(void)data;
-	(void)method;
-
 	int fd = -1;
 	if (method == http::MTH_PUT)
 		fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -140,8 +129,6 @@ ResponsePlan	UploadFileHandler::handleTextPlain(
 								const HttpRequest &req,
 								const routing::Context &route)
 {
-	(void)req;
-	(void)route;
 	ResponsePlan	plan;
 
 	std::string filename = route.normalizedPath;
@@ -149,7 +136,7 @@ ResponsePlan	UploadFileHandler::handleTextPlain(
 			http::CT_TEXT_PLAIN, req.getMethod());
 
 	if (!writeFile(fullPath, req.getBody(), req.getMethod()))
-		return ErrorHandler::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
+		return ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
 
 	//code 201 Created
 	plan.status = http::SC_CREATED;
@@ -164,8 +151,6 @@ ResponsePlan	UploadFileHandler::handleOctetStream(
 								const HttpRequest &req,
 								const routing::Context &route)
 {
-	(void)req;
-	(void)route;
 	ResponsePlan	plan;
 
 	std::string filename = route.normalizedPath;
@@ -173,7 +158,7 @@ ResponsePlan	UploadFileHandler::handleOctetStream(
 			http::CT_BINARY, req.getMethod());
 
 	if (!writeFile(fullPath, req.getBody(), req.getMethod()))
-		return ErrorHandler::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
+		return ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
 
 	//code 201 Created
 	plan.status = http::SC_CREATED;
@@ -187,18 +172,16 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 								const HttpRequest &req,
 								const routing::Context &route)
 {
-	(void)req;
-	(void)route;
 	ResponsePlan	plan;
 
 	std::string contentType = req.getHeader("Content-Type");
 	if (contentType.empty())
-		return ErrorHandler::build(http::SC_BAD_REQUEST, route.location);
+		return ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
 
 	// Extract boundary
 	size_t	boundaryPos = contentType.find("boundary=");
 	if (boundaryPos == std::string::npos)
-		return ErrorHandler::build(http::SC_BAD_REQUEST, route.location);
+		return ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
 	std::string	boundary = contentType.substr(boundaryPos + 9);
 	std::string delimiter = "--" + boundary;
 
@@ -228,7 +211,7 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 				if (lastSlash != std::string::npos)
 					filename = filename.substr(lastSlash + 1);
 				if (filename.empty())
-					return ErrorHandler::build(http::SC_BAD_REQUEST, route.location);
+					return ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
 
 				// Extract content
 				size_t	contentPos = part.find("\r\n\r\n");
@@ -241,22 +224,25 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 							http::CT_MULTIPART_FORM_DATA, req.getMethod());
 
 					if (!writeFile(fullPath, fileContent, req.getMethod()))
-						return ErrorHandler::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
+						return ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
+					plan.headers["Location"] = "/" + filename;
 				}
 				else
-					return ErrorHandler::build(http::SC_BAD_REQUEST, route.location);
+					return ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
 			}
 			else
-				return ErrorHandler::build(http::SC_BAD_REQUEST, route.location);
+				return ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
 		}
 		else
-			return ErrorHandler::build(http::SC_BAD_REQUEST, route.location);
+			return ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
 
 		pos = nextPos;
 	}
 
 	//code 201 Created
 	plan.status = http::SC_CREATED;
+
+	plan.headers["Content-Length"] = "0";
 	return (plan);
 
 }
@@ -265,8 +251,6 @@ ResponsePlan	UploadFileHandler::handleContentType(
 								const HttpRequest &req,
 								const routing::Context &route)
 {
-	(void)req;
-	(void)route;
 	ResponsePlan	plan;
 
 	std::string contentType = req.getHeader("Content-Type");
@@ -284,52 +268,17 @@ ResponsePlan	UploadFileHandler::handleContentType(
 			break;
 
 		case http::CT_BINARY:
-			// plan = handleOctetStream(req, route, filePath);
+			plan = handleOctetStream(req, route);
 			break;
 
 		case http::CT_TEXT_PLAIN:
 			plan = handleTextPlain(req, route);
+			break;
 
 		default:
-			return ErrorHandler::build(http::SC_UNSUPPORTED_MEDIA_TYPE,
+			return ErrorBuilder::build(http::SC_UNSUPPORTED_MEDIA_TYPE,
 					route.location);
 	}
-
-	return (plan);
-}
-
-ResponsePlan	UploadFileHandler::handlePOST(
-								const HttpRequest &req,
-								const routing::Context &route)
-{
-	(void)req;
-	(void)route;
-
-	ResponsePlan	plan;
-	
-	std::string uploadDir = *route.location->uploadPath;
-	std::string filename = route.normalizedPath;
-	std::string filePath = uploadDir + "/" + filename;
-
-	plan = handleContentType(req, route);
-	
-	return (plan);
-}
-
-ResponsePlan	UploadFileHandler::handlePUT(
-								const HttpRequest &req,
-								const routing::Context &route)
-{
-	(void)req;
-	(void)route;
-
-	ResponsePlan	plan;
-
-	std::string uploadDir = route.location->root;
-	std::string filename = route.normalizedPath;
-	std::string filePath = uploadDir + "/" + filename;
-
-	plan = handleContentType(req, route);
 
 	return (plan);
 }
@@ -338,14 +287,11 @@ ResponsePlan	UploadFileHandler::handle(
 								const HttpRequest &req,
 								const routing::Context &route)
 {
-	(void)req;
-	(void)route;
-
-	if (req.getMethod() == http::MTH_PUT)
-		return (handlePUT(req, route));
-	else if (req.getMethod() == http::MTH_POST)
-		return (handlePOST(req, route));
+	if (req.getMethod() == http::MTH_PUT || req.getMethod() == http::MTH_POST)
+	{
+		return (handleContentType(req, route));
+	}
 	else
-		return (ErrorHandler::build(http::SC_METHOD_NOT_ALLOWED,
+		return (ErrorBuilder::build(http::SC_METHOD_NOT_ALLOWED,
 				route.location));
 }

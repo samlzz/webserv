@@ -1,5 +1,5 @@
 #include "http/handlers/StaticFileHandler.hpp"
-#include "http/handlers/ErrorHandler.hpp"
+#include "http/dispatch/ErrorBuilder.hpp"
 #include "http/response/ResponsePlan.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/routing/Router.hpp"
@@ -44,7 +44,7 @@ ResponsePlan	StaticFileHandler::handle(
 	std::string path = route.location->root + route.normalizedPath;
 
 	if (stat(path.c_str(), &st) != 0)
-		return (ErrorHandler::build(http::SC_NOT_FOUND, route.location));
+		return (ErrorBuilder::build(http::SC_NOT_FOUND, route.location));
 
 	if (S_ISDIR(st.st_mode))
 	{
@@ -67,7 +67,7 @@ ResponsePlan	StaticFileHandler::handle(
 			int _fd;
 			if ((_fd = open(path.c_str(), O_RDONLY)) < 0)
 			{
-				return (ErrorHandler::build(http::SC_FORBIDDEN, route.location));
+				return (ErrorBuilder::build(http::SC_FORBIDDEN, route.location));
 			}
 			plan.headers["Content-Length"] = toString(st.st_size);
 			plan.headers["Content-Type"] = http::Data::getMimeType(ext);
@@ -83,7 +83,7 @@ ResponsePlan	StaticFileHandler::handle(
 			DIR *dir = opendir(path.c_str());
 			if (!dir)
 			{
-				return (ErrorHandler::build(http::SC_FORBIDDEN, route.location));
+				return (ErrorBuilder::build(http::SC_FORBIDDEN, route.location));
 			}
 	
 			struct dirent				*entry;
