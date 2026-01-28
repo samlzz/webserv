@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 11:19:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 12:48:34 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 14:02:52 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,8 @@
 # define __HTTP_DISPATCHER_HPP__
 
 # include "http/handlers/DeleteHandler.hpp"
-# include "http/handlers/ErrorHandler.hpp"
 # include "http/handlers/FormHandler.hpp"
+# include "http/handlers/IHttpHandler.hpp"
 # include "http/handlers/RedirectionHandler.hpp"
 # include "http/handlers/StaticFileHandler.hpp"
 # include "http/handlers/UploadFileHandler.hpp"
@@ -33,7 +33,6 @@ private:
 	UploadFileHandler	_uploadHandler;
 	FormHandler			_formHandler;
 	DeleteHandler		_deleteHandler;
-	ErrorHandler		_errHandler;
 	// TODO: CgiHandler
 
 public:
@@ -46,6 +45,11 @@ public:
 					) const;
 
 private:
+	const IHttpHandler	*findHandler(
+						const HttpRequest &req,
+						const routing::Context &route
+					) const;
+
 	//forbidden
 	HttpDispatcher(const HttpDispatcher &other);
 	HttpDispatcher& operator=(const HttpDispatcher &other);
