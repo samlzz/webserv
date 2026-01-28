@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ErrorHandler.hpp                                   :+:      :+:    :+:   */
+/*   ErrorBuilder.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:50:00 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 11:01:32 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 13:53:42 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,27 +18,28 @@
 # include "http/handlers/IHttpHandler.hpp"
 # include "http/response/ResponsePlan.hpp"
 
-class ErrorHandler: public IHttpHandler{
+class ErrorBuilder {
 
 public:
-	ErrorHandler();
 
-	static ResponsePlan		build(
-								http::e_status_code status,
-								const Config::Server::Location *location = 0
-							);
-	virtual ResponsePlan	handle(
-								const HttpRequest &req,
-								const routing::Context &route);
-
+	static ResponsePlan	build(
+							http::e_status_code status,
+							const Config::Server::Location *location 
+						);
 private:
 
 	// ---- Helpers ----
-	static ResponsePlan		buildDefault(http::e_status_code status);
-	static ResponsePlan		buildFromErrorPage(
-								http::e_status_code status,
-								const std::string& path
-							);
+	static ResponsePlan	buildDefault(http::e_status_code status);
+	static ResponsePlan	buildFromErrorPage(
+							http::e_status_code status,
+							const std::string& path
+						);
+
+	// class not constructable
+	ErrorBuilder();
+	~ErrorBuilder();
+	ErrorBuilder(const ErrorBuilder &other);
+	ErrorBuilder& operator=(const ErrorBuilder &other);
 };
 
 #endif /* __ERROR_HANDLER_HPP__ */
