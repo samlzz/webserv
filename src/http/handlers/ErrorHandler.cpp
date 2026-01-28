@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:49:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 10:53:31 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 11:02:05 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ ResponsePlan	ErrorHandler::handle(const HttpRequest &req, const routing::Context
 ResponsePlan	ErrorHandler::build(
 	http::e_status_code status,
 	const Config::Server::Location *location
-) const
+)
 {
 	if (location)
 	{
@@ -49,7 +49,7 @@ ResponsePlan	ErrorHandler::build(
 	return buildDefault(status);
 }
 
-ResponsePlan	ErrorHandler::buildDefault(http::e_status_code status) const
+ResponsePlan	ErrorHandler::buildDefault(http::e_status_code status)
 {
 	std::string			reason = http::Data::getStatusType(status);
 	std::ostringstream	stream;
@@ -75,7 +75,7 @@ ResponsePlan	ErrorHandler::buildDefault(http::e_status_code status) const
 ResponsePlan	ErrorHandler::buildFromErrorPage(
 	http::e_status_code status,
 	const std::string& path
-) const
+)
 {
 	struct stat	st;
 	if (stat(path.c_str(), &st))
