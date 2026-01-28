@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 17:57:03 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 15:45:41 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ CgiProcess::CgiProcess(IOutputSink &sink, IWritableNotifier &notifier)
 	: _sink(sink), _notifier(notifier)
 	, _pid(-1), _exitCode(0)
 	, _terminated(false), _errOccur(false)
-	, _read(0), _write(0)
+	, _read(0), _write(0), _refCount(0)
 {}
 
 CgiProcess::~CgiProcess()
@@ -45,6 +45,16 @@ CgiProcess::~CgiProcess()
 
 IConnection	*CgiProcess::read(void) const			{ return _read; }
 IConnection	*CgiProcess::write(void) const			{ return _write; }
+
+void		CgiProcess::retain(void)				{ _refCount++; }
+void		CgiProcess::release(void)
+{
+	if (_refCount <= 0)
+		return;
+	--_refCount;
+	if (_refCount == 0)
+		delete this;
+}
 
 void		CgiProcess::forgetRead(void)			{ _read = 0; }
 void		CgiProcess::forgetWrite(void)			{ _write = 0; }

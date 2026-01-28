@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:52:27 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 12:16:38 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 15:04:28 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ private:
 
 public:
 	CgiReadConnection(int stdoutFd, CgiProcess &ctx);
+	virtual ~CgiReadConnection();
 
 	virtual ConnEvent	handleEvents(short revents);
 	virtual ConnEvent	checkTimeout(time_t now);

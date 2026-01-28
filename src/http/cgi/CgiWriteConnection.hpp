@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:37:42 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/20 17:51:39 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 16:14:05 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,13 +24,14 @@ class CgiProcess;
 class CgiWriteConnection: public AConnection {
 
 private:
-	const std::string	&_body;
+	std::string			_body;
 	size_t				_offset;
 	CgiProcess			&_ctx;
 	bool				_spawned;
 
 public:
 	CgiWriteConnection(int stdinFd, const std::string &body, CgiProcess &ctx);
+	virtual ~CgiWriteConnection();
 
 	virtual ConnEvent	handleEvents(short revents);
 	virtual IConnection	*buddy(void);

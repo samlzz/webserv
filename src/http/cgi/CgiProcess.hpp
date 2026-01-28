@@ -6,13 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 16:13:43 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 16:00:11 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __CGI_PROCESS_HPP__
 # define __CGI_PROCESS_HPP__
 
+# include <cstddef>
 # include <ctime>
 # include <string>
 # include <sys/types.h>
@@ -52,6 +53,7 @@ private:
 
 	IConnection			*_read;
 	IConnection			*_write;
+	int32_t				_refCount;
 
 public:
 
@@ -69,6 +71,9 @@ public:
 	IConnection			*write(void) const;
 	void				forgetRead(void);
 	void				forgetWrite(void);
+
+	void				retain(void);
+	void				release(void);
 
 	time_t				startTime(void) const;
 
