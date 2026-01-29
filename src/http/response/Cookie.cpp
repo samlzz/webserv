@@ -145,7 +145,7 @@ std::string Cookie::buildCookieHeader(void)
 void Cookie::appendCookieHeader(const std::string &pHeader)
 {
 	std::string existingHeader = "";
-	t_headers::iterator it = _response_->getResponse().headers.find("Set-Cookie");
+	http::t_headers::iterator it = _response_->getResponse().headers.find("Set-Cookie");
 	if (it != _response_->getResponse().headers.end())
 		existingHeader = it->second;
 
@@ -190,7 +190,7 @@ void Cookie::clearExpiredSessions(time_t pExpirationTime)
 void Cookie::addCookieOptions(const std::string &pOptions)
 {
 	std::string existingHeader = "";
-	t_headers::iterator it = (_response_->getResponse().headers).find("Set-Cookie");
+	http::t_headers::iterator it = (_response_->getResponse().headers).find("Set-Cookie");
 	if (it != (_response_->getResponse().headers).end())
 		existingHeader = it->second;
 

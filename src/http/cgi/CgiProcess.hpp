@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 13:19:25 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 16:13:43 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 # include <sys/types.h>
 # include <stdint.h>
 
-# include "http/response/IChunkEncoder.hpp"
+# include "http/cgi/IOutputSink.hpp"
 # include "server/connections/IConnection.hpp"
 # include "server/connections/IWritableNotifier.hpp"
 
@@ -41,12 +41,15 @@ private:
 	// ============================================================================
 	// Attributes
 	// ============================================================================
-	IChunkEncoder		&_encoder;
+	IOutputSink			&_sink;
 	IWritableNotifier	&_notifier;
 	pid_t				_pid;
 	time_t				_startTs;
+
 	uint8_t				_exitCode;
 	bool				_terminated;
+	bool				_errOccur;
+
 	IConnection			*_read;
 	IConnection			*_write;
 
@@ -55,7 +58,7 @@ public:
 	// ============================================================================
 	// Construction
 	// ============================================================================
-	CgiProcess(IChunkEncoder &encoder, IWritableNotifier &notifier);
+	CgiProcess(IOutputSink &sink, IWritableNotifier &notifier);
 	~CgiProcess();
 
 	// ============================================================================
@@ -69,7 +72,8 @@ public:
 
 	time_t				startTime(void) const;
 
-	bool				isDone(void) const;
+	bool				isTerminated(void) const;
+	bool				isError(void) const;
 	uint8_t				exitCode(void) const;
 
 	// ============================================================================

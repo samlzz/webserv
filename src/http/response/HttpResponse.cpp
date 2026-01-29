@@ -6,11 +6,10 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 23:32:00 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 21:29:38 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 12:05:31 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <fstream>
 #include <iostream>
 #include <algorithm>
 #include <sstream>
@@ -30,6 +29,7 @@
 #include "http/request/HttpRequest.hpp"
 #include "config/Config.hpp"
 #include "config/validation/configValidate.hpp"
+#include "http/response/BuffStream.hpp"
 #include "server/connections/ConnEvent.hpp"
 
 // =========================================================================== //
@@ -160,6 +160,36 @@ static inline std::string url_decode(const std::string &str)
 	}
 	return result;
 }
+//Remove /../ and /./ in path
+std::string normalizePath(const std::string &path)
+{
+	std::string newPath;
+	size_t length = path.length();
+
+	for (size_t i = 0; i < length; )
+	{
+		// Handle "/../"
+		if (i + 3 < length && path[i] == '/' && path[i + 1] == '.' && path[i + 2] == '.' && path[i + 3] == '/')
+		{
+
+			size_t pos = newPath.find_last_of('/');
+			if (pos != std::string::npos)
+				newPath.erase(pos);
+			i += 3;
+		}
+		// Handle "/./"
+		else if (i + 2 < length && path[i] == '/' && path[i + 1] == '.' && path[i + 2] == '/')
+		{
+			i += 2;
+		}
+		else
+		{
+			newPath += path[i];
+			i++;
+		}
+	}
+	return newPath;
+}
 
 #pragma endregion
 
@@ -167,9 +197,6 @@ static inline std::string url_decode(const std::string &str)
 //                            MEMBER FUNCTION                                  //
 // =========================================================================== //
 #pragma region member function
-
-void	HttpResponse::encode(const char *pbuf, size_t pBufSize) { (void)pbuf; (void)pBufSize; }
-void	HttpResponse::finalize(void) {}
 
 ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notifier)
 {
@@ -180,6 +207,9 @@ ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notif
 		return ConnEvent::none();
 	}
 
+	std::string normalizedPath = normalizePath(_request.getPath());
+	_request.setPath(normalizedPath);
+	
 	std::string	path = _request.getPath();
 
 	_location = _server.findLocation(path);
@@ -241,14 +271,14 @@ ConnEvent		HttpResponse::build(const HttpRequest &pReq, IWritableNotifier &notif
 		return ConnEvent::none();
 	}
 
-	_chunkedStream.push(toString(_response));
+	_outputStream.push(toString(_response));
 	return ConnEvent::none();
 }
 
 void		HttpResponse::fillStream(void)
 {
 	char	buffer[__SIZE_OF_CHUNK__];
-	while (_chunkedStream.size() <= __MAX_CHUNK__) {
+	while (_outputStream.size() <= __MAX_CHUNK__) {
 		ssize_t	rd = read(_fd, buffer, sizeof(buffer));
 
 		if (rd < 0) {
@@ -261,7 +291,7 @@ void		HttpResponse::fillStream(void)
 			_fd = -1;
 			return ;
 		}
-		_chunkedStream.push(std::string(buffer, rd));
+		_outputStream.push(std::string(buffer, rd));
 	}
 }
 
@@ -282,9 +312,9 @@ void		HttpResponse::reset(void)
 	//clear chunked stream too
 }
 
-IChunkedStream	&HttpResponse::stream(void) { return (_chunkedStream); }
+IFifoStreamView<t_bytes>	&HttpResponse::stream(void)			{ return (_outputStream); }
 
-bool		HttpResponse::isDone(void) const { return (_isDone); }
+bool						HttpResponse::isDone(void) const	{ return (_isDone); }
 
 // Use this function to determine if the socket should be kept for the next request
 bool		HttpResponse::shouldCloseConnection(void) const {
@@ -344,10 +374,10 @@ void		HttpResponse::handleGET(void)
 
 	if (S_ISDIR(st.st_mode)) {
 		//TODO: access folder
-
 		if (path[path.length() - 1] != '/') {
 			std::string redirectPath = _request.getPath() + "/";
 			addHeader("Location", redirectPath);
+			setError(http::SC_MOVED_PERMANENTLY);
 			return ; //TODO: handle 301 MOVED PERMA
 		}
 
@@ -358,7 +388,7 @@ void		HttpResponse::handleGET(void)
 		}
 
 		if (_location->autoindex)
-		{
+		{			
 			DIR *dir = opendir(path.c_str());
 			if (!dir)
 				return setError(http::SC_FORBIDDEN);
@@ -367,15 +397,22 @@ void		HttpResponse::handleGET(void)
 			std::vector<std::string>	folders;
 			std::vector<std::string>	files;
 
-			while ((entry = readdir(dir)) != NULL) {
+			while ((entry = readdir(dir)) != NULL)
+			{
 				struct stat s;
-				if (stat(entry->d_name, &s) == 0) {
+				std::string fullEntryPath = path + "/" + entry->d_name;
+				if (stat(fullEntryPath.c_str(), &s) == 0)
+				{
 					if (S_ISDIR(s.st_mode))
 						folders.push_back(entry->d_name);
 					if (S_ISREG(s.st_mode))
 						files.push_back(entry->d_name);
 				}
 			}
+
+			_response.body = "<html><head><title>Index of " + _request.getPath() + "</title></head><body>";
+			_response.body += "<h1>Index of " + _request.getPath() + "</h1><hr><pre>";
+
 			std::sort(folders.begin(), folders.end());
 			std::sort(files.begin(), files.end());
 
@@ -383,6 +420,12 @@ void		HttpResponse::handleGET(void)
 				_response.body += "<a href=\"" + folders[i] + "\">" + folders[i] + "</a><br>\n";
 			for (size_t i = 0; i < files.size(); ++i)
 				_response.body += "<a href=\"" + files[i] + "\">" + files[i] + "</a><br>\n";
+
+			_response.body += "</pre><hr></body></html>";
+
+			_response.setStatusCode(http::SC_OK);
+			addHeader("Content-Type", http::Data::getMimeType("html"));
+			addHeader("Content-Length", toString(_response.body.size()));
 
 			closedir(dir);
 			return;
@@ -404,17 +447,98 @@ void		HttpResponse::handleHEAD(void)
 	_response.body.clear();
 }
 
-void HttpResponse::handleMultipart(void)
+bool HttpResponse::validUploadPath(std::string& path)
+{
+	if (!_location->uploadPath.isSome())
+	{
+		setError(http::SC_METHOD_NOT_ALLOWED);
+		return false;
+	}
+
+	path = *_location->uploadPath;
+
+	if (access(path.c_str(), W_OK) != 0)
+	{
+		setError(http::SC_FORBIDDEN);
+		return false;
+	}
+
+	if (path[0] == '/')
+		path = "." + path;
+	return true;
+}
+
+std::string createFilename(std::string& filename, http::e_body_kind expression)
+{
+	std::string new_filename;
+
+	switch (expression)
+	{
+	case http::CT_BINARY:
+		new_filename = "raw_post_" + toString(std::time(0));
+		break;
+	
+	case http::CT_TEXT_PLAIN:
+		new_filename = "text_post_" + toString(std::time(0)) + ".txt";
+		break;
+
+	case http::CT_APPLICATION_X_WWW_FORM_URLENCODED:
+		break;
+
+	case http::CT_MULTIPART_FORM_DATA:
+	{
+		size_t ext_pos = filename.find_last_of(".");
+		if (ext_pos != std::string::npos)
+			new_filename = filename.substr(0, ext_pos) + "_" + toString(std::time(0)) + filename.substr(ext_pos);
+		else
+			new_filename = filename + "_" + toString(std::time(0));
+		break;
+	}
+	case http::CT_UNKNOWN:
+		new_filename = "";
+		break;
+
+	default:
+		new_filename = "";
+		break;
+	}
+	return new_filename;
+}
+
+std::string HttpResponse::buildUploadPath(std::string &filename, http::e_body_kind expression)
+{
+	std::string uploadDir;
+	http::e_method	method = _request.getMethod();
+
+	if (method != http::MTH_POST && method != http::MTH_PUT)
+		return "";
+
+	if (method == http::MTH_POST)
+	{
+		if (!validUploadPath(uploadDir))
+			return "";
+		filename = createFilename(filename, expression);
+	}
+
+	else if (method == http::MTH_PUT)
+	{
+		uploadDir = _location->root;
+		filename = _request.getPath();
+		if (!filename.empty() && filename[0] == '/')
+			filename = filename.substr(1);
+	}
+
+	std::string	filePath = uploadDir + "/" + filename;
+
+	if (filePath[0] == '/')
+		filePath = "." + filePath;
+
+	return filePath;
+}
+
+void HttpResponse::handleMultipart(	http::e_method curMethod)
 {
 	std::string	contentType = _request.getHeader("Content-Type");
-	std::string	uploadDir;
-	if (_location->uploadPath.isSome())
-		uploadDir = *_location->uploadPath;
-	else
-		return setError(http::SC_METHOD_NOT_ALLOWED);
-
-	if (access(uploadDir.c_str(), W_OK) != 0)
-		return setError(http::SC_FORBIDDEN);
 
 	//SEARCH BOUNDARY
 	size_t	boundaryPos = contentType.find("boundary=");
@@ -428,10 +552,12 @@ void HttpResponse::handleMultipart(void)
 
 	while ((pos = body.find(delimiter, pos)) != std::string::npos)
 	{	
+		std::cout << "Delimiter found at position: " << pos << std::endl;
+		//FIND NEXT DELIMITER
 		size_t	nextPos = body.find(delimiter, pos + delimiter.length());
 		if (nextPos == std::string::npos)
 			break;
-
+		std::cout << "Next Delimiter found at position: " << nextPos << std::endl;
 		//EXTRACT FILENAME AND CONTENT
 		std::string	part = body.substr(pos + delimiter.length(), nextPos - pos - delimiter.length());
 		size_t	filenamePos = part.find("filename=\"");
@@ -457,26 +583,30 @@ void HttpResponse::handleMultipart(void)
 				if (contentPos != std::string::npos)
 				{
 					//EXTRACT CONTENT AND SAVE TO FILE
-					std::string	fileContent = part.substr(contentPos + 4, part.length() - contentPos - 6); // -6 to remove trailing \r\n
+					std::string	fileContent = part.substr(contentPos + 4, part.length() - contentPos - 6);
+					std::string filePath = buildUploadPath(filename, http::CT_MULTIPART_FORM_DATA);
+					if (filePath.empty())
+						return;
 
-					//add random time to filename to avoid overwriting
-					std::string new_filename;
-					size_t ext_pos = filename.find_last_of(".");
-					if (ext_pos != std::string::npos)
-						new_filename = filename.substr(0, ext_pos) + "_" + toString(std::time(0)) + filename.substr(ext_pos);
+					int fd = -1;
+					if (curMethod == http::MTH_PUT)
+						fd = open(filePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+					else if (curMethod == http::MTH_POST)
+						fd = open(filePath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0644);
 					else
-						new_filename = filename + "_" + toString(std::time(0));
+						return setError(http::SC_BAD_REQUEST);
 
-					//SAVE FILE TO filePath
-					std::string		filePath = uploadDir + "/" + new_filename;
-					std::ofstream	outFile(filePath.c_str(), std::ios::binary);
-					if (!outFile)
+					if (fd < 0)
 						return setError(http::SC_INTERNAL_SERVER_ERROR);
-					outFile.write(fileContent.c_str(), fileContent.length());
-					outFile.close();
+
+					ssize_t written = write(fd, fileContent.c_str(), fileContent.length());
+					close(fd);
+
+					if (written < 0)
+						return setError(http::SC_INTERNAL_SERVER_ERROR);
 					
 					//A verifier? location dans le header si upload
-					addHeader("Location", "/" + new_filename);
+					addHeader("Location", "/" + filename);
 				}
 				else
 				{
@@ -488,11 +618,13 @@ void HttpResponse::handleMultipart(void)
 	}
 	//code 201 Created
 	_response.setStatusCode(http::SC_CREATED);
+	std::cout << "Finished handling multipart/form-data POST request." << std::endl;
 	return;
 }
 
-void HttpResponse::handleUrlEncoded(void)
+void HttpResponse::handleUrlEncoded(http::e_method curMethod)
 {
+	(void)curMethod;
 	std::istringstream stream(_request.getBody());
 	std::string line;
 	std::map<std::string, std::string> data;
@@ -519,25 +651,28 @@ void HttpResponse::handleUrlEncoded(void)
 	return;
 }
 
-void HttpResponse::handleOctetStream(void)
+void HttpResponse::handleOctetStream(http::e_method curMethod)
 {
-	std::string	uploadDir;
-	if (_location->uploadPath.isSome())
-		uploadDir = *_location->uploadPath;
+	std::string	filename;
+	std::string filePath = buildUploadPath(filename, http::CT_BINARY);
+	if (filePath.empty())
+		return;
+
+	int fd = -1;
+	if (curMethod == http::MTH_PUT)
+		fd = open(filePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	else if (curMethod == http::MTH_POST)
+		fd = open(filePath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0644);
 	else
-		return setError(http::SC_METHOD_NOT_ALLOWED);
-
-	if (access(uploadDir.c_str(), W_OK) != 0)
-		return setError(http::SC_FORBIDDEN);
-
-	//SAVE FILE TO filePath
-	std::string	filename = "raw_post_" + toString(std::time(0));
-	std::string	filePath = uploadDir + "/" + filename;
-	std::ofstream	outFile(filePath.c_str(), std::ios::binary);
-	if (!outFile)
+	 	return setError(http::SC_BAD_REQUEST);
+	if (fd < 0)
 		return setError(http::SC_INTERNAL_SERVER_ERROR);
-	outFile.write(_request.getBody().c_str(), _request.getBody().length());
-	outFile.close();
+
+	ssize_t written = write(fd, _request.getBody().c_str(), _request.getBody().length());
+	close(fd);
+
+	if (written < 0)
+		return setError(http::SC_INTERNAL_SERVER_ERROR);
 
 	//A verifier? location dans le header si upload
 	addHeader("Location", "/" + filename);
@@ -547,26 +682,32 @@ void HttpResponse::handleOctetStream(void)
 	return;
 }
 
-void HttpResponse::handleTextPlain(void)
+void HttpResponse::handleTextPlain(http::e_method curMethod)
 {
 	// Just save the body to a file
-	std::string	uploadDir;
-	if (_location->uploadPath.isSome())
-		uploadDir = *_location->uploadPath;
+	// std::string	uploadDir;
+	std::string	filename;
+	std::string filePath = buildUploadPath(filename, http::CT_TEXT_PLAIN);
+	if (filePath.empty())
+		return;
+
+	// std::ofstream	outFile(filePath.c_str(), std::ios::binary);
+	int fd = -1;
+	if (curMethod == http::MTH_PUT)
+		fd = open(filePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	else if (curMethod == http::MTH_POST)
+		fd = open(filePath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0644);
 	else
-		return setError(http::SC_METHOD_NOT_ALLOWED);
+		return setError(http::SC_BAD_REQUEST);
 
-	if (access(uploadDir.c_str(), W_OK) != 0)
-		return setError(http::SC_FORBIDDEN);
-
-	//SAVE FILE TO filePath
-	std::string	filename = "raw_post_" + toString(std::time(0)) + ".txt";
-	std::string	filePath = uploadDir + "/" + filename;
-	std::ofstream	outFile(filePath.c_str(), std::ios::binary);
-	if (!outFile)
+	if (fd < 0)
 		return setError(http::SC_INTERNAL_SERVER_ERROR);
-	outFile.write(_request.getBody().c_str(), _request.getBody().length());
-	outFile.close();
+
+	ssize_t written = write(fd, _request.getBody().c_str(), _request.getBody().length());
+	close(fd);
+
+	if (written < 0)
+		return setError(http::SC_INTERNAL_SERVER_ERROR);
 
 	//A verifier? location dans le header si upload
 	addHeader("Location", "/" + filename);
@@ -579,26 +720,29 @@ void HttpResponse::handleTextPlain(void)
 // TODO: need a Reverse Deque Technique like send but receive instead, might need to redo request 
 void		HttpResponse::handlePOST(void)
 {
+	std::cout << "Handling POST request..." << std::endl;
 	std::string contentType = _request.getHeader("Content-Type");
 	if (contentType.empty())
-		handleOctetStream();
+		contentType = "application/octet-stream";
+
+	http::e_method curMethod = _request.getMethod();
 
 	switch (http::Data::getContentTypeKind(contentType))
 	{
 		case http::CT_APPLICATION_X_WWW_FORM_URLENCODED:
-			handleUrlEncoded();
+			handleUrlEncoded(curMethod);
 			break;
 
 		case http::CT_MULTIPART_FORM_DATA:
-			handleMultipart();
+			handleMultipart(curMethod);
 			break;
 
 		case http::CT_BINARY:
-			handleOctetStream();
+			handleOctetStream(curMethod);
 			break;
 
 		case http::CT_TEXT_PLAIN:
-			handleTextPlain();
+			handleTextPlain(curMethod);
 			break;
 
 		default:
@@ -610,7 +754,8 @@ void		HttpResponse::handlePOST(void)
 void		HttpResponse::handlePUT(void)
 {
 	struct stat		st;
-	std::string		path = _request.getPath();
+	// std::string		path = _request.getPath();
+	std::string		path = _location->root + _request.getPath();
 
 	bool	fileExist = (stat(path.c_str(), &st) == 0);
 
@@ -626,16 +771,18 @@ void		HttpResponse::handlePUT(void)
 			return setError(http::SC_FORBIDDEN);
 	}
 
-	int		fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-	if (fd < 0)
-		return setError(http::SC_INTERNAL_SERVER_ERROR);
+	// int		fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	// if (fd < 0)
+	// 	return setError(http::SC_INTERNAL_SERVER_ERROR);
 
-	std::string body = _request.getBody();
-	ssize_t	written = write(fd, body.c_str(), body.length());
-	close(fd);
+	// std::string body = _request.getBody();
+	// ssize_t	written = write(fd, body.c_str(), body.length());
+	// close(fd);
 
-	if (written < 0)
-		return setError(http::SC_INTERNAL_SERVER_ERROR);
+	// if (written < 0)
+	// 	return setError(http::SC_INTERNAL_SERVER_ERROR);
+
+	handlePOST();
 
 	fileExist ? _response.setStatusCode(http::SC_NO_CONTENT) : _response.setStatusCode(http::SC_CREATED);
 }
@@ -643,18 +790,20 @@ void		HttpResponse::handlePUT(void)
 // Delete method to remove an existing filec
 void	HttpResponse::handleDELETE(void)
 {
-	std::string path = _location->path + _request.getPath();
+	// std::string path = _location->path + _request.getPath();
+	std::string path = _location->root + _request.getPath();
 	struct stat st;
+
+	//Check si le path commence par /
+	if (path[0] == '/')
+		path = "." + path;
 
 	if (stat(path.c_str(), &st) != 0)
 		return setError(http::SC_NOT_FOUND);
-
 	if (S_ISDIR(st.st_mode))
 		return setError(http::SC_FORBIDDEN);
-
 	if (unlink(path.c_str()) != 0)
 		return setError(http::SC_INTERNAL_SERVER_ERROR);
-
 	_response.setStatusCode(http::SC_NO_CONTENT);
 }
 
@@ -688,8 +837,8 @@ std::ostream	&operator<<(std::ostream &pOut, const HttpResponse::Response &pResp
 		<< pResponse.statusCode.code << " " << pResponse.statusCode.reason
 		<< "\r\n";
 
-	HttpResponse::t_headers					headers = pResponse.headers;
-	HttpResponse::t_headers::const_iterator	it;
+	http::t_headers					headers = pResponse.headers;
+	http::t_headers::const_iterator	it;
 	for (it = headers.begin(); it != headers.end(); it++) {
 		pOut << it->first << ": " << it->second << "\r\n";
 	}

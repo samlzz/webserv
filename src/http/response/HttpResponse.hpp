@@ -15,12 +15,13 @@
 
 #include <string>
 
-#include "http/response/IHttpResponse.hpp"
-#include "http/response/ChunkedStream.hpp"
+#include "BuffStream.hpp"
+#include "interfaces/IFifoStream.hpp"
 #include "http/request/HttpRequest.hpp"
 
 #include "server/connections/ConnEvent.hpp"
 #include "config/Config.hpp"
+#include "server/connections/IWritableNotifier.hpp"
 
 # ifndef __MAX_CHUNK__
 # define __MAX_CHUNK__	3
@@ -30,12 +31,11 @@
 # define __SIZE_OF_CHUNK__	32000
 # endif
 
-class HttpResponse : public IHttpResponse {
+class HttpResponse {
 
 private:
 
 	// ========== Response Reply ==========
-	typedef std::map<std::string, std::string>	t_headers;
 	struct Response
 	{
 		struct StatusCode {
@@ -45,7 +45,7 @@ private:
 		void	setStatusCode(const int &pCode);
 
 		StatusCode			statusCode;
-		t_headers			headers;
+		http::t_headers		headers;
 		std::string			body;
 	};
 
@@ -58,19 +58,20 @@ private:
 
 	bool								_isDone;
 	bool								_isConnection;
-	ChunkedStream						_chunkedStream;
+	BuffStream							_outputStream;
 	int									_fd;
 
 	// ========== Helpers methods ==========
 	void		setError(int pCode);
 	void		loadFile(const std::string& pPath);
 	void		addHeader(const std::string &pHeader, const std::string &pContent);
-
+	bool		validUploadPath(std::string& path);
+	std::string buildUploadPath(std::string &filename,http::e_body_kind expression);
 	// ========== ContentType handler (for POST/PUT) ==========
-	void		handleMultipart(void);
-	void		handleUrlEncoded(void);
-	void		handleOctetStream(void);
-	void		handleTextPlain(void);
+	void		handleMultipart(http::e_method curMethod);
+	void		handleUrlEncoded(http::e_method curMethod);
+	void		handleOctetStream(http::e_method curMethod);
+	void		handleTextPlain(http::e_method curMethod);
 
 	// ========== Methods handler ==========
 	void		handleGET(void);
@@ -84,18 +85,14 @@ public:
 	~HttpResponse(void);
 
 	// ========== Life Cycle ==========
-	virtual ConnEvent			build(const HttpRequest& pRequest, IWritableNotifier &notifier);
-	void						fillStream(void);
-	virtual void				reset(void);
+	virtual ConnEvent					build(const HttpRequest& pRequest, IWritableNotifier &notifier);
+	void								fillStream(void);
+	virtual void						reset(void);
 
 	// ========== Output Production ==========
-	virtual IChunkedStream&		stream(void);
-	virtual bool				isDone() const;
-	virtual bool				shouldCloseConnection(void) const;
-
-	// ========== Encoder ==========
-	virtual void				encode(const char *pbuf, size_t pBufSize);
-	virtual void				finalize(void);
+	virtual IFifoStreamView<t_bytes>&	stream(void);
+	virtual bool						isDone() const;
+	virtual bool						shouldCloseConnection(void) const;
 
 friend std::ostream	&operator<<(std::ostream &pOut, const HttpResponse::Response &pResponse);
 };
