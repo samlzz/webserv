@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:49:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:31:41 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:54:25 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 #include "config/Config.hpp"
 #include "ErrorBuilder.hpp"
 #include "http/HttpData.hpp"
-#include "http/fileSystemUtils.hpp"
 #include "http/handlers/bodySrcs/FileBodySource.hpp"
 #include "http/handlers/bodySrcs/MemoryBodySource.hpp"
 #include "http/response/ResponsePlan.hpp"

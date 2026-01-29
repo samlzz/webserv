@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 12:54:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:55:10 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,11 +16,11 @@
 #include "http/HttpData.hpp"
 #include "http/HttpTypes.hpp"
 #include "http/dispatch/ErrorBuilder.hpp"
-#include "http/fileSystemUtils.hpp"
 #include "http/handlers/IHttpHandler.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/response/ResponsePlan.hpp"
 #include "http/routing/Router.hpp"
+#include "utils/fileSystemUtils.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -61,7 +61,7 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 	if (method == http::MTH_POST || method == http::MTH_PUT)
 	{
 		if (http::Data::getContentTypeKind(
-			req.getHeader("Content-Type")
+			req.getField("Content-Type")
 			) == http::CT_APPLICATION_X_WWW_FORM_URLENCODED
 		)
 			return &_formHandler;
@@ -82,7 +82,7 @@ ResponsePlan	HttpDispatcher::dispatch(
 			NULL
 		);
 
-	if (req.getState() == PARSING_ERROR)
+	if (req.isError())
 		return ErrorBuilder::build(
 			req.getStatusCode(),
 			route.location

@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   IHttpRequest.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/21 19:24:52 by achu              #+#    #+#             */
-/*   Updated: 2026/01/28 23:48:00 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/29 16:51:55 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __I_HTTP_REQUEST_HPP__
 #define __I_HTTP_REQUEST_HPP__
 
-#include <string>
+#include <cstddef>
 
 class IHttpRequest {
 public:

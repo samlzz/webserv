@@ -28,9 +28,10 @@ FILES =	main.cpp \
 		http/cgi/CgiProcess.cpp \
 		http/cgi/CgiReadConnection.cpp \
 		http/cgi/CgiWriteConnection.cpp \
+		http/dispatch/ErrorBuilder.cpp \
 		http/dispatch/HttpDispatcher.cpp \
+		http/handlers/CgiHandler.cpp \
 		http/handlers/DeleteHandler.cpp \
-		http/handlers/ErrorHandler.cpp \
 		http/handlers/FormHandler.cpp \
 		http/handlers/RedirectionHandler.cpp \
 		http/handlers/StaticFileHandler.cpp \
@@ -39,14 +40,13 @@ FILES =	main.cpp \
 		http/handlers/bodySrcs/FileBodySource.cpp \
 		http/handlers/bodySrcs/MemoryBodySource.cpp \
 		http/request/HttpRequest.cpp \
-		http/response/Cookie.cpp \
 		http/response/HttpResponse.cpp \
 		http/routing/Router.cpp \
 		server/Reactor.cpp \
-		server/ServerCtx.cpp \
 		server/connections/AConnection.cpp \
 		server/connections/ClientConnection.cpp \
-		server/connections/ServerConnection.cpp
+		server/connections/ServerConnection.cpp \
+		utils/fileSystemUtils.cpp
 ### END ###
 ifeq ($(FILES),)
     $(error FILES is empty: please define source files)

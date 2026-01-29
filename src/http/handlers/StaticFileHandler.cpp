@@ -7,9 +7,8 @@
 #include "http/HttpData.hpp"
 #include "bodySrcs/MemoryBodySource.hpp"
 #include "bodySrcs/FileBodySource.hpp"
-#include "http/fileSystemUtils.hpp"
 #include "utils/stringUtils.hpp"
-
+#include "utils/fileSystemUtils.hpp"
 
 #include <sys/stat.h>
 #include <string>
