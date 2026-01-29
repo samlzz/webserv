@@ -6,15 +6,10 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 15:25:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 12:51:10 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 15:29:50 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "CgiOutputParser.hpp"
-#include "http/HttpTypes.hpp"
-#include "http/response/BuffStream.hpp"
-#include "http/response/ResponsePlan.hpp"
-#include "http/routing/Router.hpp"
 #include <cctype>
 #include <cstddef>
 #include <sstream>
@@ -22,17 +17,20 @@
 #include <cstring>
 #include <vector>
 
+#include "CgiOutputParser.hpp"
+#include "http/HttpTypes.hpp"
+#include "http/response/BuffStream.hpp"
+
 // ============================================================================
 // Construction / Destruction
 // ============================================================================
 
-CgiOutputParser::CgiOutputParser(const ServerCtx &serv)
+CgiOutputParser::CgiOutputParser()
 	: _state(ST_HEADERS)
 	, _headBuf()
 	, _bodyStream()
 	, _status(http::SC_OK)
 	, _headers()
-	, _serv(serv)
 {}
 
 CgiOutputParser::~CgiOutputParser()
@@ -134,30 +132,8 @@ bool CgiOutputParser::tryParseHeaders()
 	std::string headerBlock = _headBuf.substr(0, pos);
 	parseHeaderLines(headerBlock);
 
-	http::t_headers::iterator	it = _headers.find("Location");
-	if (it != _headers.end())
-	{
-		// TODO: handle redirection
-		//       if URL -> redirect the client
-		//       if virtual path -> serve the pointed ressource
-		if (it->second[0] == '/')
-		{
-			routing::Context	tmp(_serv);
-			tmp.normalizedPath = it->second;
-
-			ResponsePlan filePlan = _serv.dispatcher.handleStaticFile(tmp);
-			_status = filePlan.status;
-			_headers = filePlan.headers;
-			if (filePlan.body)
-			{
-				int		fileSize = std::atoi(_headers["Content-Length"].c_str());
-				char	*fileContent = new char[fileSize]();
-				_bodyStream.push(fileContent, filePlan.body->read(fileContent, fileSize));
-			}
-		}
-		else
-			_status = http::SC_FOUND;
-	}
+	if (_headers.find("Location") != _headers.end())
+		_status = http::SC_FOUND;
 	if (_headers.find("Content-Length") == _headers.end())
 		_headers["Transfert-Encoding"] = "chunked";
 

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 14:50:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 12:43:13 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 15:32:27 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,6 @@
 # include "http/HttpTypes.hpp"
 # include "http/response/BuffStream.hpp"
 # include "http/response/interfaces/IMetaSource.hpp"
-# include "server/ServerCtx.hpp"
 
 class CgiOutputParser : public IMetaSource, public IOutputSink {
 
@@ -32,10 +31,9 @@ private:
 
 	http::e_status_code		_status;
 	http::t_headers			_headers;
-	const ServerCtx			&_serv;
 
 public:
-	CgiOutputParser(const ServerCtx &serv);
+	CgiOutputParser();
 	virtual ~CgiOutputParser();
 
 	// IOutputSink
