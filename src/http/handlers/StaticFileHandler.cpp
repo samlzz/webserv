@@ -16,7 +16,7 @@
 #include <dirent.h>
 #include <algorithm>
 
-ResponsePlan	StaticFileHandler::loadAutoindex(const std::string &path, const routing::Context &route)
+ResponsePlan	StaticFileHandler::loadAutoindex(const std::string &path, const routing::Context &route) const
 {
 	ResponsePlan	plan;
 
@@ -66,7 +66,7 @@ ResponsePlan	StaticFileHandler::loadAutoindex(const std::string &path, const rou
 	return (plan);
 }
 
-ResponsePlan	StaticFileHandler::loadFile(const std::string &path, const routing::Context &route)
+ResponsePlan	StaticFileHandler::loadFile(const std::string &path, const routing::Context &route) const
 {
 	ResponsePlan	plan;
 	struct stat st;

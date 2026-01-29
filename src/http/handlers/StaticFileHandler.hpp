@@ -10,11 +10,11 @@ class StaticFileHandler : public IHttpHandler
 private:
 	ResponsePlan	loadAutoindex(
 						const std::string &path,
-						const routing::Context &route);
+						const routing::Context &route) const;
 	
 	ResponsePlan	loadFile(
 						const std::string &path,
-						const routing::Context &route);
+						const routing::Context &route) const;
 public:
 	ResponsePlan	handle(
 						const HttpRequest &req,

@@ -7,7 +7,6 @@
 #include "config/validation/configValidate.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/HttpData.hpp"
-#include "http/fileSystemUtils.hpp"
 
 #include <cstddef>
 #include <ctime>
@@ -19,7 +18,7 @@
 
 std::string 	UploadFileHandler::generateFilename(
 						const std::string &filename,
-						http::e_body_kind contentType)
+						http::e_body_kind contentType) const
 {
 	std::string new_filename = "";
 
@@ -61,7 +60,7 @@ std::string 	UploadFileHandler::generateFilePath(
 						const routing::Context &route,
 						const std::string &filename,
 						http::e_body_kind contentType,
-						http::e_method method)
+						http::e_method method) const
 {
 	std::string uploadDir;
 	std::string new_filename = filename;
@@ -107,10 +106,11 @@ std::string 	UploadFileHandler::generateFilePath(
 	}
 	return (uploadDir + "/" + new_filename);
 }
+
 bool			UploadFileHandler::writeFile(
 						const std::string &path,
 						const std::string &data,
-						http::e_method method)
+						http::e_method method) const
 {
 	int fd = -1;
 	if (method == http::MTH_PUT)
@@ -140,7 +140,7 @@ bool			UploadFileHandler::writeFile(
 }
 ResponsePlan	UploadFileHandler::handleTextPlain(
 								const HttpRequest &req,
-								const routing::Context &route)
+								const routing::Context &route) const
 {
 	ResponsePlan	plan;
 
@@ -163,7 +163,7 @@ ResponsePlan	UploadFileHandler::handleTextPlain(
 }
 ResponsePlan	UploadFileHandler::handleOctetStream(
 								const HttpRequest &req,
-								const routing::Context &route)
+								const routing::Context &route) const
 {
 	ResponsePlan	plan;
 
@@ -186,7 +186,7 @@ ResponsePlan	UploadFileHandler::handleOctetStream(
 }
 ResponsePlan	UploadFileHandler::handleMultipart(
 								const HttpRequest &req,
-								const routing::Context &route)
+								const routing::Context &route) const
 {
 	ResponsePlan	plan;
 
@@ -272,7 +272,7 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 
 ResponsePlan	UploadFileHandler::handleContentType(
 								const HttpRequest &req,
-								const routing::Context &route)
+								const routing::Context &route) const
 {
 	ResponsePlan	plan;
 
