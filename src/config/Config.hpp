@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/05 21:08:53 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/23 20:42:22 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 14:06:51 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,8 @@ public:
 			Optionnal<std::string>		uploadPath;
 			Optionnal<StatusPath>		redirect;
 
-			bool operator<(const Location &other) const;
+			bool	operator<(const Location &other) const;
+			bool	isMethodAllowed(http::e_method method) const;
 		};
 
 	// ============================================================================

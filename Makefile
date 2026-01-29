@@ -24,9 +24,26 @@ FILES =	main.cpp \
 		config/validation/validatePath.cpp \
 		http/HttpData.cpp \
 		http/HttpTypes.cpp \
+		http/cgi/CgiOutputParser.cpp \
+		http/cgi/CgiProcess.cpp \
+		http/cgi/CgiReadConnection.cpp \
+		http/cgi/CgiWriteConnection.cpp \
+		http/dispatch/HttpDispatcher.cpp \
+		http/handlers/DeleteHandler.cpp \
+		http/handlers/ErrorHandler.cpp \
+		http/handlers/FormHandler.cpp \
+		http/handlers/RedirectionHandler.cpp \
+		http/handlers/StaticFileHandler.cpp \
+		http/handlers/UploadFileHandler.cpp \
+		http/handlers/bodySrcs/CgiBodySource.cpp \
+		http/handlers/bodySrcs/FileBodySource.cpp \
+		http/handlers/bodySrcs/MemoryBodySource.cpp \
 		http/request/HttpRequest.cpp \
+		http/response/Cookie.cpp \
 		http/response/HttpResponse.cpp \
+		http/routing/Router.cpp \
 		server/Reactor.cpp \
+		server/ServerCtx.cpp \
 		server/connections/AConnection.cpp \
 		server/connections/ClientConnection.cpp \
 		server/connections/ServerConnection.cpp

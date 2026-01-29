@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 21:09:01 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/23 18:25:34 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 14:06:55 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "Config.hpp"
+#include "http/HttpTypes.hpp"
 
 // ============================================================================
 // Server defaults values
@@ -65,4 +66,14 @@ Config::Server::findLocation(const std::string &path) const
 			return &loc;
 	}
 	return 0;
+}
+
+bool	Config::Server::Location::isMethodAllowed(http::e_method method) const
+{
+	for (size_t i = 0; i < methods.size(); ++i)
+	{
+		if (method == methods[i])
+			return true;
+	}
+	return false;
 }

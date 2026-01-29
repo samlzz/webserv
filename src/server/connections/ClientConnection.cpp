@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/24 15:09:07 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:25:49 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,17 +16,22 @@
 #include <sys/types.h>
 
 #include "ClientConnection.hpp"
-#include "config/Config.hpp"
 #include "AConnection.hpp"
 #include "ConnEvent.hpp"
+#include "http/response/HttpResponse.hpp"
+#include "http/response/BuffStream.hpp"
+#include "http/response/ResponsePlan.hpp"
+#include "http/response/interfaces/IFifoStream.hpp"
+#include "http/routing/Router.hpp"
+#include "server/ServerCtx.hpp"
 
 // ============================================================================
 // Construction / Destruction
 // ============================================================================
 
-ClientConnection::ClientConnection(int cliSockFd, const Config::Server &config)
-	: AConnection(cliSockFd)
-	, _req(), _resp(config)
+ClientConnection::ClientConnection(int cliSockFd, const ServerCtx &serverCtx)
+	: AConnection(cliSockFd), _serv(serverCtx)
+	, _req(), _resp(0)
 	, _offset(0), _cgiRead(0)
 	, _state(CS_WAIT_FIRST_BYTE)
 	, _tsLastActivity(std::time(0))
@@ -37,6 +42,19 @@ ClientConnection::ClientConnection(int cliSockFd, const Config::Server &config)
 // ============================================================================
 // Private members methods
 // ============================================================================
+
+ConnEvent	ClientConnection::buildResponse(void)
+{
+	routing::Context	route = routing::resolve(_req, _serv);
+	ResponsePlan		plan = _serv.dispatcher.dispatch(_req, route);
+
+	if (plan.event.conn && plan.event.type == ConnEvent::CE_SPAWN)
+	{
+		_cgiRead = plan.event.conn;
+	}
+	_resp = new HttpResponse(plan);
+	return plan.event;
+}
 
 ConnEvent	ClientConnection::handleRead(void)
 {
@@ -51,26 +69,23 @@ ConnEvent	ClientConnection::handleRead(void)
 		_state = CS_WAIT_REQUEST;
 
 	_req.feed(buf, static_cast<size_t>(n));
-	ConnEvent	ret = ConnEvent::none();
 	if (_req.isDone())
 	{
-		ret = _resp.build(_req, *this);
-		if (ret.type == ConnEvent::CE_SPAWN)
-			_cgiRead = ret.conn;
-
 		_state = CS_WAIT_RESPONSE;
 		_events = POLLOUT;
+		return buildResponse();
 	}
-	return ret;
+	return ConnEvent::none();
 }
 
 ConnEvent	ClientConnection::handleWrite(void)
 {
-	_resp.fillStream();
-	const std::string	&buf = _resp.stream().front();
+	_resp->fillStream();
+	IFifoStreamView<t_bytes>	&stream = _resp->stream();
+	const t_bytes				&buf = stream.front();
 
 	ssize_t n = send(_fd,
-					buf.c_str() + _offset,
+					buf.data() + _offset,
 					buf.size() - _offset,
 					0);
 	if (n <= 0)
@@ -82,19 +97,20 @@ ConnEvent	ClientConnection::handleWrite(void)
 	// all curent buffer was sent
 	if (_offset == buf.size())
 	{
-		_resp.stream().pop();
+		stream.pop();
 		_offset = 0;
 
-		if (!_resp.stream().hasChunk())
+		if (!stream.hasBuffer())
 		{
-			if (_resp.isDone())
+			if (_resp->isDone())
 			{
 				detachBuddy();
-				if (_resp.shouldCloseConnection())
+				if (_resp->shouldCloseConnection())
 					return ConnEvent::close();
 
 				_req.reset();
-				_resp.reset();
+				delete _resp;
+				_resp = 0;
 				_state = CS_WAIT_REQUEST;
 				_events = POLLIN;
 			}

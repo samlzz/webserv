@@ -1,38 +1,33 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   IHttpHandler.hpp                                   :+:      :+:    :+:   */
+/*   ServerCtx.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/01/26 14:53:58 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 12:30:28 by sliziard         ###   ########.fr       */
+/*   Created: 2026/01/27 20:34:00 by sliziard          #+#    #+#             */
+/*   Updated: 2026/01/28 12:47:48 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __IHTTP_HANDLER_HPP__
-# define __IHTTP_HANDLER_HPP__
+#ifndef __SERVER_CTX_HPP__
+# define __SERVER_CTX_HPP__
+
+# include "config/Config.hpp"
+# include "http/dispatch/HttpDispatcher.hpp"
 
 // ============================================================================
-// Forward declarations
+// Runtime context for each server
 // ============================================================================
 
-struct ResponsePlan;
-class HttpRequest;
-namespace routing { struct Context; }
+struct ServerCtx {
 
-// ============================================================================
-// Http Handlers interface
-// ============================================================================
+	const HttpDispatcher	&dispatcher;
+	const Config::Server	&config;
 
-class IHttpHandler {
-
-public:
-	virtual ~IHttpHandler() {}
-
-	virtual ResponsePlan	handle(
-								const HttpRequest &req,
-								const routing::Context &route) const = 0;
+	ServerCtx(const HttpDispatcher &pDispatcher, const Config::Server &pConfig)
+		: dispatcher(pDispatcher), config(pConfig)
+	{}
 };
 
-#endif /* __IHTTP_HANDLER_HPP__ */
+#endif /* __SERVER_CTX_HPP__ */
