@@ -127,9 +127,12 @@ std::string	Data::getMimeType(const std::string &pExt)
 
 e_body_kind	Data::getContentTypeKind(const std::string &pContentType)
 {
-	t_contentTypeData::iterator	it = contentTypeData.find(pContentType);
-	if (it != contentTypeData.end())
-		return (it->second);
+	for (t_contentTypeData::iterator it = contentTypeData.begin();
+			it != contentTypeData.end(); ++it)
+	{
+		if (pContentType.find(it->first) != std::string::npos)
+			return (it->second);
+	}
 	return (CT_UNKNOWN);
 }
 
