@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 15:34:05 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 17:05:28 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,10 @@
 # include <string>
 # include <sys/types.h>
 # include <stdint.h>
+# include <vector>
 
-# include "http/response/IChunkEncoder.hpp"
+# include "http/cgi/IOutputSink.hpp"
+# include "http/response/BuffStream.hpp"
 # include "server/connections/IConnection.hpp"
 # include "server/connections/IWritableNotifier.hpp"
 
@@ -42,21 +44,25 @@ private:
 	// ============================================================================
 	// Attributes
 	// ============================================================================
-	IChunkEncoder		&_encoder;
-	IWritableNotifier	&_notifier;
+	IOutputSink			&_sink;
+	IWritableNotifier	*_notifier;
 	pid_t				_pid;
 	time_t				_startTs;
+
 	uint8_t				_exitCode;
 	bool				_terminated;
+	bool				_errOccur;
+
 	IConnection			*_read;
 	IConnection			*_write;
+	int32_t				_refCount;
 
 public:
 
 	// ============================================================================
 	// Construction
 	// ============================================================================
-	CgiProcess(IChunkEncoder &encoder, IWritableNotifier &notifier);
+	CgiProcess(IOutputSink &sink);
 	~CgiProcess();
 
 	// ============================================================================
@@ -68,19 +74,24 @@ public:
 	void				forgetRead(void);
 	void				forgetWrite(void);
 
+	void				retain(void);
+	void				release(void);
+
 	time_t				startTime(void) const;
 
-	bool				isDone(void) const;
+	bool				isTerminated(void) const;
+	bool				isError(void) const;
 	uint8_t				exitCode(void) const;
+
+	void				setDataNotify(IWritableNotifier *notifier);
 
 	// ============================================================================
 	// Methods
 	// ============================================================================
 
-	IConnection			*start(const char* scriptPath,
-								char* const argv[],
-								char* const envp[],
-								const std::string &body = "");
+	IConnection			*start(const std::vector<std::string> &argv,
+								const std::vector<std::string> &envp,
+								const t_bytes &body);
 
 	void				onError(void);
 

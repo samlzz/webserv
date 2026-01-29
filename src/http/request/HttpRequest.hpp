@@ -6,71 +6,71 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 20:42:44 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:45:03 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_REQUEST_HPP__
 #define __HTTP_REQUEST_HPP__
 
-#include <map>
-#include <string>
-
 #include "http/request/IHttpRequest.hpp"
+
+#include <string>
+#include <vector>
+
 #include "http/HttpTypes.hpp"
+#include "http/response/BuffStream.hpp"
 
 #define MAX_METHOD_LENGTH		8
-#define MAX_URI_LENGTH			2048
-#define MAX_HEADER_LENGTH		2048
-#define MAX_BODY_LENGTH			1048576
+#define MAX_URI_LENGTH			2 * 1024
+#define MAX_HEADER_LENGTH		2 * 1024
+#define CLIENT_MAX_BODY_SIZE	1 * 1024 * 1024
 
 #define REQ_TIMEOUT_HEADER		10000   // 10 s
 #define REQ_TIMEOUT_BODY		120000 // 120 s
 
 enum	e_request_state
-	{ REQ_METHOD
-	, REQ_SPACE_BEFORE_URI
-	, REQ_URI_SLASH
-	, REQ_URI_PATH
-	, REQ_URI_QUERY
-	, REQ_URI_FRAGMENT
-	, REQ_SPACE_BEFORE_VER
-	, REQ_HTTP_H
-	, REQ_HTTP_HT
-	, REQ_HTTP_HTT
-	, REQ_HTTP_HTTP
-	, REQ_HTTP_SLASH
-	, REQ_HTTP_MAJOR_VER
-	, REQ_HTTP_DOT
-	, REQ_HTTP_MINOR_VER
-	, REQ_ALMOST_DONE
-	, REQ_DONE
+	{ LINE_METHOD
+	, LINE_SPACE_BEFORE_URI
+	, LINE_URI_SLASH
+	, LINE_URI_PATH
+	, LINE_URI_QUERY
+	, LINE_URI_FRAGMENT
+	, LINE_SPACE_BEFORE_VER
+	, LINE_HTTP_H
+	, LINE_HTTP_HT
+	, LINE_HTTP_HTT
+	, LINE_HTTP_HTTP
+	, LINE_HTTP_SLASH
+	, LINE_HTTP_MAJOR_VER
+	, LINE_HTTP_DOT
+	, LINE_HTTP_MINOR_VER
+	, LINE_ALMOST_DONE
+	, LINE_DONE
 	, HEADER_START
-	, HEADER_FIELD_NAME_START
-	, HEADER_FIELD_NAME
-	, HEADER_FIELD_COLON
-	, HEADER_FIELD_VALUE_START
-	, HEADER_FIELD_VALUE
-	, HEADER_FIELD_ALMOST_DONE
-	, HEADER_FIELD_DONE
+	, HEADER_FIELD_START
+	, HEADER_FIELD
+	, HEADER_COLON
+	, HEADER_VALUE_START
+	, HEADER_VALUE
+	, HEADER_VALUE_ALMOST_DONE
+	, HEADER_VALUE_DONE
 	, HEADER_END
-	, BODY_MESSAGE_START
-	, BODY_CHUNKED_SIZE
-	, BODY_CHUNKED_SIZE_ALMOST_DONE
-	, BODY_CHUNKED_SIZE_DONE
-	, BODY_CHUNKED_DATA
-	, BODY_CHUNKED_DATA_ALMOST_DONE
-	, BODY_CHUNKED_DATA_DONE
-	, BODY_CHUNKED_ALMOST_DONE
-	, BODY_CHUNKED_DONE
+	, BODY_START
+	, BODY_TRANSFER_HEXA
+	, BODY_TRANSFER_HEXA_ALMOST_DONE
+	, BODY_TRANSFER_HEXA_DONE
+	, BODY_TRANSFER_DATA
+	, BODY_TRANSFER_DATA_ALMOST_DONE
+	, BODY_TRANSFER_DATA_DONE
+	, BODY_TRANSFER_END
 	, BODY_CONTENT
-	, PARSING_DONE
 	, PARSING_ERROR
+	, PARSING_DONE
 };
 
 class HttpRequest : public IHttpRequest {
 private:
-	typedef std::map<std::string, std::string>	t_headers;
 	struct Request {
 		// ====== Response Line ======
 		http::e_method	method;
@@ -83,22 +83,22 @@ private:
 		int		verMaj;
 		int		verMin;
 
-		t_headers	headers;
-		std::string	body;
+		http::t_headers		headers;
+		std::vector<char>	body;
 	};
-	
-	e_request_state		_state;
-	time_t				_tsStart;
+
+	Request					_request;
+	e_request_state			_state;
+	time_t					_tsStart;
+	http::e_status_code		_code;
+
+	// ========= Buffer =========
 	std::string			_buffer;
-	std::string			_valueBuf;
+	std::string			_temp;
 
-	Request				_request;
-
-	std::string			_transferEncoding;
-	int					_transferLength;
-	int					_contentLength;
-
-	http::e_status_code	_status;
+	// ====== Body Consume ======
+	size_t				_transferLength;
+	size_t				_contentLength;
 
 	void	setError(const http::e_status_code pCode);
 
@@ -106,31 +106,33 @@ public:
 	HttpRequest(void);
 	~HttpRequest(void);
 
-	// ====== Lifecycle ======
+	// ======== Lifecycle ========
 	virtual void		feed(char *pBuffer, size_t pSize);
-	virtual void		reset(void);
-	void				checkTimeout(time_t now);
+	virtual void		reset();
 
 	// ====== Request state ======
-	virtual bool		isDone(void) const;
+	virtual bool		isDone() const;
+	virtual bool		isError() const;
 
-	// ========== Getter / Setter ==========
-	int	getState(void) const {return (_state); }
-	http::e_method		getMethod(void) const		{ return (_request.method);       };
-	std::string			getPath(void) const  		{ return (_request.uri.path);     };
-	std::string			getQuery(void) const		{ return (_request.uri.query);    };
-	std::string			getFragment(void) const		{ return (_request.uri.fragment); };
-	int					getVerMaj(void) const		{ return (_request.verMaj);       };
-	int					getVerMin(void) const		{ return (_request.verMin);       };
+	// ===== Getter / Setter =====
+	http::e_method			getMethod() const;
+	const std::string		&getPath() const;
+	const std::string		&getQuery() const;
+	const std::string		&getFragment() const;
+	int						getVerMaj() const;
+	int						getVerMin() const;
+	const http::t_headers	&getHeaders() const;
+	const t_bytes			&getBody() const;
+	http::e_status_code		getStatusCode() const;
 
-	t_headers			getHeaders(void) const { return (_request.headers); };
-	void				addHeader(const std::string& pHeader, const std::string& pContent);
-	bool				hasHeader(const std::string& pHeader) const;
-	std::string			getHeader(const std::string& pHeader) const;
+	void	setPath(const std::string &path);
 
-	std::string			getBody(void) const			{ return (_request.body); };
+	// ======= Header Utils =======
+	void				setField(const std::string& pKey, const std::string& pValue);
+	bool				hasField(const std::string& pKey) const;
+	std::string			getField(const std::string& pKey) const;
 
-	int					getStatusCode(void) const	{ return (_status); };
+	void		checkTimeout(time_t now);
 };
 
 std::ostream&		operator<<(std::ostream& pOut, const HttpRequest& pRequest);

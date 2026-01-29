@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 14:23:14 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 17:08:20 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,11 +17,11 @@
 # include <ctime>
 #include <ostream>
 
-# include "config/Config.hpp"
 # include "AConnection.hpp"
 # include "http/request/HttpRequest.hpp"
 # include "IWritableNotifier.hpp"
 # include "http/response/HttpResponse.hpp"
+# include "server/ServerCtx.hpp"
 # include "server/connections/ConnEvent.hpp"
 # include "server/connections/IConnection.hpp"
 
@@ -44,15 +44,16 @@ private:
 		CS_WAIT_RESPONSE		// write response
 	};
 
+	const ServerCtx			&_serv;
 	HttpRequest				_req;
-	HttpResponse			_resp;
+	HttpResponse			*_resp;
 	size_t					_offset;
 	IConnection				*_cgiRead;
 	e_client_state			_state;
 	time_t					_tsLastActivity;
 
 public:
-	ClientConnection(int cliSockFd, const Config::Server &config);
+	ClientConnection(int cliSockFd, const ServerCtx &servCtx);
 
 	virtual ConnEvent	handleEvents(short revents);
 
@@ -68,6 +69,8 @@ friend std::ostream	&operator<<(std::ostream &os, const e_client_state &state);
 private:
 	ConnEvent			handleRead(void);
 	ConnEvent			handleWrite(void);
+
+	ConnEvent			buildResponse(void);
 
 	time_t				timeoutFromState(void);
 

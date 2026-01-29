@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/08 18:07:04 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 14:10:43 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 17:04:08 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #include "ft_log/ft_log.hpp"
 #include "log.h"
 #include "server/Exceptions.hpp"
+#include "http/dispatch/HttpDispatcher.hpp"
 #include "server/Reactor.hpp"
 #include "server/connections/ServerConnection.hpp"
 #include "ftpp/FtppException.hpp"
@@ -46,10 +47,11 @@ int main(int ac, char **av)
 #endif
 
 		Reactor								pollManager;
+		HttpDispatcher						dispatch;
 		const std::vector<Config::Server>	&servs = conf.getServers();
 
 		for (size_t i = 0; i < servs.size(); ++i)
-			pollManager.addConnection(new ServerConnection(servs[i]));
+			pollManager.addConnection(new ServerConnection(servs[i], dispatch));
 
 		pollManager.run();
 	}

@@ -1,34 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   IChunkEncoder.hpp                                  :+:      :+:    :+:   */
+/*   IBodySource.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/01/14 09:31:51 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/21 17:22:27 by sliziard         ###   ########.fr       */
+/*   Created: 2026/01/26 14:51:29 by sliziard          #+#    #+#             */
+/*   Updated: 2026/01/27 17:58:51 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __ICHUNK_ENCODER_HPP__
-# define __ICHUNK_ENCODER_HPP__
+#ifndef __IBODY_SOURCE_HPP__
+# define __IBODY_SOURCE_HPP__
 
 # include <cstddef>
 
-class IChunkEncoder {
+class IBodySource {
 
 public:
-	virtual ~IChunkEncoder() {}
+	virtual ~IBodySource() {}
 
-	/**
-	 * Encode a piece of body data into one or more HTTP buffers
-	 */
-	virtual void	encode(const char *buffer, std::size_t bufSize) = 0;
+	virtual bool	hasMore(void) const = 0;
+	virtual bool	hasError(void) const = 0;
+	virtual bool	terminated(void) const = 0;
 
-	/**
-	 * Called once when no more data will be produced
-	 */
-	virtual void	finalize(void) = 0;
+	virtual size_t	read(char *dst, size_t max) = 0;
 };
 
-#endif /* __ICHUNK_ENCODER_HPP__ */
+#endif /* __IBODY_SOURCE_HPP__ */

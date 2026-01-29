@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:44:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 12:16:15 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/24 15:07:20 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ public:
 	virtual void		detachBuddy(void);
 
 protected:
-	void				setNonBlocking(void);
+	void				setFdFlags(void);
 
 private:
 

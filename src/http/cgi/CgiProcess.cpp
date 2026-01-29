@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 14:58:56 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 17:05:22 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,14 +18,16 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <vector>
 
 #include "CgiProcess.hpp"
 #include "ft_log/LogOp.hpp"
 #include "ft_log/level.hpp"
-#include "http/response/IChunkEncoder.hpp"
 #include "http/cgi/CgiReadConnection.hpp"
 #include "http/cgi/CgiWriteConnection.hpp"
 #include "log.h"
+#include "http/cgi/IOutputSink.hpp"
+#include "http/response/BuffStream.hpp"
 #include "server/connections/IConnection.hpp"
 #include "server/connections/IWritableNotifier.hpp"
 
@@ -33,10 +35,11 @@
 // Construction / Destruction
 // ============================================================================
 
-CgiProcess::CgiProcess(IChunkEncoder &encoder, IWritableNotifier &notifier)
-	: _encoder(encoder), _notifier(notifier)
-	, _pid(-1), _exitCode(0), _terminated(false)
-	, _read(0), _write(0)
+CgiProcess::CgiProcess(IOutputSink &sink)
+	: _sink(sink), _notifier(0)
+	, _pid(-1), _exitCode(0)
+	, _terminated(false), _errOccur(false)
+	, _read(0), _write(0), _refCount(0)
 {}
 
 CgiProcess::~CgiProcess()
@@ -46,17 +49,33 @@ CgiProcess::~CgiProcess()
 // Accessors
 // ============================================================================
 
-IConnection	*CgiProcess::read(void) const		{ return _read; }
-IConnection	*CgiProcess::write(void) const		{ return _write; }
+IConnection	*CgiProcess::read(void) const			{ return _read; }
+IConnection	*CgiProcess::write(void) const			{ return _write; }
 
-void		CgiProcess::forgetRead(void)		{ _read = 0; }
-void		CgiProcess::forgetWrite(void)		{ _write = 0; }
+void		CgiProcess::retain(void)				{ _refCount++; }
+void		CgiProcess::release(void)
+{
+	if (_refCount <= 0)
+		return;
+	--_refCount;
+	if (_refCount == 0)
+		delete this;
+}
 
-time_t		CgiProcess::startTime(void) const	{ return _startTs; }
+void		CgiProcess::forgetRead(void)			{ _read = 0; }
+void		CgiProcess::forgetWrite(void)			{ _write = 0; }
 
-bool		CgiProcess::isDone(void) const		{ return _terminated; }
+time_t		CgiProcess::startTime(void) const		{ return _startTs; }
 
-uint8_t		CgiProcess::exitCode(void) const	{ return _exitCode; }
+bool		CgiProcess::isTerminated(void) const	{ return _terminated; }
+bool		CgiProcess::isError(void) const			{ return _errOccur; }
+
+uint8_t		CgiProcess::exitCode(void) const		{ return _exitCode; }
+
+void		CgiProcess::setDataNotify(IWritableNotifier *notifier)
+{
+	_notifier = notifier;
+}
 
 // ============================================================================
 // Helpers for start()
@@ -75,13 +94,20 @@ static inline void	_closeFds(int fds[2])
 	_closeFds(fds[0], fds[1]);
 }
 
+
+static inline void	freeCharArray(char **array)
+{
+	if (!array)
+		return;
+	for (size_t i = 0; array[i]; ++i)
+		::free(array[i]);
+	delete []array;
+}
+
 // never return
 static t_never	_execChild(
-	const char* scriptPath,
-	char* const argv[],
-	char* const envp[],
-	int stdoutFd,
-	int stdinFd)
+	char **argv, char **envp,
+	int stdoutFd, int stdinFd)
 {
 	if (dup2(stdoutFd, STDOUT_FILENO) < 0)
 	{
@@ -98,8 +124,31 @@ static t_never	_execChild(
 			_exit(1);
 	}
 
-	execve(scriptPath, argv, envp);
+	execve(argv[0], argv, envp);
+	freeCharArray(argv);
+	freeCharArray(envp);
 	_exit(1);
+}
+
+// Takes a vector of string and convert it to an allocated array of char ptr
+static inline char**	toCharArray(const std::vector<std::string>& pVec)
+{
+	char** arr = new char*[pVec.size() + 1];
+
+	for (size_t i = 0; i < pVec.size(); i++)
+	{
+		arr[i] = ::strdup(pVec[i].c_str());
+		if (!arr[i])
+		{
+			for (size_t j = 0; j < i; ++j)
+				::free(arr[j]);
+			delete []arr;
+			return 0;
+		}
+	}
+
+	arr[pVec.size()] = NULL;
+	return arr;
 }
 
 // ============================================================================
@@ -121,10 +170,9 @@ static t_never	_execChild(
 
 // Returned connection must be spawned for the reactor
 // CgiProcess doesn't owns it
-IConnection	*CgiProcess::start(const char* scriptPath,
-										char* const argv[],
-										char* const envp[],
-										const std::string &body)
+IConnection	*CgiProcess::start(const std::vector<std::string> &argv,
+								const std::vector<std::string> &envp,
+								const t_bytes &body)
 {
 	int	outFds[2];
 	int	inFds[2] = {-1, -1};
@@ -153,7 +201,7 @@ IConnection	*CgiProcess::start(const char* scriptPath,
 	if (pid == 0) /* child process */
 	{
 		_closeFds(outFds[0], inFds[1]);
-		_execChild(scriptPath, argv, envp, outFds[1], inFds[0]);
+		_execChild(toCharArray(argv), toCharArray(envp), outFds[1], inFds[0]);
 	}
 	else /* parent process */
 	{
@@ -180,8 +228,8 @@ IConnection	*CgiProcess::start(const char* scriptPath,
 
 		ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
 			<< "CGI spawn pid=" << pid
-			<< " exec=\"" << scriptPath
-			<< "\" script=\"" << argv[0] << '"' << std::endl;
+			<< " exec=\"" << argv[0]
+			<< "\" script=\"" << argv[1] << '"' << std::endl;
 		_startTs = std::time(0);
 		_pid = pid;
 		_read = readConn;
@@ -240,7 +288,10 @@ void	CgiProcess::onError(void)
 	if (_terminated)
 		return;
 	_terminated = true;
+	_errOccur = true;
 	cleanup(true);
+	if (_notifier)
+		_notifier->notifyWritable();
 }
 
 void	CgiProcess::onTimeout(void)
@@ -248,7 +299,6 @@ void	CgiProcess::onTimeout(void)
 	ft_log::log(WS_LOG_CGI, ft_log::LOG_WARN)
 		<< "CGI timeout pid=" << _pid << std::endl;
 	onError();
-	_notifier.notifyWritable();
 }
 
 void	CgiProcess::onEof(void)
@@ -259,8 +309,9 @@ void	CgiProcess::onEof(void)
 	ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
 		<< "CGI-Read EOF reached pid=" << _pid << std::endl;
 	forgetRead();
-	_encoder.finalize();
-	_notifier.notifyWritable();
+	_sink.finalize();
+	if (_notifier)
+		_notifier->notifyWritable();
 	cleanup(false);
 }
 
@@ -275,8 +326,11 @@ void	CgiProcess::onRead(const char *buffer, size_t bufSize)
 		firstBuf = false;
 	}
 
-	_encoder.encode(buffer, bufSize);
-	_notifier.notifyWritable();
+	if (_terminated)
+		return ;
+	_sink.append(buffer, bufSize);
+	if (_notifier)
+		_notifier->notifyWritable();
 }
 
 void	CgiProcess::onBodyEnd(size_t writtenBytes)

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:28:48 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/23 20:42:28 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:10:51 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 
 #include "http/HttpTypes.hpp"
 #include "config/Config.hpp"
+#include "utils/stringUtils.hpp"
 #include "configValidate.hpp"
 
 namespace config_validate
@@ -45,7 +46,7 @@ static inline void	validateMethods(const Config::Server::Location &loc)
 		for (size_t j = i + 1; j < loc.methods.size(); ++j)
 		{
 			if (m == loc.methods[j])
-				throw LocationError(loc.path, "duplicate HTTP method", toString(m));
+				throw LocationError(loc.path, "duplicate HTTP method", str::toString(m));
 		}
 	}
 }
@@ -57,7 +58,7 @@ static inline void	validateErrorPages(const Config::Server::Location &loc)
 			it != loc.errorPages.end(); ++it)
 	{
 		if (it->first == http::SC_NONE || it->first < http::SC_BAD_REQUEST)
-			throw LocationError(loc.path, "invalid status code in error_page", toString(it->first));
+			throw LocationError(loc.path, "invalid status code in error_page", str::toString(it->first));
 
 		validatePathGeneric(it->second, PR_NO_DOTDOT, "error_page path");
 	}

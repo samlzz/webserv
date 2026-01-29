@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 14:21:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 15:02:11 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 17:10:12 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,13 +16,13 @@
 #include <sys/wait.h>
 
 #include "Reactor.hpp"
-#include "config/validation/configValidate.hpp"
 #include "ft_log/LogOp.hpp"
 #include "ft_log/level.hpp"
 #include "log.h"
 #include "server/Exceptions.hpp"
 #include "server/connections/ConnEvent.hpp"
 #include "server/connections/IConnection.hpp"
+#include "utils/stringUtils.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -60,7 +60,7 @@ void	Reactor::addConnection(IConnection* conn)
 {
 	ft_log::log(WS_LOG_SERVER, ft_log::LOG_INFO)
 		<< "New connection on fd " << conn->fd()
-		<< (conn->buddy() ? "(buddy: " + toString(conn->buddy()->fd()) + ")" : "")
+		<< (conn->buddy() ? "(buddy: " + str::toString(conn->buddy()->fd()) + ")" : "")
 		<< std::endl;
 
 	_connections.push_back(conn);

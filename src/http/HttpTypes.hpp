@@ -6,13 +6,15 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 22:31:56 by achu              #+#    #+#             */
-/*   Updated: 2026/01/23 20:40:56 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/27 10:46:16 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_TYPES_HPP__
 #define __HTTP_TYPES_HPP__
 
+# include <map>
+# include <string>
 # include <ostream>
 
 namespace http
@@ -68,6 +70,8 @@ namespace http
 		, CT_BINARY
 		, CT_TEXT_PLAIN
 	};
+
+	typedef std::map<std::string, std::string>	t_headers;
 
 } // namespace http
 
