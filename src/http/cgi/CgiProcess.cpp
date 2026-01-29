@@ -6,17 +6,19 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 17:36:02 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:04:48 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cassert>
 #include <cerrno>
 #include <cstdlib>
+#include <cstring>
 #include <ctime>
 #include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <vector>
 
 #include "CgiProcess.hpp"
 #include "http/cgi/CgiReadConnection.hpp"
@@ -88,13 +90,20 @@ static inline void	_closeFds(int fds[2])
 	_closeFds(fds[0], fds[1]);
 }
 
+
+static inline void	freeCharArray(char **array)
+{
+	if (!array)
+		return;
+	for (size_t i = 0; array[i]; ++i)
+		::free(array[i]);
+	delete []array;
+}
+
 // never return
 static t_never	_execChild(
-	const char* scriptPath,
-	char* const argv[],
-	char* const envp[],
-	int stdoutFd,
-	int stdinFd)
+	char **argv, char **envp,
+	int stdoutFd, int stdinFd)
 {
 	if (dup2(stdoutFd, STDOUT_FILENO) < 0)
 	{
@@ -111,8 +120,31 @@ static t_never	_execChild(
 			_exit(1);
 	}
 
-	execve(scriptPath, argv, envp);
+	execve(argv[0], argv, envp);
+	freeCharArray(argv);
+	freeCharArray(envp);
 	_exit(1);
+}
+
+// Takes a vector of string and convert it to an allocated array of char ptr
+static inline char**	toCharArray(const std::vector<std::string>& pVec)
+{
+	char** arr = new char*[pVec.size() + 1];
+
+	for (size_t i = 0; i < pVec.size(); i++)
+	{
+		arr[i] = ::strdup(pVec[i].c_str());
+		if (!arr[i])
+		{
+			for (size_t j = 0; j < i; ++j)
+				::free(arr[j]);
+			delete []arr;
+			return 0;
+		}
+	}
+
+	arr[pVec.size()] = NULL;
+	return arr;
 }
 
 // ============================================================================
@@ -134,10 +166,9 @@ static t_never	_execChild(
 
 // Returned connection must be spawned for the reactor
 // CgiProcess doesn't owns it
-IConnection	*CgiProcess::start(const char* scriptPath,
-										char* const argv[],
-										char* const envp[],
-										const std::string &body)
+IConnection	*CgiProcess::start(const std::vector<std::string> &argv,
+								const std::vector<std::string> &envp,
+								const std::string &body)
 {
 	int	outFds[2];
 	int	inFds[2] = {-1, -1};
@@ -165,7 +196,7 @@ IConnection	*CgiProcess::start(const char* scriptPath,
 	if (pid == 0) /* child process */
 	{
 		_closeFds(outFds[0], inFds[1]);
-		_execChild(scriptPath, argv, envp, outFds[1], inFds[0]);
+		_execChild(toCharArray(argv), toCharArray(envp), outFds[1], inFds[0]);
 	}
 	else /* parent process */
 	{

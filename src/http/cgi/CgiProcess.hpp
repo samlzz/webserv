@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 17:33:47 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:05:30 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include <string>
 # include <sys/types.h>
 # include <stdint.h>
+#include <vector>
 
 # include "http/cgi/IOutputSink.hpp"
 # include "server/connections/IConnection.hpp"
@@ -87,9 +88,8 @@ public:
 	// Methods
 	// ============================================================================
 
-	IConnection			*start(const char* scriptPath,
-								char* const argv[],
-								char* const envp[],
+	IConnection			*start(const std::vector<std::string> &argv,
+								const std::vector<std::string> &envp,
 								const std::string &body = "");
 
 	void				onError(void);
