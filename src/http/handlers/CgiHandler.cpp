@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 16:05:13 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:42:58 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 17:00:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@
 CgiHandler::CgiHandler() {}
 CgiHandler::~CgiHandler() {}
 
-static inline std::string	subPath(const std::string& pPath)
+static std::string	subPath(const std::string& pPath)
 {
 	std::string		result;
 	size_t			end;
@@ -50,7 +50,7 @@ static inline std::string	subPath(const std::string& pPath)
 	return result;
 }
 
-static inline std::string	subInfo(const std::string& pPath)
+static std::string	subInfo(const std::string& pPath)
 {
 	std::string		result;
 	size_t			start;
@@ -99,10 +99,10 @@ static inline std::vector<std::string>	genEnvp(const routing::Context& route, co
 	addEnv(envp, "GATEWAY_INTERFACE", "CGI/1.1");
 	addEnv(envp, "REQUEST_METHOD", str::toString(req.getMethod()));
 	addEnv(envp, "QUERY_STRING", req.getQuery());
-	addEnv(envp, "PATH_INFO", subInfo(req.getPath()));
-	addEnv(envp, "PATH_TRANSLATED", route.location->root + subInfo(req.getPath()));
-	addEnv(envp, "SCRIPT_NAME", subPath(req.getPath()));
-	addEnv(envp, "SCRIPT_FILENAME", route.location->root + subPath(req.getPath()));
+	addEnv(envp, "PATH_INFO", subInfo(route.normalizedPath));
+	addEnv(envp, "PATH_TRANSLATED", route.location->root + subInfo(route.normalizedPath));
+	addEnv(envp, "SCRIPT_NAME", subPath(route.normalizedPath));
+	addEnv(envp, "SCRIPT_FILENAME", route.location->root + subPath(route.normalizedPath));
 	addEnv(envp, "REDIRECT_STATUS", "200");
 
 	addEnv(envp, "REMOTE_ADDR", "127.0.0.1");
@@ -131,11 +131,11 @@ static inline std::vector<std::string>	genEnvp(const routing::Context& route, co
 }
 
 // Generate an vecor of string version of the argv for cgi
-static inline std::vector<std::string>	genArgv(const routing::Context& route, const HttpRequest& req)
+static inline std::vector<std::string>	genArgv(const routing::Context& route)
 {
 	std::vector<std::string> vec;
 
-	Config::t_dict::const_iterator	it = route.location->cgiExts.find(fs::subExt(req.getPath()));
+	Config::t_dict::const_iterator	it = route.location->cgiExts.find(fs::subExt(route.normalizedPath));
 	if (it != route.location->cgiExts.end())
 		vec.push_back(it->second);
 
@@ -156,7 +156,7 @@ ResponsePlan CgiHandler::handle(
 	process->retain();
 
 	IConnection* readConn = process->start(
-		genArgv(route, req),
+		genArgv(route),
 		genEnvp(route, req),
 		req.getBody()
 	);

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 16:04:11 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 17:46:58 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:56:32 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,11 +26,6 @@ public:
 	virtual ResponsePlan handle(
 							const HttpRequest &req,
 							const routing::Context &ctx) const;
-private:
-	char	**getArgv(const HttpRequest &req) const;
-	char	**getEnvp(const HttpRequest &req) const;
-
-	char	*getScriptPath(const HttpRequest &req) const;
 };
 
 #endif /* __CGI_HANDLER_HPP__ */
