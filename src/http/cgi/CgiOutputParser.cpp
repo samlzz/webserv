@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 15:25:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 15:29:50 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:16:15 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #include "CgiOutputParser.hpp"
 #include "http/HttpTypes.hpp"
 #include "http/response/BuffStream.hpp"
+#include "utils/stringUtils.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -146,19 +147,6 @@ bool CgiOutputParser::tryParseHeaders()
 	return true;
 }
 
-static std::string _trim(const std::string& s)
-{
-	size_t start = 0;
-	while (start < s.size() && (s[start] == ' ' || s[start] == '\t'))
-		start++;
-
-	size_t end = s.size();
-	while (end > start && (s[end - 1] == ' ' || s[end - 1] == '\t'))
-		end--;
-
-	return s.substr(start, end - start);
-}
-
 void CgiOutputParser::parseHeaderLines(const std::string& headerBlock)
 {
 	std::istringstream iss(headerBlock);
@@ -176,8 +164,8 @@ void CgiOutputParser::parseHeaderLines(const std::string& headerBlock)
 		if (colon == std::string::npos)
 			continue;
 
-		std::string key = _trim(line.substr(0, colon));
-		std::string val = _trim(line.substr(colon + 1));
+		std::string key = str::trim(line.substr(0, colon));
+		std::string val = str::trim(line.substr(colon + 1));
 
 		size_t sep = line.find('-');
 		if (sep != std::string::npos && sep + 1 < key.size())
