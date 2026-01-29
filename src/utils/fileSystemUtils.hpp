@@ -37,6 +37,8 @@ int			openReadOnly(const std::string &path);
 std::string	subExt(const std::string &filePath);
 ssize_t		size(const std::string &path);
 
+std::string	url_decode(const std::string &str);
+
 } // namespace fs
 
 #endif /* __FILESYSTEMUTILS_HPP__ */
