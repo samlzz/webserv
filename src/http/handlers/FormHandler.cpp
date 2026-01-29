@@ -2,8 +2,8 @@
 #include "http/response/ResponsePlan.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/routing/Router.hpp"
-#include "config/validation/configValidate.hpp"
 #include "bodySrcs/MemoryBodySource.hpp"
+#include "utils/stringUtils.hpp"
 
 #include <sstream>
 #include <string>
@@ -40,7 +40,7 @@ ResponsePlan	FormHandler::handle(
 	body += "</ul></body></html>\n";
 
 	plan.headers["Content-Type"] = "text/html";
-	plan.headers["Content-Length"] = toString(body.size());
+	plan.headers["Content-Length"] = str::toString(body.size());
 
 	plan.body = new MemoryBodySource(body);
 

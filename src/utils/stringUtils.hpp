@@ -1,30 +1,33 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   String.hpp                                         :+:      :+:    :+:   */
+/*   stringUtils.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 02:35:19 by achu              #+#    #+#             */
-/*   Updated: 2026/01/29 16:08:03 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:09:33 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __STRING_HPP__
-#define __STRING_HPP__
+#ifndef __STRING_UTILS_HPP__
+#define __STRING_UTILS_HPP__
 
 #include <sstream>
 #include <string>
 
-namespace utils
+namespace str
 {
 
-template <class T>
-std::string		toString(T pClass)
+/**
+ * @brief Convert any streamable value to std::string.
+ */
+template <typename T>
+inline std::string	toString(T value)
 {
-	std::ostringstream out;
-	out << pClass;
-	return out.str();
+	std::ostringstream oss;
+	oss << value;
+	return oss.str();
 }
 
 } // namespace utils

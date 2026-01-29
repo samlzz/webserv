@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:19:52 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/13 13:58:25 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:09:56 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,22 +15,11 @@
 
 # include <arpa/inet.h>
 # include <netinet/in.h>
-# include <sstream>
 # include <stdexcept>
 # include <stdint.h>
 
 # include "config/Config.hpp"
-
-/**
- * @brief Convert any streamable value to std::string.
- */
-template <typename T>
-inline std::string	toString(T value)
-{
-	std::ostringstream oss;
-	oss << value;
-	return oss.str();
-}
+# include "utils/stringUtils.hpp"
 
 namespace config_validate
 {
@@ -62,7 +51,7 @@ class ServerError : public WsConfigError {
 public:
 	ServerError(struct in_addr host, uint16_t port, const std::string &msg)
 		: WsConfigError(std::string("server ") + inet_ntoa(host)
-							+ ":" + toString(port) + ": " + msg)
+							+ ":" + str::toString(port) + ": " + msg)
 	{}
 };
 

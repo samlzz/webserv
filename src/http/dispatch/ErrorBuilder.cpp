@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:49:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 14:57:11 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:11:46 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,12 @@
 
 #include "config/Config.hpp"
 #include "ErrorBuilder.hpp"
-#include "config/validation/configValidate.hpp"
 #include "http/HttpData.hpp"
-#include "http/fileSystemUtils.hpp"
 #include "http/handlers/bodySrcs/FileBodySource.hpp"
 #include "http/handlers/bodySrcs/MemoryBodySource.hpp"
 #include "http/response/ResponsePlan.hpp"
+#include "utils/fileSystemUtils.hpp"
+#include "utils/stringUtils.hpp"
 
 ResponsePlan	ErrorBuilder::build(
 	http::e_status_code status,
@@ -56,7 +56,7 @@ ResponsePlan	ErrorBuilder::buildDefault(http::e_status_code status)
 
 	plan.status = status;
 	plan.headers["Content-Type"] = "text/html";
-	plan.headers["Content-Length"] = toString(body.length());
+	plan.headers["Content-Length"] = str::toString(body.length());
 	plan.body = new MemoryBodySource(body);
 
 	return plan;
@@ -76,7 +76,7 @@ ResponsePlan	ErrorBuilder::buildFromErrorPage(
 	ResponsePlan plan;
 	plan.status = status;
 	plan.headers["Content-Type"] = "text/html";
-	plan.headers["Content-Length"] = toString(size);
+	plan.headers["Content-Length"] = str::toString(size);
 	plan.body = new FileBodySource(fd);
 
 	return plan;

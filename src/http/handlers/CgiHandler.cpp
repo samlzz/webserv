@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 16:05:13 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:06:26 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:12:26 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,16 +16,16 @@
 #include "http/cgi/CgiOutputParser.hpp"
 #include "bodySrcs/CgiBodySource.hpp"
 #include "http/dispatch/ErrorBuilder.hpp"
-#include "http/fileSystemUtils.hpp"
 #include "http/routing/Router.hpp"
 #include "server/connections/ConnEvent.hpp"
+#include "utils/fileSystemUtils.hpp"
+#include "utils/stringUtils.hpp"
 
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
 #include <vector>
 
-#include "utils/String.hpp"
 
 CgiHandler::CgiHandler() {}
 CgiHandler::~CgiHandler() {}
@@ -97,7 +97,7 @@ static inline std::vector<std::string>	genEnvp(const routing::Context& route, co
 	std::vector<std::string> envp;
 
 	addEnv(envp, "GATEWAY_INTERFACE", "CGI/1.1");
-	addEnv(envp, "REQUEST_METHOD", utils::toString(req.getMethod()));
+	addEnv(envp, "REQUEST_METHOD", str::toString(req.getMethod()));
 	addEnv(envp, "QUERY_STRING", req.getQuery());
 	addEnv(envp, "PATH_INFO", subInfo(req.getPath()));
 	addEnv(envp, "PATH_TRANSLATED", route.location->root + subInfo(req.getPath()));
@@ -114,7 +114,7 @@ static inline std::vector<std::string>	genEnvp(const routing::Context& route, co
 	if (req.hasHeader("Content-Length"))
 		addEnv(envp, "CONTENT_LENGTH", req.getHeader("Content-Length"));
 	else
-		addEnv(envp, "CONTENT_LENGTH", utils::toString(req.getBody().size()));
+		addEnv(envp, "CONTENT_LENGTH", str::toString(req.getBody().size()));
 	
 	if (req.hasHeader("Content-Type"))
 		addEnv(envp, "CONTENT_TYPE", req.getHeader("Content-Type"));

@@ -3,13 +3,13 @@
 #include "http/request/HttpRequest.hpp"
 #include "http/routing/Router.hpp"
 #include "http/HttpData.hpp"
-#include "config/validation/configValidate.hpp"
 #include "bodySrcs/MemoryBodySource.hpp"
 #include "bodySrcs/FileBodySource.hpp"
 
 
 #include "sys/stat.h"
 #include "fcntl.h"
+#include "utils/stringUtils.hpp"
 #include <string>
 #include <dirent.h>
 #include <algorithm>
@@ -69,7 +69,7 @@ ResponsePlan	StaticFileHandler::handle(
 				plan.status = http::SC_FORBIDDEN;
 				return (plan);
 			}
-			plan.headers["Content-Length"] = toString(st.st_size);
+			plan.headers["Content-Length"] = str::toString(st.st_size);
 			plan.headers["Content-Type"] = http::Data::getMimeType(ext);
 			
 			plan.body = new FileBodySource(_fd);
@@ -119,7 +119,7 @@ ResponsePlan	StaticFileHandler::handle(
 			plan.status = http::SC_OK;
 
 			plan.headers["Content-Type"] = http::Data::getMimeType("html");
-			plan.headers["Content-Length"] = toString(body.size());
+			plan.headers["Content-Length"] = str::toString(body.size());
 
 			plan.body = new MemoryBodySource(body);
 
