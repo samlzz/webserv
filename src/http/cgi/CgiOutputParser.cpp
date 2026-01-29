@@ -6,14 +6,21 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 15:25:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 15:37:12 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:16:15 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "CgiOutputParser.hpp"
+#include <cctype>
+#include <cstddef>
 #include <sstream>
 #include <cstdlib>
 #include <cstring>
+#include <vector>
+
+#include "CgiOutputParser.hpp"
+#include "http/HttpTypes.hpp"
+#include "http/response/BuffStream.hpp"
+#include "utils/stringUtils.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -22,7 +29,7 @@
 CgiOutputParser::CgiOutputParser()
 	: _state(ST_HEADERS)
 	, _headBuf()
-	, _bodyQ()
+	, _bodyStream()
 	, _status(http::SC_OK)
 	, _headers()
 {}
@@ -46,7 +53,7 @@ void CgiOutputParser::append(const char* buf, size_t n)
 			return;
 	}
 	else if (_state == ST_BODY)
-		_bodyQ.push_back(std::string(buf, n));
+		_bodyStream.push(buf, n);
 }
 
 void CgiOutputParser::finalize(void)
@@ -79,15 +86,15 @@ const http::t_headers& CgiOutputParser::headers() const
 
 bool CgiOutputParser::bodyHasData() const
 {
-	return !_bodyQ.empty();
+	return _bodyStream.hasBuffer();
 }
 
 size_t CgiOutputParser::bodyRead(char* dst, size_t max)
 {
-	if (!dst || max == 0 || _bodyQ.empty())
+	if (!dst || max == 0 || !_bodyStream.hasBuffer())
 		return 0;
 
-	std::string& front = _bodyQ.front();
+	t_bytes &front = _bodyStream.front();
 	size_t n = front.size();
 	if (n > max)
 		n = max;
@@ -95,16 +102,16 @@ size_t CgiOutputParser::bodyRead(char* dst, size_t max)
 	std::memcpy(dst, front.data(), n);
 
 	if (n == front.size())
-		_bodyQ.pop_front();
+		_bodyStream.pop();
 	else
-		front.erase(0, n);
+		front.erase(front.begin(), front.begin() + n);
 
 	return n;
 }
 
 bool CgiOutputParser::eof() const
 {
-	return _state == ST_DONE && _bodyQ.empty();
+	return _state == ST_DONE && !_bodyStream.hasBuffer();
 }
 
 // ============================================================================
@@ -126,26 +133,18 @@ bool CgiOutputParser::tryParseHeaders()
 	std::string headerBlock = _headBuf.substr(0, pos);
 	parseHeaderLines(headerBlock);
 
+	if (_headers.find("Location") != _headers.end())
+		_status = http::SC_FOUND;
+	if (_headers.find("Content-Length") == _headers.end())
+		_headers["Transfert-Encoding"] = "chunked";
+
 	_state = ST_BODY;
 
 	size_t bodyStart = pos + sepLen;
 	if (bodyStart < _headBuf.size())
-		_bodyQ.push_back(_headBuf.substr(bodyStart));
+		_bodyStream.push(_headBuf.substr(bodyStart));
 	_headBuf.clear();
 	return true;
-}
-
-static std::string _trim(const std::string& s)
-{
-	size_t start = 0;
-	while (start < s.size() && (s[start] == ' ' || s[start] == '\t'))
-		start++;
-
-	size_t end = s.size();
-	while (end > start && (s[end - 1] == ' ' || s[end - 1] == '\t'))
-		end--;
-
-	return s.substr(start, end - start);
 }
 
 void CgiOutputParser::parseHeaderLines(const std::string& headerBlock)
@@ -165,9 +164,12 @@ void CgiOutputParser::parseHeaderLines(const std::string& headerBlock)
 		if (colon == std::string::npos)
 			continue;
 
-		std::string key = _trim(line.substr(0, colon));
-		std::string val = _trim(line.substr(colon + 1));
+		std::string key = str::trim(line.substr(0, colon));
+		std::string val = str::trim(line.substr(colon + 1));
 
+		size_t sep = line.find('-');
+		if (sep != std::string::npos && sep + 1 < key.size())
+			key[sep + 1] = std::toupper(key[sep + 1]);
 		if (key == "Status")
 		{
 			int code = std::atoi(val.c_str());
@@ -175,7 +177,7 @@ void CgiOutputParser::parseHeaderLines(const std::string& headerBlock)
 				_status = static_cast<http::e_status_code>(code);
 		}
 		else
-		_headers[key] = val;
+			_headers[key] = val;
 	}
 }
 

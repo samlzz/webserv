@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 14:50:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 15:36:54 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 15:32:27 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,10 +14,10 @@
 # define __CGI_OUTPUT_PARSER_HPP__
 
 # include <string>
-# include <deque>
 
 # include "IOutputSink.hpp"
 # include "http/HttpTypes.hpp"
+# include "http/response/BuffStream.hpp"
 # include "http/response/interfaces/IMetaSource.hpp"
 
 class CgiOutputParser : public IMetaSource, public IOutputSink {
@@ -27,7 +27,7 @@ private:
 	e_state					_state;
 
 	std::string				_headBuf;
-	std::deque<std::string>	_bodyQ;
+	BuffStream				_bodyStream;
 
 	http::e_status_code		_status;
 	http::t_headers			_headers;

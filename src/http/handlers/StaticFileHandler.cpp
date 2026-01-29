@@ -5,13 +5,13 @@
 #include "http/request/HttpRequest.hpp"
 #include "http/routing/Router.hpp"
 #include "http/HttpData.hpp"
-#include "config/validation/configValidate.hpp"
 #include "bodySrcs/MemoryBodySource.hpp"
 #include "bodySrcs/FileBodySource.hpp"
 #include "http/fileSystemUtils.hpp"
+#include "utils/stringUtils.hpp"
 
 
-#include "sys/stat.h"
+#include <sys/stat.h>
 #include <string>
 #include <dirent.h>
 #include <algorithm>
@@ -59,7 +59,7 @@ ResponsePlan	StaticFileHandler::loadAutoindex(const std::string &path, const rou
 	plan.status = http::SC_OK;
 
 	plan.headers["Content-Type"] = http::Data::getMimeType("html");
-	plan.headers["Content-Length"] = toString(body.size());
+	plan.headers["Content-Length"] = str::toString(body.size());
 
 	plan.body = new MemoryBodySource(body);
 	
@@ -85,7 +85,7 @@ ResponsePlan	StaticFileHandler::loadFile(const std::string &path, const routing:
 	if (_fd < 0)
 		return (ErrorBuilder::build(http::SC_FORBIDDEN, route.location));
 
-	plan.headers["Content-Length"] = toString(st.st_size);
+	plan.headers["Content-Length"] = str::toString(st.st_size);
 	plan.headers["Content-Type"] = http::Data::getMimeType(ext);
 	
 	plan.body = new FileBodySource(_fd);

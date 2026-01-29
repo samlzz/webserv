@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 14:28:13 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 18:02:48 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/28 15:55:01 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 // ============================================================================
 
 FileBodySource::FileBodySource(int fd)
-	: _fd(fd), _done(false)
+	: _fd(fd), _done(false), _error(false)
 {
 	if (_fd < 0)
 		_done = true;
@@ -37,7 +37,7 @@ FileBodySource::~FileBodySource()
 
 bool	FileBodySource::terminated(void) const
 {
-	return true;
+	return !_error;
 }
 
 bool	FileBodySource::hasMore(void) const

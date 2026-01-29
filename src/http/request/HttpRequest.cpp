@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/29 14:52:44 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/29 16:47:03 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 
 #include "HttpRequest.hpp"
 #include "http/HttpTypes.hpp"
+#include "http/response/BuffStream.hpp"
 
 #define CURRENT_STATE() _state
 #define UPDATE_STATE(S) _state = S
@@ -40,13 +41,13 @@ HttpRequest::~HttpRequest(void) {
 #pragma region Getter / Setter
 
 http::e_method			HttpRequest::getMethod() const		{ return (_request.method);       };
-std::string				HttpRequest::getPath() const  		{ return (_request.uri.path);     };
-std::string				HttpRequest::getQuery() const		{ return (_request.uri.query);    };
-std::string				HttpRequest::getFragment() const	{ return (_request.uri.fragment); };
+const std::string		&HttpRequest::getPath() const  		{ return (_request.uri.path);     };
+const std::string		&HttpRequest::getQuery() const		{ return (_request.uri.query);    };
+const std::string		&HttpRequest::getFragment() const	{ return (_request.uri.fragment); };
 int						HttpRequest::getVerMaj() const		{ return (_request.verMaj);       };
 int						HttpRequest::getVerMin() const		{ return (_request.verMin);       };
-http::t_headers			HttpRequest::getHeaders() const 	{ return (_request.headers);      };
-std::vector<char>		HttpRequest::getBody() const		{ return (_request.body);         };
+const http::t_headers	&HttpRequest::getHeaders() const 	{ return (_request.headers);      };
+const t_bytes			&HttpRequest::getBody() const		{ return (_request.body);         };
 http::e_status_code		HttpRequest::getStatusCode() const	{ return (_code);                 };
 
 void	HttpRequest::setPath(const std::string &path) { _request.uri.path = path; };
@@ -412,9 +413,9 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			if (ch != '\n') return setError(http::SC_BAD_REQUEST);
 			if (_transferLength == 0)
 				UPDATE_STATE(BODY_TRANSFER_END);
-    		else
+			else
 				UPDATE_STATE(BODY_TRANSFER_DATA);
-    		break;
+			break;
 
 		case BODY_TRANSFER_DATA: {
 			size_t		available = pSize - i;
@@ -443,7 +444,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			__attribute__ ((fallthrough));
 			
 		case BODY_TRANSFER_END:
-			if (!htod(_buffer) == 0) {
+			if (htod(_buffer) != 0) {
 				UPDATE_STATE(BODY_TRANSFER_HEXA);
 				_buffer.clear();
 				break;
@@ -544,8 +545,8 @@ std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 
 	http::t_headers headers = pRequest.getHeaders();
 	for (http::t_headers::const_iterator it = headers.begin();  it != headers.end(); ++it) {
-        pOut << it->first << ": " << it->second << "\r\n";
-    }
+		pOut << it->first << ": " << it->second << "\r\n";
+	}
 	pOut << "\r\n";
 
 	const std::vector<char>& body = pRequest.getBody();
@@ -554,8 +555,8 @@ std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 	}
 	pOut << "\r\n";
 
-	pOut << pRequest.isDone() ? "is done" : "is not done";
-	pOut << pRequest.isError() ? "is error" : "is not error";
+	pOut << (pRequest.isDone() ? "is done" : "is not done");
+	pOut << (pRequest.isError() ? "is error" : "is not error");
 	
 	return (pOut);
 }

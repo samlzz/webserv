@@ -6,19 +6,22 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 16:13:43 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:48:09 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __CGI_PROCESS_HPP__
 # define __CGI_PROCESS_HPP__
 
+# include <cstddef>
 # include <ctime>
 # include <string>
 # include <sys/types.h>
 # include <stdint.h>
+# include <vector>
 
 # include "http/cgi/IOutputSink.hpp"
+# include "http/response/BuffStream.hpp"
 # include "server/connections/IConnection.hpp"
 # include "server/connections/IWritableNotifier.hpp"
 
@@ -42,7 +45,7 @@ private:
 	// Attributes
 	// ============================================================================
 	IOutputSink			&_sink;
-	IWritableNotifier	&_notifier;
+	IWritableNotifier	*_notifier;
 	pid_t				_pid;
 	time_t				_startTs;
 
@@ -52,13 +55,14 @@ private:
 
 	IConnection			*_read;
 	IConnection			*_write;
+	int32_t				_refCount;
 
 public:
 
 	// ============================================================================
 	// Construction
 	// ============================================================================
-	CgiProcess(IOutputSink &sink, IWritableNotifier &notifier);
+	CgiProcess(IOutputSink &sink);
 	~CgiProcess();
 
 	// ============================================================================
@@ -70,20 +74,24 @@ public:
 	void				forgetRead(void);
 	void				forgetWrite(void);
 
+	void				retain(void);
+	void				release(void);
+
 	time_t				startTime(void) const;
 
 	bool				isTerminated(void) const;
 	bool				isError(void) const;
 	uint8_t				exitCode(void) const;
 
+	void				setDataNotify(IWritableNotifier *notifier);
+
 	// ============================================================================
 	// Methods
 	// ============================================================================
 
-	IConnection			*start(const char* scriptPath,
-								char* const argv[],
-								char* const envp[],
-								const std::string &body = "");
+	IConnection			*start(const std::vector<std::string> &argv,
+								const std::vector<std::string> &envp,
+								const t_bytes &body);
 
 	void				onError(void);
 

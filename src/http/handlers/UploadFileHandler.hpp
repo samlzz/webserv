@@ -2,6 +2,7 @@
 # define __UPLOADFILEHANDLER_HPP__
 
 #include "http/handlers/IHttpHandler.hpp"
+#include "http/response/BuffStream.hpp"
 #include "http/response/ResponsePlan.hpp"
 
 class UploadFileHandler : public IHttpHandler
@@ -9,7 +10,7 @@ class UploadFileHandler : public IHttpHandler
 private:
 	bool			writeFile(
 						const std::string &path,
-						const std::string &data,
+						const t_bytes &data,
 						http::e_method method) const;
 
 	std::string 	generateFilePath(

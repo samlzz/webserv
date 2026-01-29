@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/29 14:49:51 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/29 16:45:03 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "http/HttpTypes.hpp"
+#include "http/response/BuffStream.hpp"
 
 #define MAX_METHOD_LENGTH		8
 #define MAX_URI_LENGTH			2 * 1024
@@ -115,13 +116,13 @@ public:
 
 	// ===== Getter / Setter =====
 	http::e_method			getMethod() const;
-	std::string				getPath() const;
-	std::string				getQuery() const;
-	std::string				getFragment() const;
+	const std::string		&getPath() const;
+	const std::string		&getQuery() const;
+	const std::string		&getFragment() const;
 	int						getVerMaj() const;
 	int						getVerMin() const;
-	http::t_headers			getHeaders() const;
-	std::vector<char>		getBody() const;
+	const http::t_headers	&getHeaders() const;
+	const t_bytes			&getBody() const;
 	http::e_status_code		getStatusCode() const;
 
 	void	setPath(const std::string &path);

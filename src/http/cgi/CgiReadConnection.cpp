@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/24 15:09:30 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:32:10 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,13 @@
 CgiReadConnection::CgiReadConnection(int stdoutFd, CgiProcess &ctx)
 	: AConnection(stdoutFd, POLLIN), _ctx(ctx)
 {
+	_ctx.retain();
 	setFdFlags();
+}
+
+CgiReadConnection::~CgiReadConnection()
+{
+	_ctx.release();
 }
 
 // ============================================================================

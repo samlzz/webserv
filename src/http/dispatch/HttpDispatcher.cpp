@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 14:21:53 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 12:54:27 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include "http/HttpData.hpp"
 #include "http/HttpTypes.hpp"
 #include "http/dispatch/ErrorBuilder.hpp"
+#include "http/fileSystemUtils.hpp"
 #include "http/handlers/IHttpHandler.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/response/ResponsePlan.hpp"
@@ -30,25 +31,6 @@ HttpDispatcher::HttpDispatcher()
 
 HttpDispatcher::~HttpDispatcher()
 {}
-
-// ============================================================================
-// Static helpers
-// ============================================================================
-
-static inline std::string	subExt(const std::string& pPath)
-{
-	std::string		result;
-	size_t			start;
-
-	if ((start = pPath.find_last_of('.')) == std::string::npos)
-		return ("");
-
-	result = pPath.substr(start + 1, pPath.length() - start);
-	if (result.empty())
-		return ("");
-
-	return (result);
-}
 
 // ============================================================================
 // Methods
@@ -66,9 +48,9 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 
 	http::e_method	method = req.getMethod();
 	if ((method == http::MTH_GET || method == http::MTH_POST)
-		&& loca.cgiExts.find(subExt(route.normalizedPath)) != loca.cgiExts.end()
+		&& loca.cgiExts.find(fs::subExt(route.normalizedPath)) != loca.cgiExts.end()
 	)
-		return NULL; // TODO: &_cgiHandler
+		return &_cgiHandler;
 	
 	if (method == http::MTH_GET || method == http::MTH_HEAD)
 		return &_staticHandler;

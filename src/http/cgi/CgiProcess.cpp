@@ -6,22 +6,25 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 17:57:03 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:47:30 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cassert>
 #include <cerrno>
 #include <cstdlib>
+#include <cstring>
 #include <ctime>
 #include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <vector>
 
 #include "CgiProcess.hpp"
 #include "http/cgi/CgiReadConnection.hpp"
 #include "http/cgi/CgiWriteConnection.hpp"
 #include "http/cgi/IOutputSink.hpp"
+#include "http/response/BuffStream.hpp"
 #include "server/connections/IConnection.hpp"
 #include "server/connections/IWritableNotifier.hpp"
 
@@ -29,11 +32,11 @@
 // Construction / Destruction
 // ============================================================================
 
-CgiProcess::CgiProcess(IOutputSink &sink, IWritableNotifier &notifier)
-	: _sink(sink), _notifier(notifier)
+CgiProcess::CgiProcess(IOutputSink &sink)
+	: _sink(sink), _notifier(0)
 	, _pid(-1), _exitCode(0)
 	, _terminated(false), _errOccur(false)
-	, _read(0), _write(0)
+	, _read(0), _write(0), _refCount(0)
 {}
 
 CgiProcess::~CgiProcess()
@@ -46,6 +49,16 @@ CgiProcess::~CgiProcess()
 IConnection	*CgiProcess::read(void) const			{ return _read; }
 IConnection	*CgiProcess::write(void) const			{ return _write; }
 
+void		CgiProcess::retain(void)				{ _refCount++; }
+void		CgiProcess::release(void)
+{
+	if (_refCount <= 0)
+		return;
+	--_refCount;
+	if (_refCount == 0)
+		delete this;
+}
+
 void		CgiProcess::forgetRead(void)			{ _read = 0; }
 void		CgiProcess::forgetWrite(void)			{ _write = 0; }
 
@@ -55,6 +68,11 @@ bool		CgiProcess::isTerminated(void) const	{ return _terminated; }
 bool		CgiProcess::isError(void) const			{ return _errOccur; }
 
 uint8_t		CgiProcess::exitCode(void) const		{ return _exitCode; }
+
+void		CgiProcess::setDataNotify(IWritableNotifier *notifier)
+{
+	_notifier = notifier;
+}
 
 // ============================================================================
 // Helpers for start()
@@ -73,13 +91,20 @@ static inline void	_closeFds(int fds[2])
 	_closeFds(fds[0], fds[1]);
 }
 
+
+static inline void	freeCharArray(char **array)
+{
+	if (!array)
+		return;
+	for (size_t i = 0; array[i]; ++i)
+		::free(array[i]);
+	delete []array;
+}
+
 // never return
 static t_never	_execChild(
-	const char* scriptPath,
-	char* const argv[],
-	char* const envp[],
-	int stdoutFd,
-	int stdinFd)
+	char **argv, char **envp,
+	int stdoutFd, int stdinFd)
 {
 	if (dup2(stdoutFd, STDOUT_FILENO) < 0)
 	{
@@ -96,8 +121,31 @@ static t_never	_execChild(
 			_exit(1);
 	}
 
-	execve(scriptPath, argv, envp);
+	execve(argv[0], argv, envp);
+	freeCharArray(argv);
+	freeCharArray(envp);
 	_exit(1);
+}
+
+// Takes a vector of string and convert it to an allocated array of char ptr
+static inline char**	toCharArray(const std::vector<std::string>& pVec)
+{
+	char** arr = new char*[pVec.size() + 1];
+
+	for (size_t i = 0; i < pVec.size(); i++)
+	{
+		arr[i] = ::strdup(pVec[i].c_str());
+		if (!arr[i])
+		{
+			for (size_t j = 0; j < i; ++j)
+				::free(arr[j]);
+			delete []arr;
+			return 0;
+		}
+	}
+
+	arr[pVec.size()] = NULL;
+	return arr;
 }
 
 // ============================================================================
@@ -119,10 +167,9 @@ static t_never	_execChild(
 
 // Returned connection must be spawned for the reactor
 // CgiProcess doesn't owns it
-IConnection	*CgiProcess::start(const char* scriptPath,
-										char* const argv[],
-										char* const envp[],
-										const std::string &body)
+IConnection	*CgiProcess::start(const std::vector<std::string> &argv,
+								const std::vector<std::string> &envp,
+								const t_bytes &body)
 {
 	int	outFds[2];
 	int	inFds[2] = {-1, -1};
@@ -150,7 +197,7 @@ IConnection	*CgiProcess::start(const char* scriptPath,
 	if (pid == 0) /* child process */
 	{
 		_closeFds(outFds[0], inFds[1]);
-		_execChild(scriptPath, argv, envp, outFds[1], inFds[0]);
+		_execChild(toCharArray(argv), toCharArray(envp), outFds[1], inFds[0]);
 	}
 	else /* parent process */
 	{
@@ -225,7 +272,8 @@ void	CgiProcess::onError(void)
 	_terminated = true;
 	_errOccur = true;
 	cleanup(true);
-	_notifier.notifyWritable();
+	if (_notifier)
+		_notifier->notifyWritable();
 }
 
 void	CgiProcess::onTimeout(void)
@@ -240,7 +288,8 @@ void	CgiProcess::onEof(void)
 	_terminated = true;
 	forgetRead();
 	_sink.finalize();
-	_notifier.notifyWritable();
+	if (_notifier)
+		_notifier->notifyWritable();
 	cleanup(false);
 }
 
@@ -249,7 +298,8 @@ void	CgiProcess::onRead(const char *buffer, size_t bufSize)
 	if (_terminated)
 		return ;
 	_sink.append(buffer, bufSize);
-	_notifier.notifyWritable();
+	if (_notifier)
+		_notifier->notifyWritable();
 }
 void	CgiProcess::onBodyEnd(void)
 {

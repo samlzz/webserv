@@ -1,12 +1,13 @@
 #include "http/handlers/UploadFileHandler.hpp"
 #include "http/HttpTypes.hpp"
+#include "http/response/BuffStream.hpp"
 #include "http/response/ResponsePlan.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/routing/Router.hpp"
 #include "http/dispatch/ErrorBuilder.hpp"
-#include "config/validation/configValidate.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/HttpData.hpp"
+#include "utils/stringUtils.hpp"
 
 #include <cstddef>
 #include <ctime>
@@ -29,18 +30,18 @@ std::string 	UploadFileHandler::generateFilename(
 			size_t ext_pos = filename.find_last_of(".");
 			
 			if (ext_pos != std::string::npos)
-				new_filename = filename.substr(0, ext_pos) + "_" + toString(std::time(0)) + filename.substr(ext_pos);
+				new_filename = filename.substr(0, ext_pos) + "_" + str::toString(std::time(0)) + filename.substr(ext_pos);
 			else
-				new_filename = filename + "_" + toString(std::time(0));
+				new_filename = filename + "_" + str::toString(std::time(0));
 			break;
 		}
 		
 		case http::CT_TEXT_PLAIN:
-			new_filename = "text_post_" + toString(std::time(0)) + ".txt";
+			new_filename = "text_post_" + str::toString(std::time(0)) + ".txt";
 			break;
 
 		case http::CT_BINARY:
-			new_filename = "raw_post_" + toString(std::time(0));
+			new_filename = "raw_post_" + str::toString(std::time(0));
 			break;
 
 		case http::CT_APPLICATION_X_WWW_FORM_URLENCODED:
@@ -109,7 +110,7 @@ std::string 	UploadFileHandler::generateFilePath(
 
 bool			UploadFileHandler::writeFile(
 						const std::string &path,
-						const std::string &data,
+						const t_bytes &data,
 						http::e_method method) const
 {
 	int fd = -1;
@@ -121,17 +122,17 @@ bool			UploadFileHandler::writeFile(
 	if (fd < 0)
 		return (false);
 
-	ssize_t totalWritten = 0;
+	size_t totalWritten = 0;
 	ssize_t written;
-	while (totalWritten < static_cast<ssize_t>(data.length()))
+	while (totalWritten < data.size())
 	{
-		written = write(fd, data.c_str() + totalWritten, data.length() - totalWritten);
+		written = write(fd, data.data() + totalWritten, data.size() - totalWritten);
 		if (written < 0)
 		{
 			close(fd);
 			return (false);
 		}
-		totalWritten += written;
+		totalWritten += static_cast<size_t>(written);
 	}
 	close(fd);
 	if (written < 0)
@@ -190,7 +191,7 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 {
 	ResponsePlan	plan;
 
-	std::string contentType = req.getHeader("Content-Type");
+	std::string contentType = req.getField("Content-Type");
 	if (contentType.empty())
 		return ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
 
@@ -204,7 +205,8 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 	size_t	pos = 0;
 
 	// std::string body(req.vec.data(), req.vec.size());
-	std::string	body = req.getBody();
+	t_bytes		vecBody = req.getBody();
+	std::string	body(vecBody.data(), vecBody.size());
 
 	while ((pos = body.find(delimiter, pos)) != std::string::npos)
 	{	
@@ -246,7 +248,7 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 					std::string fullPath = generateFilePath(route, filename,
 							http::CT_MULTIPART_FORM_DATA, req.getMethod());
 
-					if (!writeFile(fullPath, fileContent, req.getMethod()))
+					if (!writeFile(fullPath, t_bytes(fileContent.begin(), fileContent.end()), req.getMethod()))
 						return ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
 					plan.headers["Location"] = "/" + filename;
 				}
@@ -276,7 +278,7 @@ ResponsePlan	UploadFileHandler::handleContentType(
 {
 	ResponsePlan	plan;
 
-	std::string contentType = req.getHeader("Content-Type");
+	std::string contentType = req.getField("Content-Type");
 	if (contentType.empty())
 		contentType = "application/octet-stream";
 	

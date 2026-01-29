@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:44:04 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/24 15:09:19 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 16:49:01 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,12 +24,18 @@
 // ============================================================================
 
 CgiWriteConnection::CgiWriteConnection(
-	int stdinFd, const std::string &body, CgiProcess &ctx
+	int stdinFd, const t_bytes &body, CgiProcess &ctx
 )
 	: AConnection(stdinFd, POLLOUT)
 	, _body(body), _offset(0), _ctx(ctx), _spawned(false)
 {
+	_ctx.retain();
 	setFdFlags();
+}
+
+CgiWriteConnection::~CgiWriteConnection()
+{
+	_ctx.release();
 }
 
 // ============================================================================
@@ -57,7 +63,7 @@ ConnEvent	CgiWriteConnection::handleEvents(short revents)
 
 	if (revents & POLLOUT)
 	{
-		ssize_t n = write(_fd, _body.c_str() + _offset, _body.size() - _offset);
+		ssize_t n = write(_fd, _body.data() + _offset, _body.size() - _offset);
 		if (n <= 0)
 			return (ConnEvent::none());
 
