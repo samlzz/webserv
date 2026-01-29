@@ -6,11 +6,13 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 15:25:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 15:37:12 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 12:22:13 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CgiOutputParser.hpp"
+#include <cctype>
+#include <cstddef>
 #include <sstream>
 #include <cstdlib>
 #include <cstring>
@@ -126,6 +128,15 @@ bool CgiOutputParser::tryParseHeaders()
 	std::string headerBlock = _headBuf.substr(0, pos);
 	parseHeaderLines(headerBlock);
 
+	if (_headers.find("Location") != _headers.end())
+	{
+		// TODO: handle redirection
+		//       if URL -> redirect the client
+		//       if virtual path -> serve the pointed ressource
+	}
+	if (_headers.find("Content-Length") == _headers.end())
+		_headers["Transfert-Encoding"] = "chunked";
+
 	_state = ST_BODY;
 
 	size_t bodyStart = pos + sepLen;
@@ -168,6 +179,9 @@ void CgiOutputParser::parseHeaderLines(const std::string& headerBlock)
 		std::string key = _trim(line.substr(0, colon));
 		std::string val = _trim(line.substr(colon + 1));
 
+		size_t sep = line.find('-');
+		if (sep != std::string::npos && sep + 1 < key.size())
+			key[sep + 1] = std::toupper(key[sep + 1]);
 		if (key == "Status")
 		{
 			int code = std::atoi(val.c_str());
@@ -175,7 +189,7 @@ void CgiOutputParser::parseHeaderLines(const std::string& headerBlock)
 				_status = static_cast<http::e_status_code>(code);
 		}
 		else
-		_headers[key] = val;
+			_headers[key] = val;
 	}
 }
 
