@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 16:05:13 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 03:29:36 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/29 15:23:21 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,23 +20,12 @@
 #include "server/connections/ConnEvent.hpp"
 
 #include <cstring>
+#include <sstream>
 
 #include "utils/String.hpp"
 
 CgiHandler::CgiHandler() {}
 CgiHandler::~CgiHandler() {}
-
-// Create a content-value string for the header "Allow"
-static inline std::string	methodTOstring(const http::e_method& pMethod) {
-	switch (pMethod) {
-		case http::GET:    return "GET";
-		case http::POST:   return "POST";
-		case http::DELETE: return "DELETE";
-		case http::PUT:    return "PUT";
-		case http::HEAD:   return "HEAD";
-		default:           return "UNKNOWN";
-	}
-}
 
 // Substract the extension part of a URI path or file
 static inline std::string	subExt(const std::string& pPath)
@@ -127,12 +116,12 @@ static inline std::vector<std::string>	genEnvp(const routing::Context& route, co
 	std::vector<std::string> envp;
 
 	addEnv(envp, "GATEWAY_INTERFACE", "CGI/1.1");
-	addEnv(envp, "REQUEST_METHOD", methodTOstring(req.getMethod()));
+	addEnv(envp, "REQUEST_METHOD", utils::toString(req.getMethod()));
 	addEnv(envp, "QUERY_STRING", req.getQuery());
 	addEnv(envp, "PATH_INFO", subInfo(req.getPath()));
-	addEnv(envp, "PATH_TRANSLATED", route.location->root + getInfo(req.getPath()));
+	addEnv(envp, "PATH_TRANSLATED", route.location->root + subInfo(req.getPath()));
 	addEnv(envp, "SCRIPT_NAME", subPath(req.getPath()));
-	addEnv(envp, "SCRIPT_FILENAME", route.location->root + subPath(req.getPath());
+	addEnv(envp, "SCRIPT_FILENAME", route.location->root + subPath(req.getPath()));
 	addEnv(envp, "REDIRECT_STATUS", "200");
 
 	addEnv(envp, "REMOTE_ADDR", "127.0.0.1");
@@ -166,10 +155,10 @@ static inline std::vector<std::string>	genArgv(const routing::Context& route, co
 	std::vector<std::string> vec;
 
 	Config::t_dict::const_iterator	it = route.location->cgiExts.find(subExt(req.getPath()));
-	if (it != _location->cgiExts.end())
+	if (it != route.location->cgiExts.end())
 		vec.push_back(it->second);
 
-	vec.push_back(route.location->root + req.getPath());
+	vec.push_back(route.location->root + subPath(route.normalizedPath));
 
 	return vec;
 }
@@ -198,8 +187,8 @@ ResponsePlan CgiHandler::handle(
 
 	IConnection* readConn = process->start(
 		getScriptPath(req),
-		getArgv(req),
-		getEnvp(req),
+		toCharArray(genArgv(route, req)),
+		toCharArray(genArgv(route, req)),
 		req.getBody()
 	);
 
