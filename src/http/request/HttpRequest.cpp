@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/28 23:47:01 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/29 14:52:44 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,21 +24,32 @@
 //#****************************************************************************#
 //#                        CONSTRUCTOR & DESTRUCTOR                            #
 //#****************************************************************************#
+#pragma region Construct & Destruct
 
-HttpRequest::HttpRequest(void)
-{
+HttpRequest::HttpRequest(void) {
 	reset();
 }
 
-HttpRequest::~HttpRequest(void)
-{
+HttpRequest::~HttpRequest(void) {
 	_buffer.clear();
 }
 
 //#****************************************************************************#
 //#                             GETTER & SETTER                                #
 //#****************************************************************************#
-#pragma region Getter & Setter
+#pragma region Getter / Setter
+
+http::e_method			HttpRequest::getMethod() const		{ return (_request.method);       };
+std::string				HttpRequest::getPath() const  		{ return (_request.uri.path);     };
+std::string				HttpRequest::getQuery() const		{ return (_request.uri.query);    };
+std::string				HttpRequest::getFragment() const	{ return (_request.uri.fragment); };
+int						HttpRequest::getVerMaj() const		{ return (_request.verMaj);       };
+int						HttpRequest::getVerMin() const		{ return (_request.verMin);       };
+http::t_headers			HttpRequest::getHeaders() const 	{ return (_request.headers);      };
+std::vector<char>		HttpRequest::getBody() const		{ return (_request.body);         };
+http::e_status_code		HttpRequest::getStatusCode() const	{ return (_code);                 };
+
+void	HttpRequest::setPath(const std::string &path) { _request.uri.path = path; };
 
 void	HttpRequest::setField(const std::string& pKey, const std::string& pValue) {
 	_request.headers[pKey] = pValue;
@@ -118,6 +129,7 @@ static int		htod(const std::string& pHex)
 /// @brief None-blocking function using a state machine that parse all the incoming request from client to proceed
 /// @param pBuffer Insert the socket incoming buffer string
 /// @param pSize Insert the socket incoming buffer size
+/// @return Return the number of byte size_t treated in the function
 void	HttpRequest::feed(char *pBuffer, size_t pSize)
 {
 	char	ch;
@@ -365,7 +377,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				if (!isDec(_buffer))
 					return setError(http::SC_BAD_REQUEST);
 				_contentLength = std::atoi(_buffer.c_str());
-				if (_contentLength > MAX_BODY_LENGTH)
+				if (_contentLength > CLIENT_MAX_BODY_SIZE)
 					return setError(http::SC_CONTENT_TOO_LARGE);
 				UPDATE_STATE(BODY_CONTENT);
 			}
@@ -478,7 +490,6 @@ bool	HttpRequest::isError() const
 void	HttpRequest::reset(void)
 {
 	UPDATE_STATE(LINE_METHOD);
-	_tsStart = 0;
 
 	_request.method = http::MTH_UNKNOWN;
 	_request.uri.path.clear();
@@ -489,8 +500,11 @@ void	HttpRequest::reset(void)
 	_request.headers.clear();
 	_request.body.clear();
 
-	_contentLength = 0;
 	_transferLength = 0;
+	_contentLength = 0;
+
+	_tsStart = 0;
+	_buffer.clear();
 	_code = http::SC_OK;
 }
 

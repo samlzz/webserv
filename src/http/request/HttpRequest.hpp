@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/28 23:47:27 by achu             ###   ########.fr       */
+/*   Updated: 2026/01/29 14:49:51 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,9 @@
 #include "http/HttpTypes.hpp"
 
 #define MAX_METHOD_LENGTH		8
-#define MAX_URI_LENGTH			2048
-#define MAX_HEADER_LENGTH		2048
-#define MAX_BODY_LENGTH			1048576
+#define MAX_URI_LENGTH			2 * 1024
+#define MAX_HEADER_LENGTH		2 * 1024
+#define CLIENT_MAX_BODY_SIZE	1 * 1024 * 1024
 
 #define REQ_TIMEOUT_HEADER		10000   // 10 s
 #define REQ_TIMEOUT_BODY		120000 // 120 s
@@ -85,17 +85,17 @@ private:
 		http::t_headers		headers;
 		std::vector<char>	body;
 	};
-	
+
 	Request					_request;
 	e_request_state			_state;
 	time_t					_tsStart;
 	http::e_status_code		_code;
 
-	// ====== Buffer ======
+	// ========= Buffer =========
 	std::string			_buffer;
 	std::string			_temp;
 
-	// ====== Body Consume Counter ======
+	// ====== Body Consume ======
 	size_t				_transferLength;
 	size_t				_contentLength;
 
@@ -105,33 +105,33 @@ public:
 	HttpRequest(void);
 	~HttpRequest(void);
 
-	// ====== Lifecycle ======
+	// ======== Lifecycle ========
 	virtual void		feed(char *pBuffer, size_t pSize);
 	virtual void		reset();
-	void				checkTimeout(time_t now);
 
 	// ====== Request state ======
 	virtual bool		isDone() const;
 	virtual bool		isError() const;
 
-	// ========== Getter / Setter ==========
-	http::e_method		getMethod() const		{ return (_request.method);       };
-	std::string			getPath() const  		{ return (_request.uri.path);     };
-	void				setPath(const std::string &path)	{ _request.uri.path = path;       };
-	std::string			getQuery() const		{ return (_request.uri.query);    };
-	std::string			getFragment() const		{ return (_request.uri.fragment); };
-	int					getVerMaj() const		{ return (_request.verMaj);       };
-	int					getVerMin() const		{ return (_request.verMin);       };
+	// ===== Getter / Setter =====
+	http::e_method			getMethod() const;
+	std::string				getPath() const;
+	std::string				getQuery() const;
+	std::string				getFragment() const;
+	int						getVerMaj() const;
+	int						getVerMin() const;
+	http::t_headers			getHeaders() const;
+	std::vector<char>		getBody() const;
+	http::e_status_code		getStatusCode() const;
 
-	http::t_headers		getHeaders() const { return (_request.headers); };
+	void	setPath(const std::string &path);
 
+	// ======= Header Utils =======
 	void				setField(const std::string& pKey, const std::string& pValue);
 	bool				hasField(const std::string& pKey) const;
 	std::string			getField(const std::string& pKey) const;
 
-	std::vector<char>		getBody() const			{ return (_request.body); };
-
-	http::e_status_code	getStatusCode() const	{ return (_code); };
+	void		checkTimeout(time_t now);
 };
 
 std::ostream&		operator<<(std::ostream& pOut, const HttpRequest& pRequest);
