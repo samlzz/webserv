@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 11:25:15 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/27 13:40:40 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 12:45:37 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ public:
 	virtual bool			hasBuffer(void) const			{ return !_stream.empty(); }
 
 	virtual const t_bytes	&front(void) const				{ return _stream.front(); }
+	t_bytes					&front(void)					{ return _stream.front(); }
 	virtual void			pop(void)						{ _stream.pop_front(); }
 
 	// ============================================================================

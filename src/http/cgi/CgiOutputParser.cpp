@@ -6,27 +6,33 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 15:25:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 12:22:13 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 12:51:10 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CgiOutputParser.hpp"
+#include "http/HttpTypes.hpp"
+#include "http/response/BuffStream.hpp"
+#include "http/response/ResponsePlan.hpp"
+#include "http/routing/Router.hpp"
 #include <cctype>
 #include <cstddef>
 #include <sstream>
 #include <cstdlib>
 #include <cstring>
+#include <vector>
 
 // ============================================================================
 // Construction / Destruction
 // ============================================================================
 
-CgiOutputParser::CgiOutputParser()
+CgiOutputParser::CgiOutputParser(const ServerCtx &serv)
 	: _state(ST_HEADERS)
 	, _headBuf()
-	, _bodyQ()
+	, _bodyStream()
 	, _status(http::SC_OK)
 	, _headers()
+	, _serv(serv)
 {}
 
 CgiOutputParser::~CgiOutputParser()
@@ -48,7 +54,7 @@ void CgiOutputParser::append(const char* buf, size_t n)
 			return;
 	}
 	else if (_state == ST_BODY)
-		_bodyQ.push_back(std::string(buf, n));
+		_bodyStream.push(buf, n);
 }
 
 void CgiOutputParser::finalize(void)
@@ -81,15 +87,15 @@ const http::t_headers& CgiOutputParser::headers() const
 
 bool CgiOutputParser::bodyHasData() const
 {
-	return !_bodyQ.empty();
+	return _bodyStream.hasBuffer();
 }
 
 size_t CgiOutputParser::bodyRead(char* dst, size_t max)
 {
-	if (!dst || max == 0 || _bodyQ.empty())
+	if (!dst || max == 0 || !_bodyStream.hasBuffer())
 		return 0;
 
-	std::string& front = _bodyQ.front();
+	t_bytes &front = _bodyStream.front();
 	size_t n = front.size();
 	if (n > max)
 		n = max;
@@ -97,16 +103,16 @@ size_t CgiOutputParser::bodyRead(char* dst, size_t max)
 	std::memcpy(dst, front.data(), n);
 
 	if (n == front.size())
-		_bodyQ.pop_front();
+		_bodyStream.pop();
 	else
-		front.erase(0, n);
+		front.erase(front.begin(), front.begin() + n);
 
 	return n;
 }
 
 bool CgiOutputParser::eof() const
 {
-	return _state == ST_DONE && _bodyQ.empty();
+	return _state == ST_DONE && !_bodyStream.hasBuffer();
 }
 
 // ============================================================================
@@ -128,11 +134,29 @@ bool CgiOutputParser::tryParseHeaders()
 	std::string headerBlock = _headBuf.substr(0, pos);
 	parseHeaderLines(headerBlock);
 
-	if (_headers.find("Location") != _headers.end())
+	http::t_headers::iterator	it = _headers.find("Location");
+	if (it != _headers.end())
 	{
 		// TODO: handle redirection
 		//       if URL -> redirect the client
 		//       if virtual path -> serve the pointed ressource
+		if (it->second[0] == '/')
+		{
+			routing::Context	tmp(_serv);
+			tmp.normalizedPath = it->second;
+
+			ResponsePlan filePlan = _serv.dispatcher.handleStaticFile(tmp);
+			_status = filePlan.status;
+			_headers = filePlan.headers;
+			if (filePlan.body)
+			{
+				int		fileSize = std::atoi(_headers["Content-Length"].c_str());
+				char	*fileContent = new char[fileSize]();
+				_bodyStream.push(fileContent, filePlan.body->read(fileContent, fileSize));
+			}
+		}
+		else
+			_status = http::SC_FOUND;
 	}
 	if (_headers.find("Content-Length") == _headers.end())
 		_headers["Transfert-Encoding"] = "chunked";
@@ -141,7 +165,7 @@ bool CgiOutputParser::tryParseHeaders()
 
 	size_t bodyStart = pos + sepLen;
 	if (bodyStart < _headBuf.size())
-		_bodyQ.push_back(_headBuf.substr(bodyStart));
+		_bodyStream.push(_headBuf.substr(bodyStart));
 	_headBuf.clear();
 	return true;
 }

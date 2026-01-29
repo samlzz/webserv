@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 16:05:13 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 17:43:34 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/29 12:43:23 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ ResponsePlan CgiHandler::handle(
 {
 	ResponsePlan plan;
 
-	CgiOutputParser* parser = new CgiOutputParser();
+	CgiOutputParser* parser = new CgiOutputParser(route.server);
 	CgiProcess* process = new CgiProcess(*parser);
 	process->retain();
 
