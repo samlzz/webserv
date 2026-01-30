@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 17:05:22 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 17:25:59 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -285,6 +285,9 @@ void	CgiProcess::cleanup(bool killChild)
 
 void	CgiProcess::onError(void)
 {
+	ft_log::log(WS_LOG_CGI, ft_log::LOG_ERROR)
+		<< "CGI error occurs " << (_terminated ? "after" : "before")
+		<< " end of process pid=" << _pid << std::endl;
 	if (_terminated)
 		return;
 	_terminated = true;
@@ -322,7 +325,9 @@ void	CgiProcess::onRead(const char *buffer, size_t bufSize)
 	if (firstBuf)
 	{
 		ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
-			<< "CGI-Read first output pid=" << _pid;
+			<< "CGI-Read first output pid=" << _pid << std::endl;
+		ft_log::log(WS_LOG_CGI, ft_log::LOG_TRACE)
+			<< "Buffer:\n" << std::string(buffer, bufSize) << std::endl;
 		firstBuf = false;
 	}
 
