@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 15:25:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 14:21:14 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 15:38:30 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,8 +130,11 @@ bool CgiOutputParser::tryParseHeaders()
 	else
 		return false;
 
-	std::string headerBlock = _headBuf.substr(0, pos);
-	parseHeaderLines(headerBlock);
+	if (pos > 0)
+	{
+		std::string headerBlock = _headBuf.substr(0, pos);
+		parseHeaderLines(headerBlock);
+	}
 
 	if (_headers.find("Location") != _headers.end())
 		_status = http::SC_FOUND;
