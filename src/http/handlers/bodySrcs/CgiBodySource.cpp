@@ -26,6 +26,7 @@ CgiBodySource::CgiBodySource(CgiProcess *proc, CgiOutputParser *parser)
 
 CgiBodySource::~CgiBodySource()
 {
+	_process->kill();
 	_process->release();
 	delete _parser;
 }
