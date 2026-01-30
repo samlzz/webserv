@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:48:09 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 12:41:08 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,12 @@ public:
 	IConnection			*start(const std::vector<std::string> &argv,
 								const std::vector<std::string> &envp,
 								const t_bytes &body);
+	
+	void				kill(void);
+
+	// ============================================================================
+	// Events driven methods
+	// ============================================================================
 
 	void				onError(void);
 

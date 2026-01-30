@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:47:30 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 13:11:43 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -231,6 +231,16 @@ IConnection	*CgiProcess::start(const std::vector<std::string> &argv,
 	return _read;
 }
 
+void	CgiProcess::kill(void)
+{
+	if (_terminated)
+		return;
+	_terminated = true;
+	cleanup(true);
+}
+
+// ---- Private members ----
+
 /**
  * `killChild` child must be true in case of error
  *
@@ -244,7 +254,7 @@ void	CgiProcess::cleanup(bool killChild)
 		return;
 
 	if (killChild)
-		kill(_pid, SIGKILL);
+		::kill(_pid, SIGKILL);
 
 	int		status = 0;
 	pid_t	r = waitpid(_pid, &status, WNOHANG);
