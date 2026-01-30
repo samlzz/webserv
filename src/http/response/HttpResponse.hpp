@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:03:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 13:21:03 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 15:33:16 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 # include <stdint.h>
 
 # include "http/HttpTypes.hpp"
+# include "http/request/HttpRequest.hpp"
 # include "http/response/BuffStream.hpp"
 # include "http/response/ResponsePlan.hpp"
 # include "http/response/interfaces/IBodySource.hpp"
@@ -33,8 +34,16 @@
 class HttpResponse {
 
 private:
-	routing::Context		_route;
+	struct DecisionContext
+	{
+		const HttpRequest			&request;
+		routing::Context			route;
 
+		DecisionContext(const HttpRequest &req, const routing::Context &routeCtx)
+			: request(req), route(routeCtx) {}
+	};
+
+	DecisionContext			_ctx;
 	http::e_status_code		_status;
 	http::t_headers			_headers;
 	IBodySource				*_body;
@@ -47,7 +56,9 @@ public:
 	// ============================================================================
 	// Construction / Destruction
 	// ============================================================================
-	HttpResponse(const ResponsePlan &plan, const routing::Context &route);
+	HttpResponse(const ResponsePlan &plan,
+					const HttpRequest &req,
+					const routing::Context &route);
 	~HttpResponse();
 
 	// ========================================================================
@@ -69,7 +80,11 @@ private:
 	// ========================================================================
 	// Helpers
 	// ========================================================================
+	void						applyPlan(const ResponsePlan &plan);
+
 	bool						fillMeta(IMetaSource *meta);
+	bool						handleCgiRedirect(const std::string &redirectPath);
+
 	void						commitMeta(void);
 	
 	// forbidden

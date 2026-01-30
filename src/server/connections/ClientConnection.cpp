@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 13:28:50 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 13:44:07 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ ConnEvent	ClientConnection::buildResponse(void)
 	if (plan.event.conn && plan.event.type == ConnEvent::CE_SPAWN)
 		_cgiRead = plan.event.conn;
 
-	_resp = new HttpResponse(plan, route);
+	_resp = new HttpResponse(plan, _req, route);
 	return plan.event;
 }
 

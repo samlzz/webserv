@@ -6,17 +6,19 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:30:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 13:21:28 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 15:33:23 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdint.h>
 #include <sstream>
+#include <stdint.h>
 
-#include "HttpResponse.hpp"
 #include "http/HttpData.hpp"
+#include "server/ServerCtx.hpp"
+#include "HttpResponse.hpp"
 #include "http/HttpTypes.hpp"
 #include "http/dispatch/ErrorBuilder.hpp"
+#include "http/request/HttpRequest.hpp"
 #include "http/response/ResponsePlan.hpp"
 #include "http/response/interfaces/IMetaSource.hpp"
 #include "http/routing/Router.hpp"
@@ -25,8 +27,10 @@
 // Construction / Destruction
 // ============================================================================
 
-HttpResponse::HttpResponse(const ResponsePlan &plan, const routing::Context &route)
-	: _route(route)
+HttpResponse::HttpResponse(const ResponsePlan &plan,
+							const HttpRequest &req,
+							const routing::Context &route)
+	: _ctx(req, route)
 	, _status(plan.status), _headers(plan.headers), _body(plan.body)
 	, _out()
 	, _commited(false), _done(false)
@@ -51,9 +55,22 @@ bool						HttpResponse::shouldCloseConnection(void) const
 }
 
 // ============================================================================
-// Methods
+// Public method
 // ============================================================================
 
+/**
+ * Fille output stream with available content
+
+ * Start by adding meta (status code and headers) if they was available
+ * Then push body (if present) while stream size is less than RESP_MAX_BUF_COUNT
+
+ * If no data available (either meta if not commited or body if present)
+ *  true must be returned to mean some data will be available later
+
+ * Return:
+ *   - true if no error occurs, 0 to n buffer can be pushed in stream
+ *   - false otherwise
+ */
 bool	HttpResponse::fillStream(void)
 {
 	if (!_commited)
@@ -90,6 +107,59 @@ bool	HttpResponse::fillStream(void)
 	return true;
 }
 
+// ============================================================================
+// Private methods
+// ============================================================================
+
+void	HttpResponse::applyPlan(const ResponsePlan &plan)
+{
+	_status = plan.status;
+	_headers = plan.headers;
+	delete _body;
+	_body = plan.body;
+}
+
+// ---- Meta helpers ----
+
+static inline bool	_isInternalRedirect(const std::string &redirectPath)
+{
+	return redirectPath[0] == '/';
+}
+
+/**
+ * CGI internal redirection is handled as a response-level semantic.
+
+ * Return:
+ *   - true if is an internal redirection (so header souldn't be modified)
+ *   - false otherwise
+*/
+bool	HttpResponse::handleCgiRedirect(const std::string &redirectPath)
+{
+	if (_isInternalRedirect(redirectPath))
+	{
+		HttpRequest fakeReq(_ctx.request);
+		fakeReq.setMethod(http::MTH_GET);
+		fakeReq.setPath(redirectPath);
+
+		routing::Context	route = routing::resolve(fakeReq, _ctx.route.server);
+		applyPlan(_ctx.route.server.dispatcher.dispatch(fakeReq, route));
+		return true;
+	}
+	else
+	{
+		delete _body;
+		_body = 0;
+		return false;
+	}
+}
+
+/**
+ * Fill status code and headers if meta was provided
+
+ * Return:
+ *   - true if meta are ready to be commited
+ *   - false otherwise, we need to wait until meta are available
+*/
 bool	HttpResponse::fillMeta(IMetaSource *meta)
 {
 	if (!meta)
@@ -97,19 +167,22 @@ bool	HttpResponse::fillMeta(IMetaSource *meta)
 
 	if (_body->hasError())
 	{
-		ResponsePlan	err = ErrorBuilder::build(
+		applyPlan(ErrorBuilder::build(
 								meta->status(),
-								_route.location
-							);
-		_status = err.status;
-		_headers = err.headers;
-		delete _body;
-		_body = err.body;
+								_ctx.route.location
+							));
 		return true;
 	}
-
 	if (!meta->metaReady())
 		return false;
+
+	http::t_headers::const_iterator	it = meta->headers().find("Location");
+	if (
+		it != meta->headers().end()
+		&& handleCgiRedirect(it->second)
+	)
+		return true;
+
 	_status = meta->status();
 	_headers.insert(
 		meta->headers().begin(), meta->headers().end()
@@ -117,6 +190,9 @@ bool	HttpResponse::fillMeta(IMetaSource *meta)
 	return true;
 }
 
+/**
+ * Create the first buffer from meta and push it into output stream
+ */
 void	HttpResponse::commitMeta(void)
 {
 	std::ostringstream	oss;
