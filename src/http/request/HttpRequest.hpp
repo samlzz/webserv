@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/29 18:02:33 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 13:49:16 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,7 +116,9 @@ public:
 
 	// ===== Getter / Setter =====
 	http::e_method			getMethod() const;
+	void					setMethod(http::e_method pMethod);
 	const std::string		&getPath() const;
+	void					setPath(const std::string &pPath);
 	const std::string		&getQuery() const;
 	const std::string		&getFragment() const;
 	int						getVerMaj() const;

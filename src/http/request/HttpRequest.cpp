@@ -6,14 +6,16 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/29 18:02:40 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 13:54:28 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <cstddef>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <algorithm>
+#include <string>
 
 #include "HttpRequest.hpp"
 #include "http/HttpTypes.hpp"
@@ -41,7 +43,22 @@ HttpRequest::~HttpRequest(void) {
 #pragma region Getter / Setter
 
 http::e_method			HttpRequest::getMethod() const		{ return (_request.method);       };
-const std::string		&HttpRequest::getPath() const  		{ return (_request.uri.path);     };
+void					HttpRequest::setMethod(
+									http::e_method pMethod)	{ _request.method = pMethod; }
+
+const std::string		&HttpRequest::getPath() const		{ return (_request.uri.path);     };
+void					HttpRequest::setPath(const std::string &pPath)
+{
+	size_t	queryPos = pPath.find('?');
+	size_t	fragmentPos = pPath.find('#');
+
+	_request.uri.path = pPath.substr(0, queryPos);
+	if (queryPos != std::string::npos)
+		_request.uri.query = pPath.substr(queryPos, fragmentPos);
+	if (fragmentPos != std::string::npos)
+		_request.uri.fragment = pPath.substr(fragmentPos);
+}
+
 const std::string		&HttpRequest::getQuery() const		{ return (_request.uri.query);    };
 const std::string		&HttpRequest::getFragment() const	{ return (_request.uri.fragment); };
 int						HttpRequest::getVerMaj() const		{ return (_request.verMaj);       };
