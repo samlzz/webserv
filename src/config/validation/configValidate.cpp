@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:28:48 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:10:51 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 15:54:11 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,7 +83,7 @@ static inline void	validateCgi(const Config::Server::Location &loc)
 	{
 		const std::string &ext = it->first;
 
-		if (ext.empty() || ext[0] != '.')
+		if (ext.empty())
 			throw LocationError(loc.path, "invalid cgi extension", ext);
 
 		validatePathGeneric(it->second,
