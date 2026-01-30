@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:31:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 13:28:50 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,8 @@ ConnEvent	ClientConnection::buildResponse(void)
 		needs->setNotifier(*this);
 	if (plan.event.conn && plan.event.type == ConnEvent::CE_SPAWN)
 		_cgiRead = plan.event.conn;
-	_resp = new HttpResponse(plan);
+
+	_resp = new HttpResponse(plan, route);
 	return plan.event;
 }
 
@@ -82,8 +83,12 @@ ConnEvent	ClientConnection::handleRead(void)
 
 ConnEvent	ClientConnection::handleWrite(void)
 {
-	_resp->fillStream();
+	if (!_resp->fillStream())
+		return ConnEvent::close();
+
 	IFifoStreamView<t_bytes>	&stream = _resp->stream();
+	if (!stream.hasBuffer())
+		return (_events = 0, ConnEvent::none());
 	const t_bytes				&buf = stream.front();
 
 	ssize_t n = send(_fd,
@@ -96,7 +101,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 	_tsLastActivity = std::time(0);
 	_offset += static_cast<size_t>(n);
 
-	// all curent buffer was sent
+	// ? all curent buffer was sent
 	if (_offset == buf.size())
 	{
 		stream.pop();
@@ -117,7 +122,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 				_events = POLLIN;
 			}
 			else
-				_events = 0;
+				_events = 0; // ? No buffer to send, wait for notifyWritable
 		}
 	}
 	return ConnEvent::none();

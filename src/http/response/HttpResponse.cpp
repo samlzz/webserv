@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:30:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 13:09:23 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 13:21:28 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,16 +54,13 @@ bool						HttpResponse::shouldCloseConnection(void) const
 // Methods
 // ============================================================================
 
-int32_t	HttpResponse::fillStream(void)
+bool	HttpResponse::fillStream(void)
 {
-	int32_t	added = 0;
-
 	if (!_commited)
 	{
 		if (!fillMeta(dynamic_cast<IMetaSource *>(_body)))
-			return 0;
+			return true;
 		commitMeta();
-		++added;
 		_commited = true;
 		if (!_body)
 			_done = true;
@@ -75,7 +72,7 @@ int32_t	HttpResponse::fillStream(void)
 		if (_body->hasError())
 		{
 			_done = true;
-			return -1;
+			return false;
 		}
 		char	buffer[RESP_BUFFER_SIZE];
 		while (_out.size() < RESP_MAX_BUF_COUNT && _body->hasMore())
@@ -85,13 +82,12 @@ int32_t	HttpResponse::fillStream(void)
 				break; // ? body not ready now
 
 			_out.push(buffer, n);
-			++added;
 		}
 
 		if (!_body->hasMore() && _body->terminated())
 			_done = true;
 	}
-	return added;
+	return true;
 }
 
 bool	HttpResponse::fillMeta(IMetaSource *meta)
@@ -101,7 +97,10 @@ bool	HttpResponse::fillMeta(IMetaSource *meta)
 
 	if (_body->hasError())
 	{
-		ResponsePlan	err = ErrorBuilder::build(meta->status(), _route.location);
+		ResponsePlan	err = ErrorBuilder::build(
+								meta->status(),
+								_route.location
+							);
 		_status = err.status;
 		_headers = err.headers;
 		delete _body;
