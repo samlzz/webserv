@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:44:04 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:49:01 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 18:00:44 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,9 +63,10 @@ ConnEvent	CgiWriteConnection::handleEvents(short revents)
 
 	if (revents & POLLOUT)
 	{
+		// ? _offset must always be strictly less than _body.size()
 		ssize_t n = write(_fd, _body.data() + _offset, _body.size() - _offset);
-		if (n <= 0)
-			return (ConnEvent::none());
+		if (n <= 0) // ? so n should never be 0
+			return (_ctx.onError(), ConnEvent::close());
 
 		_offset += static_cast<size_t>(n);
 		if (_offset == _body.size())
@@ -75,5 +76,5 @@ ConnEvent	CgiWriteConnection::handleEvents(short revents)
 			return ConnEvent::close();
 		}
 	}
-	return ConnEvent::none();
+	return exitEvent(revents);
 }

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:32:10 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 17:29:50 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,13 +52,13 @@ ConnEvent	CgiReadConnection::handleEvents(short revents)
 		ssize_t	n = read(_fd, buf, CGI_READ_BUF_SIZE);
 
 		if (n < 0)
-			return (ConnEvent::none());
+			return (_ctx.onError(), ConnEvent::close());
 		if (n == 0)
 			return (_ctx.onEof(), ConnEvent::close());
 
 		_ctx.onRead(buf, static_cast<size_t>(n));
 	}
-	return ConnEvent::none();
+	return exitEvent(revents);
 }
 
 ConnEvent	CgiReadConnection::checkTimeout(time_t now)
