@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:44:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/24 15:07:20 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 17:22:29 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <sys/poll.h>
 
 # include "IConnection.hpp"
+#include "server/connections/ConnEvent.hpp"
 
 class AConnection : public IConnection {
 
@@ -48,6 +49,7 @@ public:
 // ============================================================================
 
 	virtual ConnEvent	handleEvents(short revents) = 0;
+	virtual ConnEvent	exitEvent(short revents) const;
 
 	virtual ConnEvent	checkTimeout(time_t now);
 
@@ -71,7 +73,7 @@ private:
 
 static inline bool	isErrEvent(short events)
 {
-	return events & (POLLERR | POLLNVAL | POLLHUP);
+	return events & (POLLERR | POLLNVAL);
 }
 
 static inline bool	isNonBlockingErrno(void)
