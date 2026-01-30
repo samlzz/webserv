@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 16:26:53 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 18:04:51 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,11 +92,14 @@ ConnEvent	ClientConnection::handleWrite(void)
 		return (_events = 0, ConnEvent::none());
 	const t_bytes				&buf = stream.front();
 
+	if (buf.empty())
+		return (stream.pop(), ConnEvent::none());
+	// ? _offset must always be strictly less than buf.size()
 	ssize_t n = send(_fd,
 					buf.data() + _offset,
 					buf.size() - _offset,
 					0);
-	if (n <= 0)
+	if (n <= 0) // ? so n should never be 0
 		return ConnEvent::close();
 
 	_tsLastActivity = std::time(0);
@@ -144,7 +147,7 @@ ConnEvent	ClientConnection::handleEvents(short revents)
 	if (revents & POLLOUT)
 		return handleWrite();
 
-	return ConnEvent::none();
+	return exitEvent(revents);
 }
 
 time_t	ClientConnection::timeoutFromState(void)
@@ -166,7 +169,10 @@ ConnEvent	ClientConnection::checkTimeout(time_t now)
 
 	_req.checkTimeout(now);
 	if (_shouldRefresh)
+	{
+		_shouldRefresh = false;
 		return ConnEvent::refresh();
+	}
 	return ConnEvent::none();
 }
 
