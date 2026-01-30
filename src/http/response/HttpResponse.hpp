@@ -6,17 +6,21 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:03:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 12:43:20 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 13:13:59 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_RESPONSE_HPP__
 # define __HTTP_RESPONSE_HPP__
 
+# include <stdint.h>
+
 # include "http/HttpTypes.hpp"
 # include "http/response/BuffStream.hpp"
 # include "http/response/ResponsePlan.hpp"
 # include "http/response/interfaces/IBodySource.hpp"
+# include "http/response/interfaces/IMetaSource.hpp"
+# include "http/routing/Router.hpp"
 
 # define RESP_MAX_BUF_COUNT		8
 
@@ -29,26 +33,28 @@
 class HttpResponse {
 
 private:
-	http::e_status_code	_status;
-	http::t_headers		_headers;
-	IBodySource			*_body;
-	BuffStream			_out;
+	routing::Context		_route;
 
-	bool				_commited;
-	bool				_done;
+	http::e_status_code		_status;
+	http::t_headers			_headers;
+	IBodySource				*_body;
+	BuffStream				_out;
+
+	bool					_commited;
+	bool					_done;
 
 public:
 	// ============================================================================
 	// Construction / Destruction
 	// ============================================================================
-	HttpResponse(const ResponsePlan &plan);
+	HttpResponse(const ResponsePlan &plan, const routing::Context &route);
 	~HttpResponse();
 
 	// ========================================================================
 	// Life Cycle
 	// ========================================================================
 
-	void						fillStream(void);
+	int32_t						fillStream(void);
 
 	// ========================================================================
 	// Output Production
@@ -63,7 +69,8 @@ private:
 	// ========================================================================
 	// Helpers
 	// ========================================================================
-	void								commitMeta(void);
+	bool						fillMeta(IMetaSource *meta);
+	void						commitMeta(void);
 	
 	// forbidden
 	HttpResponse();
