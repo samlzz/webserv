@@ -11,13 +11,16 @@ private:
 	bool			writeFile(
 						const std::string &path,
 						const t_bytes &data,
-						http::e_method method) const;
+						http::e_method method,
+						ResponsePlan &plan,
+						const routing::Context &route) const;
 
 	std::string 	generateFilePath(
 						const routing::Context &route,
 						const std::string &filename,
 						http::e_body_kind contentType,
-						http::e_method method) const;
+						http::e_method method,
+						ResponsePlan &plan) const;
 
 	std::string 	generateFilename(
 						const std::string &filename,
