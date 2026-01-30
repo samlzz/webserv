@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 14:21:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 13:27:08 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 16:24:49 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,6 +96,14 @@ bool	Reactor::manageConnEvent(ConnEvent ev, size_t idx)
 		removeConnection(idx);
 		return true;
 	}
+
+	case ConnEvent::CE_REFRESH:
+	{
+		_pfds[idx].events = _connections[idx]->events();
+		_pfds[idx].revents = 0;
+		break;
+	}
+
 	case ConnEvent::CE_NONE:
 		__attribute__ ((fallthrough));
 	default:

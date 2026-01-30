@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 13:03:47 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 16:26:22 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,10 +44,13 @@ private:
 	};
 
 	const ServerCtx			&_serv;
+
 	HttpRequest				_req;
 	HttpResponse			*_resp;
 	size_t					_offset;
 	IConnection				*_cgiRead;
+
+	bool					_shouldRefresh;
 	e_client_state			_state;
 	time_t					_tsLastActivity;
 

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 13:44:07 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 16:26:53 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@ ClientConnection::ClientConnection(int cliSockFd, const ServerCtx &serverCtx)
 	: AConnection(cliSockFd), _serv(serverCtx)
 	, _req(), _resp(0)
 	, _offset(0), _cgiRead(0)
+	, _shouldRefresh(false)
 	, _state(CS_WAIT_FIRST_BYTE)
 	, _tsLastActivity(std::time(0))
 {
@@ -164,12 +165,15 @@ ConnEvent	ClientConnection::checkTimeout(time_t now)
 		return ConnEvent::close();
 
 	_req.checkTimeout(now);
+	if (_shouldRefresh)
+		return ConnEvent::refresh();
 	return ConnEvent::none();
 }
 
 void	ClientConnection::notifyWritable(void)
 {
 	addEvent(POLLOUT);
+	_shouldRefresh = true;
 }
 
 IConnection	*ClientConnection::buddy(void)		{ return _cgiRead; }
