@@ -19,6 +19,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
+#include <algorithm>
 
 std::string 	UploadFileHandler::generateFilename(
 						const std::string &filename,
@@ -243,57 +245,69 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 	std::string	boundary = contentType.substr(boundaryPos + 9);
 	std::string delimiter = "--" + boundary;
 
-	size_t	pos = 0;
-	// std::string body(req.vec.data(), req.vec.size());
-	t_bytes		vecBody = req.getBody();
-	std::string	body(vecBody.data(), vecBody.size());
-	
-	while ((pos = body.find(delimiter, pos)) != std::string::npos)
+	std::vector<char>::const_iterator pBoundary_start;
+	std::vector<char>::const_iterator pBoundary_end;
+
+	const t_bytes		&vecBody = req.getBody();
+	std::vector<char>::const_iterator vec_it = vecBody.begin();
+	std::vector<char>::const_iterator vec_ite = vecBody.end();
+
+	while (vec_it != vec_ite)
 	{	
-		// Find next delimiter
-		size_t	nextPos = body.find(delimiter, pos + delimiter.length());
-		if (nextPos == std::string::npos)
+		pBoundary_start = std::search(vec_it, vec_ite, delimiter.begin(), delimiter.end());
+		if (pBoundary_start == vec_ite)
+			return ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
+
+		vec_it = pBoundary_start + delimiter.length();
+
+		pBoundary_end = std::search(vec_it, vec_ite, delimiter.begin(), delimiter.end());
+		if (pBoundary_end == vec_ite)
 			break;
 
 		// Extract filename and content
-		std::string	part = body.substr(pos + delimiter.length(), nextPos - pos - delimiter.length());
-		size_t	filenamePos = part.find("filename=\"");
-		if (filenamePos != std::string::npos)
+		std::vector<char> part_vec(vec_it, pBoundary_end);
+
+		std::string toFind = "filename=\"";
+		std::vector<char>::iterator pFilename_start = std::search(part_vec.begin(), part_vec.end(), toFind.begin(), toFind.end());
+		if (pFilename_start != part_vec.end())
 		{
-			size_t	filenameEnd = part.find("\"", filenamePos + 10);
-			if (filenameEnd != std::string::npos)
+			if (std::distance(pFilename_start, part_vec.end()) < 10)
+				return ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
+
+			std::string toFind_end = "\"";
+			std::vector<char>::iterator searchStart = pFilename_start + 10;
+			std::vector<char>::iterator pFilename_end = std::search(searchStart, part_vec.end(), toFind_end.begin(), toFind_end.end());
+			if (pFilename_end != part_vec.end())
 			{
 				// Extract filename
-				std::string	filename = part.substr(filenamePos + 10, filenameEnd - filenamePos - 10);
+				std::string filename(pFilename_start + 10, pFilename_end);
 
 				// Clean filename (remove path if any)
 				size_t lastSlash = filename.find_last_of("/\\");
 				if (lastSlash != std::string::npos)
 					filename = filename.substr(lastSlash + 1);
 				if (filename.empty())
-				{
 					return ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
-				}
+
 				// Extract content
-				size_t	contentPos = part.find("\r\n\r\n");
-				if (contentPos != std::string::npos)
+				std::string toFind_content = "\r\n\r\n";
+				std::vector<char>::iterator pContent_start = std::search(part_vec.begin(), part_vec.end(), toFind_content.begin(), toFind_content.end());
+				if (pContent_start != part_vec.end())
 				{
-					size_t headerSize = contentPos + 4;
-					size_t endSize = 2;
-					if (part.length() <= headerSize + endSize)
-					{
-						return ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
-					}
-					
 					// Extract content and save to file
-					std::string	fileContent = part.substr(contentPos + 4, part.length() - contentPos);
+					std::vector<char>::iterator pContent_start_plus = pContent_start + toFind_content.length();
+					std::vector<char> fileContent(pContent_start_plus, part_vec.end());
+
+					//remove trailing \r\n
+					if (fileContent.size() >= 2)
+						fileContent.resize(fileContent.size() - 2);
 
 					std::string fullPath = generateFilePath(route, filename,
 							http::CT_MULTIPART_FORM_DATA, req.getMethod(), plan);
 					if (fullPath.empty())
 						return (plan);
 
-					if (!writeFile(fullPath, t_bytes(fileContent.begin(), fileContent.end()), req.getMethod(), plan, route))
+					if (!writeFile(fullPath, fileContent, req.getMethod(), plan, route))
 						return (plan);
 
 					plan.headers["Location"] = "/" + filename;
@@ -312,8 +326,7 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 		{
 			return ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
 		}
-
-		pos = nextPos;
+		vec_it = pBoundary_end;
 	}
 
 	plan.status = http::SC_CREATED;
