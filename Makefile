@@ -46,7 +46,8 @@ FILES =	main.cpp \
 		server/connections/AConnection.cpp \
 		server/connections/ClientConnection.cpp \
 		server/connections/ServerConnection.cpp \
-		utils/fileSystemUtils.cpp
+		utils/fileSystemUtils.cpp \
+		utils/pathUtils.cpp
 ### END ###
 ifeq ($(FILES),)
     $(error FILES is empty: please define source files)
