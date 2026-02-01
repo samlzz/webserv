@@ -87,9 +87,9 @@ ResponsePlan	StaticFileHandler::loadFile(const std::string &path, const routing:
 	plan.headers["Content-Length"] = str::toString(st.st_size);
 	plan.headers["Content-Type"] = http::Data::getMimeType(ext);
 	
-	plan.body = new FileBodySource(_fd);
-
 	plan.status = http::SC_OK;
+
+	plan.body = new FileBodySource(_fd);
 
 	return (plan);
 }
@@ -100,7 +100,6 @@ ResponsePlan	StaticFileHandler::handle(
 {
 	(void)req;
 	(void)route;
-	// std::string		convertStr(vec.data(), vec.size());
 
 	ResponsePlan	plan;
 

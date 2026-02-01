@@ -22,6 +22,22 @@
 #include <vector>
 #include <algorithm>
 
+std::string 	UploadFileHandler::removeTrailingSlashes(
+						const std::string &path) const
+{
+	std::string result;
+	
+	for (size_t i = 0; i < path.length(); ++i)
+	{
+		if (path[i] != '/' || (i == 0 || path[i - 1] != '/'))
+		{
+			result += path[i];
+		}
+	}
+
+	return (result);
+}
+
 std::string 	UploadFileHandler::generateFilename(
 						const std::string &filename,
 						http::e_body_kind contentType) const
@@ -106,8 +122,6 @@ std::string 	UploadFileHandler::generateFilePath(
 		uploadDir = route.location->root;
 		if (!new_filename.empty() && new_filename[0] == '/')
 			new_filename = new_filename.substr(1);
-
-		new_filename = filename;
 	}
 
 	//check uploadDir
@@ -184,9 +198,7 @@ ResponsePlan	UploadFileHandler::handleTextPlain(
 	if (fullPath.empty())
 		return (plan);
 
-	// std::string body(req.vec.data(), req.vec.size());
-	
-	if (fullPath[0] == '\0')
+	if (!fullPath.empty() && fullPath[0] == '/')
 		fullPath = '.' + fullPath;
 
 	if (!writeFile(fullPath, req.getBody(), req.getMethod(), plan, route))
@@ -195,7 +207,7 @@ ResponsePlan	UploadFileHandler::handleTextPlain(
 	//code 201 Created
 	plan.status = http::SC_CREATED;
 
-	plan.headers["Location"] = "/" + filename;
+	plan.headers["Location"] = removeTrailingSlashes(filename);
 	plan.headers["Content-Length"] = "0";
 
 	return (plan);
@@ -221,7 +233,7 @@ ResponsePlan	UploadFileHandler::handleOctetStream(
 	//code 201 Created
 	plan.status = http::SC_CREATED;
 
-	plan.headers["Location"] = "/" + filename;
+	plan.headers["Location"] = removeTrailingSlashes(filename);
 	plan.headers["Content-Length"] = "0";
 
 	return (plan);
@@ -309,8 +321,7 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 
 					if (!writeFile(fullPath, fileContent, req.getMethod(), plan, route))
 						return (plan);
-
-					plan.headers["Location"] = "/" + filename;
+					plan.headers["Location"] = removeTrailingSlashes(filename);
 				}
 				else
 				{

@@ -8,6 +8,9 @@
 class UploadFileHandler : public IHttpHandler
 {
 private:
+	std::string 	removeTrailingSlashes(
+						const std::string &path) const;
+						
 	bool			writeFile(
 						const std::string &path,
 						const t_bytes &data,
