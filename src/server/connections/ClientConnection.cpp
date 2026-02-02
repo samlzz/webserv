@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/02 10:05:26 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 12:43:24 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,10 +38,16 @@ ClientConnection::ClientConnection(int cliSockFd, const ServerCtx &serverCtx)
 	: AConnection(cliSockFd), _serv(serverCtx)
 	, _req(), _resp(0)
 	, _offset(0), _cgiRead(0)
+	, _shouldRefresh(false)
 	, _state(CS_WAIT_FIRST_BYTE)
 	, _tsLastActivity(std::time(0))
 {
 	setFdFlags();
+}
+
+ClientConnection::~ClientConnection(void)
+{
+	delete _resp;
 }
 
 // ============================================================================
@@ -58,19 +64,26 @@ ConnEvent	ClientConnection::buildResponse(void)
 		needs->setNotifier(*this);
 	if (plan.event.conn && plan.event.type == ConnEvent::CE_SPAWN)
 		_cgiRead = plan.event.conn;
-	_resp = new HttpResponse(plan);
+
+	_resp = new HttpResponse(plan, _req, route);
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
 		<< "Built response for client " << _fd
 		<< " , wait for POLLOUT..." << std::endl;
+
 	return plan.event;
 }
 
+/**
+ * This function was call only when _req.isDnone is false.
+ * Because when it's done we wait for POLLOUT only
+*/
 ConnEvent	ClientConnection::handleRead(void)
 {
 	char	buf[CLIENT_READ_BUF_SIZE];
 	ssize_t	n = recv(_fd, buf, CLIENT_READ_BUF_SIZE, 0);
 
-	if (n <= 0)
+	// ? If EOF was received: client sent an incomplete request
+	if (n <= 0) // ? error or EOF
 	{
 		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_ERROR)
 			<< "Fail to read " << CLIENT_READ_BUF_SIZE
@@ -106,15 +119,22 @@ ConnEvent	ClientConnection::handleRead(void)
 
 ConnEvent	ClientConnection::handleWrite(void)
 {
-	_resp->fillStream();
+	if (!_resp->fillStream())
+		return ConnEvent::close();
+
 	IFifoStreamView<t_bytes>	&stream = _resp->stream();
+	if (!stream.hasBuffer())
+		return (_events = 0, ConnEvent::none());
 	const t_bytes				&buf = stream.front();
 
+	if (buf.empty())
+		return (stream.pop(), ConnEvent::none());
+	// ? _offset must always be strictly less than buf.size()
 	ssize_t n = send(_fd,
 					buf.data() + _offset,
 					buf.size() - _offset,
 					0);
-	if (n <= 0)
+	if (n <= 0) // ? so n should never be 0
 	{
 		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_ERROR)
 			<< "Fail to send " << buf.size() - _offset
@@ -131,8 +151,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 	_tsLastActivity = std::time(0);
 	_offset += static_cast<size_t>(n);
 
-	// all curent buffer was sent
-	if (_offset == buf.size())
+	if (_offset == buf.size()) // ? all curent buffer was sent
 	{
 		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
 			<< "Current buffer was totally sent" << std::endl;
@@ -160,7 +179,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 			}
 			else
 			{
-				_events = 0;
+				_events = 0; // ? No buffer to send, wait for notifyWritable
 				ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
 					<< "No buffer left in response stream, wait for it..." << std::endl;
 			}
@@ -170,7 +189,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 }
 
 // ============================================================================
-// Public methods
+// IConnection methods
 // ============================================================================
 
 ConnEvent	ClientConnection::handleEvents(short revents)
@@ -187,6 +206,9 @@ ConnEvent	ClientConnection::handleEvents(short revents)
 
 	if (revents & POLLOUT)
 		return handleWrite();
+
+	if (revents & POLLHUP)
+		return ConnEvent::close();
 
 	return ConnEvent::none();
 }
@@ -214,6 +236,11 @@ ConnEvent	ClientConnection::checkTimeout(time_t now)
 	}
 
 	_req.checkTimeout(now);
+	if (_shouldRefresh)
+	{
+		_shouldRefresh = false;
+		return ConnEvent::refresh();
+	}
 	return ConnEvent::none();
 }
 
@@ -226,6 +253,12 @@ std::ostream	&operator<<(std::ostream &os, const ClientConnection::e_client_stat
 	}
 	return os;
 }
+IConnection	*ClientConnection::buddy(void)		{ return _cgiRead; }
+void		ClientConnection::detachBuddy(void)	{ _cgiRead = 0; }
+
+// ============================================================================
+// IWritableNotifier methods
+// ============================================================================
 
 void	ClientConnection::notifyWritable(void)
 {
@@ -234,7 +267,12 @@ void	ClientConnection::notifyWritable(void)
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
 		<< "Wait for POLLOUT..." << std::endl;
 	addEvent(POLLOUT);
+	_shouldRefresh = true;
 }
 
-IConnection	*ClientConnection::buddy(void)		{ return _cgiRead; }
-void		ClientConnection::detachBuddy(void)	{ _cgiRead = 0; }
+// ? detach buddy and schedule a write attempt so HttpResponse can finalize (error/EOF)
+void	ClientConnection::notifyEnd(void)
+{
+	detachBuddy();
+	notifyWritable();
+}

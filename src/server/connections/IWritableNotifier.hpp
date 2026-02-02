@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/13 21:04:47 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/14 13:24:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 09:40:25 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,11 @@ public:
 	 * (e.g. enable POLLOUT) so that the Reactor will schedule a write.
 	 */
 	virtual void	notifyWritable(void) = 0;
+	
+	/**
+	 * Notify that producer of data ended up his task.
+	 */
+	virtual void	notifyEnd(void) = 0;
 };
 
 #endif /* __IWRITABLE_NOTIFIER_HPP__ */

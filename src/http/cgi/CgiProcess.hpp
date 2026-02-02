@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 17:05:28 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 12:41:51 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@
 # include "server/connections/IWritableNotifier.hpp"
 
 # ifndef CGI_MAX_EXEC_TIME
-#  define CGI_MAX_EXEC_TIME 30000 // 30 s
+#  define CGI_MAX_EXEC_TIME 30 // ? in seconds
 # endif
 
 // ============================================================================
@@ -92,6 +92,12 @@ public:
 	IConnection			*start(const std::vector<std::string> &argv,
 								const std::vector<std::string> &envp,
 								const t_bytes &body);
+	
+	void				kill(void);
+
+	// ============================================================================
+	// Events driven methods
+	// ============================================================================
 
 	void				onError(void);
 
@@ -99,9 +105,6 @@ public:
 	void				onRead(const char *buffer, size_t bufSize);
 	void				onEof(void);
 	void				onTimeout(void);
-
-	// ---- CgiReadConnection events ----
-	void				onBodyEnd(size_t writtenBytes);
 
 private:
 

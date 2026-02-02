@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/29 16:45:03 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 09:12:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,9 @@
 #define MAX_HEADER_LENGTH		2 * 1024
 #define CLIENT_MAX_BODY_SIZE	1 * 1024 * 1024
 
-#define REQ_TIMEOUT_HEADER		10000   // 10 s
-#define REQ_TIMEOUT_BODY		120000 // 120 s
+/* ? Timeout are in seconds */
+#define REQ_TIMEOUT_HEADER		10
+#define REQ_TIMEOUT_BODY		120
 
 enum	e_request_state
 	{ LINE_METHOD
@@ -116,7 +117,9 @@ public:
 
 	// ===== Getter / Setter =====
 	http::e_method			getMethod() const;
+	void					setMethod(http::e_method pMethod);
 	const std::string		&getPath() const;
+	void					setPath(const std::string &pPath);
 	const std::string		&getQuery() const;
 	const std::string		&getFragment() const;
 	int						getVerMaj() const;
@@ -125,14 +128,12 @@ public:
 	const t_bytes			&getBody() const;
 	http::e_status_code		getStatusCode() const;
 
-	void	setPath(const std::string &path);
-
 	// ======= Header Utils =======
 	void				setField(const std::string& pKey, const std::string& pValue);
 	bool				hasField(const std::string& pKey) const;
 	std::string			getField(const std::string& pKey) const;
 
-	void		checkTimeout(time_t now);
+	void				checkTimeout(time_t now);
 };
 
 std::ostream&		operator<<(std::ostream& pOut, const HttpRequest& pRequest);

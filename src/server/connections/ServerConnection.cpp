@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 08:50:37 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 17:08:52 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 12:44:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,8 @@ ConnEvent	ServerConnection::handleEvents(short revents)
 {
 	if (isErrEvent(revents))
 		throw WsServerError("poll error on listen socket");
+	if (revents & POLLHUP)
+		throw WsServerError("listen socket hung up");
 
 	if (revents & POLLIN)
 	{

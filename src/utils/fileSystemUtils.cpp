@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 14:41:48 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 14:42:29 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/31 12:21:41 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,26 +85,6 @@ int openReadOnly(const std::string &path)
 {
 	int fd = open(path.c_str(), O_RDONLY | O_CLOEXEC);
 	return fd;
-}
-
-// -----------------------------------------------------------------------------
-// subExt
-// -----------------------------------------------------------------------------
-std::string subExt(const std::string &filePath)
-{
-	size_t slash = filePath.find_last_of('/');
-	size_t dot   = filePath.find_last_of('.');
-
-	if (dot == std::string::npos)
-		return "";
-
-	if (slash != std::string::npos && dot < slash)
-		return "";
-
-	if (dot + 1 >= filePath.size())
-		return "";
-
-	return filePath.substr(dot + 1);
 }
 
 // -----------------------------------------------------------------------------

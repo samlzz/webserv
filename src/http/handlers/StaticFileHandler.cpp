@@ -7,6 +7,7 @@
 #include "http/HttpData.hpp"
 #include "bodySrcs/MemoryBodySource.hpp"
 #include "bodySrcs/FileBodySource.hpp"
+#include "utils/pathUtils.hpp"
 #include "utils/stringUtils.hpp"
 #include "utils/fileSystemUtils.hpp"
 
@@ -71,7 +72,7 @@ ResponsePlan	StaticFileHandler::loadFile(const std::string &path, const routing:
 	struct stat st;
 
 	stat(path.c_str(), &st);
-	std::string	ext = fs::subExt(path);
+	std::string	ext = path::subExt(path);
 
 	int _fd;
 	// if ((_fd = open(path.c_str(), O_RDONLY)) < 0)

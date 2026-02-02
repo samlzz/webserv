@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/02 10:08:00 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 12:41:43 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -239,6 +239,16 @@ IConnection	*CgiProcess::start(const std::vector<std::string> &argv,
 	return _read;
 }
 
+void	CgiProcess::kill(void)
+{
+	if (_terminated)
+		return;
+	_terminated = true;
+	cleanup(true);
+}
+
+// ---- Private members ----
+
 /**
  * `killChild` child must be true in case of error
  *
@@ -253,7 +263,7 @@ void	CgiProcess::cleanup(bool killChild)
 
 	if (killChild)
 	{
-		kill(_pid, SIGKILL);
+		::kill(_pid, SIGKILL);
 		ft_log::log(WS_LOG_CGI, ft_log::LOG_WARN)
 			<< "CGI killed pid=" << _pid << std::endl;
 	}
@@ -294,7 +304,7 @@ void	CgiProcess::onError(void)
 	_errOccur = true;
 	cleanup(true);
 	if (_notifier)
-		_notifier->notifyWritable();
+		_notifier->notifyEnd();
 }
 
 void	CgiProcess::onTimeout(void)
@@ -314,7 +324,7 @@ void	CgiProcess::onEof(void)
 	forgetRead();
 	_sink.finalize();
 	if (_notifier)
-		_notifier->notifyWritable();
+		_notifier->notifyEnd();
 	cleanup(false);
 }
 
@@ -331,12 +341,4 @@ void	CgiProcess::onRead(const char *buffer, size_t bufSize)
 	_sink.append(buffer, bufSize);
 	if (_notifier)
 		_notifier->notifyWritable();
-}
-
-void	CgiProcess::onBodyEnd(size_t writtenBytes)
-{
-	ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
-		<< "CGI-Write body completed pid=" << _pid
-		<< " total_written=" << writtenBytes << std::endl;
-	forgetWrite();
 }

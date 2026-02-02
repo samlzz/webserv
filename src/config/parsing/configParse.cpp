@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:36:59 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/23 20:42:24 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 15:58:26 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,7 @@ static inline void	_appendCgiItem(Config::t_dict &cgiExts,
 	std::string					path = cgiNode->getAttr("execPath", "");
 
 	for (std::vector<std::string>::const_iterator it = exts.begin(); it != exts.end(); ++it)
-		cgiExts[*it] = path;
+		cgiExts[it->substr(1)] = path;
 }
 
 // ========================================================================
