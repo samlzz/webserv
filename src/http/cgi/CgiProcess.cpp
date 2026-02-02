@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/02 09:45:08 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 13:28:13 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@
 CgiProcess::CgiProcess(IOutputSink &sink)
 	: _sink(sink), _notifier(0)
 	, _pid(-1), _exitCode(0)
-	, _terminated(false), _errOccur(false)
+	, _terminated(false), _errOccur(false), _hasTimeout(false)
 	, _read(0), _write(0), _refCount(0)
 {}
 
@@ -66,6 +66,7 @@ time_t		CgiProcess::startTime(void) const		{ return _startTs; }
 
 bool		CgiProcess::isTerminated(void) const	{ return _terminated; }
 bool		CgiProcess::isError(void) const			{ return _errOccur; }
+bool		CgiProcess::isTimeout(void) const		{ return _hasTimeout; }
 
 uint8_t		CgiProcess::exitCode(void) const		{ return _exitCode; }
 
@@ -288,6 +289,7 @@ void	CgiProcess::onError(void)
 
 void	CgiProcess::onTimeout(void)
 {
+	_hasTimeout = true;
 	onError();
 }
 
