@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:44:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 17:22:29 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/01 16:51:27 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,6 @@ public:
 // ============================================================================
 
 	virtual ConnEvent	handleEvents(short revents) = 0;
-	virtual ConnEvent	exitEvent(short revents) const;
 
 	virtual ConnEvent	checkTimeout(time_t now);
 

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:49:52 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 17:35:44 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/01 20:41:11 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,14 +76,6 @@ void	AConnection::setFdFlags(void)
 		|| fcntl(_fd, F_SETFD, flags | FD_CLOEXEC) == -1
 	)
 		throw SysError("fcntl");
-}
-
-ConnEvent	AConnection::exitEvent(short revents) const
-{
-	if (revents & POLLHUP && !(revents & (POLLIN | POLLOUT)))
-		return ConnEvent::close();
-	else
-		return ConnEvent::none();
 }
 
 ConnEvent	AConnection::checkTimeout(time_t now)

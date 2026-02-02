@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 18:04:51 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/01 16:54:59 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,12 +60,17 @@ ConnEvent	ClientConnection::buildResponse(void)
 	return plan.event;
 }
 
+/**
+ * This function was call only when _req.isDnone is false.
+ * Because when it's done we wait for POLLOUT only
+*/
 ConnEvent	ClientConnection::handleRead(void)
 {
 	char	buf[CLIENT_READ_BUF_SIZE];
 	ssize_t	n = recv(_fd, buf, CLIENT_READ_BUF_SIZE, 0);
 
-	if (n <= 0)
+	// ? If EOF was received: client sent an incomplete request
+	if (n <= 0) // ? error or EOF
 		return ConnEvent::close();
 
 	_tsLastActivity = std::time(0);
@@ -105,8 +110,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 	_tsLastActivity = std::time(0);
 	_offset += static_cast<size_t>(n);
 
-	// ? all curent buffer was sent
-	if (_offset == buf.size())
+	if (_offset == buf.size()) // ? all curent buffer was sent
 	{
 		stream.pop();
 		_offset = 0;
@@ -147,7 +151,10 @@ ConnEvent	ClientConnection::handleEvents(short revents)
 	if (revents & POLLOUT)
 		return handleWrite();
 
-	return exitEvent(revents);
+	if (revents & POLLHUP)
+		return ConnEvent::close();
+
+	return ConnEvent::none();
 }
 
 time_t	ClientConnection::timeoutFromState(void)
