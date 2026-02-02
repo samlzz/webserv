@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 14:21:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 17:10:12 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 10:09:53 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,8 +104,8 @@ bool	Reactor::manageConnEvent(ConnEvent ev, size_t idx)
 			if (buddy->buddy() == victim)
 				buddy->detachBuddy();
 			_pendingClose.insert(buddy);
-			ft_log::log(WS_LOG_SERVER, ft_log::LOG_DEBUG)
-				<< "Defer close of connection on fd " << buddy->fd();
+			ft_log::log(WS_LOG_SERVER, ft_log::LOG_DEBUG) << "Defer close "
+				"of connection on fd " << buddy->fd() << std::endl;
 		}
 		removeConnection(idx);
 		return true;

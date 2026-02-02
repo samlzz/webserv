@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 17:14:33 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 10:05:26 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -209,7 +209,7 @@ ConnEvent	ClientConnection::checkTimeout(time_t now)
 	{
 		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_WARN)
 			<< "Client on fd " << _fd
-			<< " has timeout when waiting for " << _state << std::endl;
+			<< " timeout when waiting for " << _state << std::endl;
 		return ConnEvent::close();
 	}
 

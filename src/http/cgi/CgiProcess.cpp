@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 17:25:59 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 10:08:00 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -272,7 +272,7 @@ void	CgiProcess::cleanup(bool killChild)
 			_exitCode = 255;
 
 		ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
-			<< "CGI exited " << _exitCode << " pid=" << _pid << std::endl;
+			<< "CGI exited " << static_cast<int32_t>(_exitCode) << " pid=" << _pid << std::endl;
 	}
 	else
 		ft_log::log(WS_LOG_CGI, ft_log::LOG_DEBUG)
@@ -320,16 +320,11 @@ void	CgiProcess::onEof(void)
 
 void	CgiProcess::onRead(const char *buffer, size_t bufSize)
 {
-	static bool	firstBuf = true;
-
-	if (firstBuf)
-	{
-		ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
-			<< "CGI-Read first output pid=" << _pid << std::endl;
-		ft_log::log(WS_LOG_CGI, ft_log::LOG_TRACE)
-			<< "Buffer:\n" << std::string(buffer, bufSize) << std::endl;
-		firstBuf = false;
-	}
+	ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
+		<< "CGI-Read output of " << bufSize << " bytes pid=" << _pid << std::endl;
+	ft_log::log(WS_LOG_CGI, ft_log::LOG_TRACE)
+		<< "Buffer:\n" << WS_LOG_SEP << std::string(buffer, bufSize)
+		<< WS_LOG_SEP << std::endl;
 
 	if (_terminated)
 		return ;
