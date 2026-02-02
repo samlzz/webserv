@@ -3,7 +3,6 @@
 
 #include <cstdlib>
 #include <ctime>
-#include <iostream>
 
 struct Session;
 

@@ -33,11 +33,11 @@ namespace routing
 
 struct Context
 {
-	const ServerCtx					&server;
-	const Config::Server::Location	*location;
-	std::string						normalizedPath;
-	Cookies							cookies;
-	SessionsManager::Session		*session;
+	const ServerCtx						&server;
+	const Config::Server::Location		*location;
+	std::string							normalizedPath;
+	mutable Cookies						cookies;
+	mutable SessionsManager::Session	*session;
 
 	Context(const ServerCtx &serv)
 		: server(serv), location(0), normalizedPath(), cookies(), session(0)
