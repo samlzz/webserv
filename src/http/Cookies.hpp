@@ -23,6 +23,7 @@ public:
 	std::string 	getCookie(const std::string &key) const;
 	void 			setCookie(const std::string &key, const std::string &value);
 	std::string 	buildCookieHeader(void);
+	std::string 	buildMultipleCookieHeader(void);
 };
 
 #endif /* __COOKIES_HPP__ */

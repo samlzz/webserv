@@ -69,3 +69,20 @@ std::string 	Cookies::buildCookieHeader(void)
 	}
 	return cookieStream.str();
 }
+
+std::string Cookies::buildMultipleCookieHeader(void)
+{
+	std::ostringstream	cookieStream;
+	for (t_cookies::const_iterator it = _cookies.begin(); it != _cookies.end(); ++it)
+	{
+		if (it == _cookies.begin())
+		{
+			cookieStream << it->first << "=" << it->second << "; ";
+		}
+		else
+		{
+			cookieStream << "\r\nSet-Cookie: " << it->first << "=" << it->second << "; ";
+		}
+	}
+	return cookieStream.str();
+}

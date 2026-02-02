@@ -9,13 +9,15 @@
 
 class SessionsManager
 {
-private:
+public:
 	struct Session
 	{
 		std::string							username;
 		time_t								last_activity;
 		std::map<std::string, std::string>	infos;
 	};
+
+private:
 	std::map<std::string, Session>	_sessions;
 
 public:
@@ -25,10 +27,10 @@ public:
 	std::string 	generateSessionId(void);
 	std::string		createSession(const std::string &username);
 
-	Session 		getSession(const std::string &sessionId);
-
-	std::string 	getSessionId(const http::t_headers &headers);
-	std::string 	getSessionId(const std::string &field);
+	Session 		&getSession(const std::string &sessionId);
+	Session 		&getSession(const std::string &sessionId) const;
+	std::string 	getSessionId(const http::t_headers &headers) const;
+	std::string 	getSessionId(const std::string &field) const;
 
 	Session 		findSession(const http::t_headers &headers);
 

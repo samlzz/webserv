@@ -43,7 +43,7 @@ private:
 		CS_WAIT_RESPONSE		// write response
 	};
 
-	const ServerCtx			&_serv;
+	ServerCtx				&_serv;
 	HttpRequest				_req;
 	HttpResponse			*_resp;
 	size_t					_offset;
@@ -52,7 +52,7 @@ private:
 	time_t					_tsLastActivity;
 
 public:
-	ClientConnection(int cliSockFd, const ServerCtx &servCtx);
+	ClientConnection(int cliSockFd, ServerCtx &servCtx);
 
 	virtual ConnEvent	handleEvents(short revents);
 

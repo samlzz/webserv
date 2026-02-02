@@ -87,6 +87,18 @@ Context	resolve(const HttpRequest &req,
 		ctx.normalizedPath = lp + suffix;
 	}
 	
+	//parse cookies
+	ctx.cookies.parseCookies(req.getHeaders());
+
+	//manage sessions
+	std::string sessionId = ctx.cookies.getCookie("sessionId");
+	if (sessionId.empty())
+		sessionId = serv._sessions.createSession("guest");
+	ctx.cookies.setCookie("sessionId", sessionId);
+
+	SessionsManager::Session *session = &serv._sessions.getSession(sessionId);
+	ctx.session = session;
+	
 	return ctx;
 }
 

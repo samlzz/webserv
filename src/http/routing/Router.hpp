@@ -16,13 +16,15 @@
 # include <string>
 
 # include "config/Config.hpp"
+#include "http/Cookies.hpp"
+#include "http/Sessions.hpp"
 
 // ============================================================================
 // Forward declarations
 // ============================================================================
 class HttpRequest;
 struct ServerCtx;
-
+struct Session;
 // ============================================================================
 // Routes resolving
 // ============================================================================
@@ -34,9 +36,11 @@ struct Context
 	const ServerCtx					&server;
 	const Config::Server::Location	*location;
 	std::string						normalizedPath;
+	Cookies							cookies;
+	SessionsManager::Session		*session;
 
 	Context(const ServerCtx &serv)
-		: server(serv), location(0), normalizedPath()
+		: server(serv), location(0), normalizedPath(), cookies(), session(0)
 	{}
 private:
 	Context();

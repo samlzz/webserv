@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
 
 struct Session;
 
@@ -38,11 +39,12 @@ std::string SessionsManager::createSession(const std::string &username)
 	_sessions[sessionId] = session;
 	return sessionId;
 }
-SessionsManager::Session SessionsManager::getSession(const std::string &sessionId)
+SessionsManager::Session &SessionsManager::getSession(const std::string &sessionId)
 {
 	return _sessions[sessionId];
 }
-std::string 		SessionsManager::getSessionId(const http::t_headers &headers)
+
+std::string 		SessionsManager::getSessionId(const http::t_headers &headers) const
 {
 	http::t_headers::const_iterator it = headers.find("Cookie");
 	if (it == headers.end())
@@ -50,7 +52,7 @@ std::string 		SessionsManager::getSessionId(const http::t_headers &headers)
 	return getSessionId(it->second);
 }
 
-std::string 		SessionsManager::getSessionId(const std::string &field)
+std::string 		SessionsManager::getSessionId(const std::string &field) const
 {
 	size_t start = field.find("sessionId=");
 	if (start == std::string::npos)
@@ -61,6 +63,7 @@ std::string 		SessionsManager::getSessionId(const std::string &field)
 		end = field.length();
 	return field.substr(start, end - start);
 }
+
 SessionsManager::Session SessionsManager::findSession(const http::t_headers &headers)
 {
 	std::string sessionId = getSessionId(headers);
@@ -68,7 +71,7 @@ SessionsManager::Session SessionsManager::findSession(const http::t_headers &hea
 	{
 		sessionId = createSession("username");
 	}
-	return _sessions[sessionId];
+	return getSession(sessionId);
 }
 
 void SessionsManager::clearExpiredSessions(time_t timeout)
