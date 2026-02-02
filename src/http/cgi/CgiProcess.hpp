@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 12:41:08 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/01 20:33:53 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,9 +105,6 @@ public:
 	void				onRead(const char *buffer, size_t bufSize);
 	void				onEof(void);
 	void				onTimeout(void);
-
-	// ---- CgiReadConnection events ----
-	void				onBodyEnd(void);
 
 private:
 

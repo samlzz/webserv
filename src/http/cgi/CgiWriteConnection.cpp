@@ -6,11 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:44:04 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 18:00:44 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/01 20:34:07 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
+#include <sys/poll.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -42,19 +43,6 @@ CgiWriteConnection::~CgiWriteConnection()
 // Methods
 // ============================================================================
 
-IConnection	*CgiWriteConnection::buddy(void)
-{
-	if (!_spawned)
-		return 0;
-	return _ctx.read();
-}
-
-void	CgiWriteConnection::detachBuddy(void)
-{
-	if (_spawned)
-		_ctx.forgetRead();
-}
-
 ConnEvent	CgiWriteConnection::handleEvents(short revents)
 {
 	_spawned = true;
@@ -70,11 +58,33 @@ ConnEvent	CgiWriteConnection::handleEvents(short revents)
 
 		_offset += static_cast<size_t>(n);
 		if (_offset == _body.size())
-		{
-			_ctx.onBodyEnd();
-			_spawned = false;
-			return ConnEvent::close();
-		}
+			return endOfWrite();
 	}
-	return exitEvent(revents);
+
+	if (revents & POLLHUP)
+		return endOfWrite();
+
+	return ConnEvent::none();
+}
+
+ConnEvent	CgiWriteConnection::endOfWrite(void)
+{
+	_ctx.forgetWrite();
+	_spawned = false;
+	return ConnEvent::close();
+}
+
+// ---- Buddy's methods ----
+
+IConnection	*CgiWriteConnection::buddy(void)
+{
+	if (!_spawned)
+		return 0;
+	return _ctx.read();
+}
+
+void	CgiWriteConnection::detachBuddy(void)
+{
+	if (_spawned)
+		_ctx.forgetRead();
 }

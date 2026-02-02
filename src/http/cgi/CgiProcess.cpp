@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 13:11:43 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/01 20:33:58 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -310,8 +310,4 @@ void	CgiProcess::onRead(const char *buffer, size_t bufSize)
 	_sink.append(buffer, bufSize);
 	if (_notifier)
 		_notifier->notifyWritable();
-}
-void	CgiProcess::onBodyEnd(void)
-{
-	forgetWrite();
 }

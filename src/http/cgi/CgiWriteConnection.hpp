@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:37:42 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:48:50 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/01 20:05:27 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,8 @@ public:
 	virtual void		detachBuddy(void);
 
 private:
+	ConnEvent			endOfWrite(void);
+
 	// forbidden
 	CgiWriteConnection();
 	CgiWriteConnection(const CgiWriteConnection &other);
