@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/01 20:33:58 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 09:45:08 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -283,7 +283,7 @@ void	CgiProcess::onError(void)
 	_errOccur = true;
 	cleanup(true);
 	if (_notifier)
-		_notifier->notifyWritable();
+		_notifier->notifyEnd();
 }
 
 void	CgiProcess::onTimeout(void)
@@ -299,7 +299,7 @@ void	CgiProcess::onEof(void)
 	forgetRead();
 	_sink.finalize();
 	if (_notifier)
-		_notifier->notifyWritable();
+		_notifier->notifyEnd();
 	cleanup(false);
 }
 

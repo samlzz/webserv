@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/01 16:54:59 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 09:54:25 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,11 @@ ClientConnection::ClientConnection(int cliSockFd, const ServerCtx &serverCtx)
 	, _tsLastActivity(std::time(0))
 {
 	setFdFlags();
+}
+
+ClientConnection::~ClientConnection(void)
+{
+	delete _resp;
 }
 
 // ============================================================================
@@ -137,7 +142,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 }
 
 // ============================================================================
-// Public methods
+// IConnection methods
 // ============================================================================
 
 ConnEvent	ClientConnection::handleEvents(short revents)
@@ -183,11 +188,22 @@ ConnEvent	ClientConnection::checkTimeout(time_t now)
 	return ConnEvent::none();
 }
 
+IConnection	*ClientConnection::buddy(void)		{ return _cgiRead; }
+void		ClientConnection::detachBuddy(void)	{ _cgiRead = 0; }
+
+// ============================================================================
+// IWritableNotifier methods
+// ============================================================================
+
 void	ClientConnection::notifyWritable(void)
 {
 	addEvent(POLLOUT);
 	_shouldRefresh = true;
 }
 
-IConnection	*ClientConnection::buddy(void)		{ return _cgiRead; }
-void		ClientConnection::detachBuddy(void)	{ _cgiRead = 0; }
+// ? detach buddy and schedule a write attempt so HttpResponse can finalize (error/EOF)
+void	ClientConnection::notifyEnd(void)
+{
+	detachBuddy();
+	notifyWritable();
+}

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/02 09:24:46 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 09:41:28 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,15 +57,19 @@ private:
 
 public:
 	ClientConnection(int cliSockFd, const ServerCtx &servCtx);
+	virtual ~ClientConnection(void);
 
+	/* IConnection */
 	virtual ConnEvent	handleEvents(short revents);
 
 	virtual ConnEvent	checkTimeout(time_t now);
 
-	virtual void		notifyWritable(void);
-
 	virtual IConnection	*buddy(void);
 	virtual void		detachBuddy(void);
+
+	/* IWritableNotifier */
+	virtual void		notifyWritable(void);
+	virtual void		notifyEnd(void);
 
 private:
 	ConnEvent			handleRead(void);
