@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 16:05:13 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/31 12:24:25 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 08:17:39 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,12 +93,13 @@ static inline std::vector<std::string>	genEnvp(const routing::Context& route, co
 // Generate an vecor of string version of the argv for cgi
 static inline std::vector<std::string>	genArgv(const routing::Context& route)
 {
-	std::vector<std::string> vec;
+	std::vector<std::string>		vec;
+	std::string						ext = path::subExt(
+											path::subPath(route.normalizedPath)
+										);
+	Config::t_dict::const_iterator	it = route.location->cgiExts.find(ext);
 
-	Config::t_dict::const_iterator	it = route.location->cgiExts.find(path::subExt(route.normalizedPath));
-	if (it != route.location->cgiExts.end())
-		vec.push_back(it->second);
-
+	vec.push_back(it->second);
 	vec.push_back(route.location->root + path::subPath(route.normalizedPath));
 
 	return vec;
