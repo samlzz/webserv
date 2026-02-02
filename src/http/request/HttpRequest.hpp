@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/30 13:49:16 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 09:12:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,9 @@
 #define MAX_HEADER_LENGTH		2 * 1024
 #define CLIENT_MAX_BODY_SIZE	1 * 1024 * 1024
 
-#define REQ_TIMEOUT_HEADER		10000   // 10 s
-#define REQ_TIMEOUT_BODY		120000 // 120 s
+/* ? Timeout are in seconds */
+#define REQ_TIMEOUT_HEADER		10
+#define REQ_TIMEOUT_BODY		120
 
 enum	e_request_state
 	{ LINE_METHOD

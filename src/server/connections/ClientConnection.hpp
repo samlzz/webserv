@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 16:26:22 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 09:24:46 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,9 +28,10 @@
 #  define CLIENT_READ_BUF_SIZE	2048
 # endif
 
-# define CLIENT_TIMEOUT_ACCEPT	10000	// 10 s
-# define CLIENT_TIMEOUT_REQ		60000	// 60s
-# define CLIENT_TIMEOUT_RESP	30000	// 30s
+/* ? Timeout are in seconds */
+# define CLIENT_TIMEOUT_ACCEPT	10
+# define CLIENT_TIMEOUT_REQ		60
+# define CLIENT_TIMEOUT_RESP	30
 
 class ClientConnection: public AConnection, public IWritableNotifier {
 
