@@ -14,6 +14,7 @@
 #include <string>
 #include <dirent.h>
 #include <algorithm>
+#include <iostream>
 
 ResponsePlan	StaticFileHandler::loadAutoindex(const std::string &path, const routing::Context &route) const
 {
@@ -100,12 +101,20 @@ ResponsePlan	StaticFileHandler::handle(
 {
 	(void)req;
 	(void)route;
-	// std::string		convertStr(vec.data(), vec.size());
 
 	ResponsePlan	plan;
 
 	struct stat st;
 	std::string path = route.location->root + route.normalizedPath;
+
+	// Theme handling for styles.css
+	if (route.normalizedPath == "/styles.css")
+	{
+		if (req.getField("Cookie").find("theme=dark") != std::string::npos)
+			path = route.location->root + "/styles_dark.css";
+		else
+			path = route.location->root + "/styles.css";
+	}
 
 	if (stat(path.c_str(), &st) != 0)
 		return (ErrorBuilder::build(http::SC_NOT_FOUND, route.location));

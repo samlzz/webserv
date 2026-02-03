@@ -46,6 +46,9 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 	if (loca.redirect)
 		return &_redirectHandler;
 
+	if (route.normalizedPath.find("theme") != std::string::npos)
+		return &_themeHandler;
+		
 	http::e_method	method = req.getMethod();
 	if ((method == http::MTH_GET || method == http::MTH_POST)
 		&& loca.cgiExts.find(fs::subExt(route.normalizedPath)) != loca.cgiExts.end()
