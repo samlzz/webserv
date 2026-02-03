@@ -88,6 +88,11 @@ std::string 	UploadFileHandler::generateFilePath(
 	std::string new_filename = filename;
 	if (method == http::MTH_POST)
 	{
+		if (!route.location->uploadPath.isSome())
+		{
+			plan = ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
+			return ("");
+		}
 		uploadDir = *route.location->uploadPath.get();
 		if (uploadDir.empty())
 			return ("");
