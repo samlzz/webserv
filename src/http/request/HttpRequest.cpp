@@ -3,21 +3,23 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/29 18:02:40 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/03 15:32:58 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#include "HttpRequest.hpp"
+#include "http/response/BuffStream.hpp"
+
 
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <algorithm>
 
-#include "HttpRequest.hpp"
 #include "http/HttpTypes.hpp"
-#include "http/response/BuffStream.hpp"
 
 #define CURRENT_STATE() _state
 #define UPDATE_STATE(S) _state = S
@@ -27,7 +29,8 @@
 //#****************************************************************************#
 #pragma region Construct & Destruct
 
-HttpRequest::HttpRequest(void) {
+HttpRequest::HttpRequest(const Config::Server& pConfig) 
+	: _config(pConfig) {
 	reset();
 }
 
@@ -288,6 +291,8 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case LINE_DONE:
 			if (ch != '\n') return setError(http::SC_BAD_REQUEST);
+			if (_request.verMaj != 1 || _request.verMin != 1)
+				return setError(http::SC_VERSION_NOT_SUPPORTED);
 			UPDATE_STATE(HEADER_START);
 			break;
 
@@ -376,7 +381,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				if (!isDec(_buffer))
 					return setError(http::SC_BAD_REQUEST);
 				_contentLength = std::atoi(_buffer.c_str());
-				if (_contentLength > CLIENT_MAX_BODY_SIZE)
+				if (_contentLength > _config.maxBodySize)
 					return setError(http::SC_CONTENT_TOO_LARGE);
 				UPDATE_STATE(BODY_CONTENT);
 			}
@@ -523,6 +528,7 @@ void	HttpRequest::checkTimeout(time_t now)
 void HttpRequest::setError(const http::e_status_code pCode)
 {
 	_code = pCode;
+	setField("Connection", "close");
 	UPDATE_STATE(PARSING_ERROR);
 }
 

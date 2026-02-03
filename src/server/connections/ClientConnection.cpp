@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ClientConnection.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:31:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/03 15:38:12 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@
 
 ClientConnection::ClientConnection(int cliSockFd, const ServerCtx &serverCtx)
 	: AConnection(cliSockFd), _serv(serverCtx)
-	, _req(), _resp(0)
+	, _req(_serv.config), _resp(0)
 	, _offset(0), _cgiRead(0)
 	, _state(CS_WAIT_FIRST_BYTE)
 	, _tsLastActivity(std::time(0))

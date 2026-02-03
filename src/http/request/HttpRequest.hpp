@@ -3,16 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/01/29 18:02:33 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/03 15:24:23 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_REQUEST_HPP__
 #define __HTTP_REQUEST_HPP__
 
+#include "config/Config.hpp"
 #include "http/request/IHttpRequest.hpp"
 
 #include <string>
@@ -24,7 +25,6 @@
 #define MAX_METHOD_LENGTH		8
 #define MAX_URI_LENGTH			2 * 1024
 #define MAX_HEADER_LENGTH		2 * 1024
-#define CLIENT_MAX_BODY_SIZE	1 * 1024 * 1024
 
 #define REQ_TIMEOUT_HEADER		10000   // 10 s
 #define REQ_TIMEOUT_BODY		120000 // 120 s
@@ -87,7 +87,9 @@ private:
 		std::vector<char>	body;
 	};
 
+	Config::Server			_config;
 	Request					_request;
+
 	e_request_state			_state;
 	time_t					_tsStart;
 	http::e_status_code		_code;
@@ -103,7 +105,7 @@ private:
 	void	setError(const http::e_status_code pCode);
 
 public:
-	HttpRequest(void);
+	HttpRequest(const Config::Server& pConfig);
 	~HttpRequest(void);
 
 	// ======== Lifecycle ========
