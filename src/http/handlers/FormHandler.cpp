@@ -32,6 +32,9 @@ ResponsePlan	FormHandler::handle(
 		}
 	}
 
+	if (route.normalizedPath == "/set_name" && data.find("username") != data.end() && !data["username"].empty() && route.session)
+		route.session->username = data["username"];
+
 	std::string	body = "<html><body><ul>\n";
 	for (std::map<std::string, std::string>::iterator it = data.begin(); it != data.end(); it++)
 	{

@@ -73,6 +73,11 @@ SessionsManager::Session SessionsManager::findSession(const http::t_headers &hea
 	return getSession(sessionId);
 }
 
+bool SessionsManager::sessionExists(const std::string &sessionId) const
+{
+	return _sessions.find(sessionId) != _sessions.end();
+}
+
 void SessionsManager::clearExpiredSessions(time_t timeout)
 {
 	for (std::map<std::string, Session>::iterator it = _sessions.begin(); it != _sessions.end(); ++it)

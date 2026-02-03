@@ -16,6 +16,52 @@
 #include <algorithm>
 #include <iostream>
 
+std::string readFileToString(const std::string &path)
+{
+	std::string content;
+	int fd = fs::openReadOnly(path);
+	if (fd < 0)
+		return content;
+
+	struct stat st;
+	if (fstat(fd, &st) != 0)
+	{
+		close(fd);
+		return content;
+	}
+
+	content.resize(st.st_size);
+	ssize_t totalRead = 0;
+	while (totalRead < static_cast<ssize_t>(st.st_size))
+	{
+		ssize_t bytesRead = read(fd, &content[totalRead], st.st_size - totalRead);
+		if (bytesRead <= 0)
+		{
+			content.clear();
+			break;
+		}
+		totalRead += bytesRead;
+	}
+
+	close(fd);
+	return content;
+}
+
+std::string replacePlaceholder(
+					const std::string &content,
+					const std::string &placeholder,
+					const std::string &value)
+{
+	std::string result = content;
+	size_t pos = 0;
+	while ((pos = result.find(placeholder, pos)) != std::string::npos)
+	{
+		result.replace(pos, placeholder.length(), value);
+		pos += value.length();
+	}
+	return result;
+}
+
 ResponsePlan	StaticFileHandler::loadAutoindex(const std::string &path, const routing::Context &route) const
 {
 	ResponsePlan	plan;
@@ -133,7 +179,19 @@ ResponsePlan	StaticFileHandler::handle(
 		std::string fullIndex = path + route.location->index;
 		if (fs::isFile(fullIndex))
 		{
-			return loadFile(fullIndex, route);
+			// return loadFile(fullIndex, route);
+			if (fullIndex.find("index.html") != std::string::npos && req.hasField("Cookie"))
+			{
+				std::string content = readFileToString(fullIndex);
+				std::string username = route.session ? route.session->username : "Guest";
+				content = replacePlaceholder(content, "{{USERNAME}}", username);
+
+				plan.status = http::SC_OK;
+				plan.headers["Content-Type"] = http::Data::getMimeType("html");
+				plan.headers["Content-Length"] = str::toString(content.size());
+				plan.body = new MemoryBodySource(content);
+				return (plan);
+			}
 		}
 
 		if (route.location->autoindex)

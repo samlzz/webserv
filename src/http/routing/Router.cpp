@@ -14,6 +14,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "Router.hpp"
 #include "http/request/HttpRequest.hpp"
@@ -108,14 +109,15 @@ Context	resolve(const HttpRequest &req,
 
 	//manage sessions
 	std::string sessionId = ctx.cookies.getCookie("sessionId");
-	if (sessionId.empty())
+
+	if (sessionId.empty() || !serv._sessions.sessionExists(sessionId))
 	{
 		sessionId = serv._sessions.createSession("guest");
 		ctx.cookies.setCookie("sessionId", sessionId);
 	}
 	SessionsManager::Session *session = &serv._sessions.getSession(sessionId);
 	ctx.session = session;
-	
+
 	return ctx;
 }
 

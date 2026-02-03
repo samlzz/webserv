@@ -33,6 +33,8 @@ public:
 	std::string 	getSessionId(const std::string &field) const;
 
 	Session 		findSession(const http::t_headers &headers);
+	
+	bool			sessionExists(const std::string &sessionId) const;
 
 	void 			clearExpiredSessions(time_t timeout);
 };
