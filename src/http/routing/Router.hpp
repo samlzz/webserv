@@ -19,6 +19,7 @@
 #include "http/Cookies.hpp"
 #include "http/Sessions.hpp"
 
+#define SESSION_TIMEOUT 1800 // 30 minutes
 // ============================================================================
 // Forward declarations
 // ============================================================================

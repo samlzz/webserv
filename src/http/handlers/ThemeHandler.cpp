@@ -5,7 +5,6 @@
 #include "http/request/HttpRequest.hpp"
 #include "http/routing/Router.hpp"
 
-#include <iostream>
 ResponsePlan	ThemeHandler::handle(
 						const HttpRequest &req,
 						const routing::Context &route) const

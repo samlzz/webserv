@@ -1,4 +1,4 @@
-#include "Sessions.hpp"
+#include "http/Sessions.hpp"
 
 
 #include <cstdlib>
@@ -80,12 +80,13 @@ bool SessionsManager::sessionExists(const std::string &sessionId) const
 
 void SessionsManager::clearExpiredSessions(time_t timeout)
 {
-	for (std::map<std::string, Session>::iterator it = _sessions.begin(); it != _sessions.end(); ++it)
+	for (std::map<std::string, Session>::iterator it = _sessions.begin(); it != _sessions.end();)
 	{
 		if (std::time(0) - it->second.last_activity > timeout)
 		{
-			_sessions.erase(it);
-			it--;
+			std::map<std::string, Session>::iterator toErase = it;
+			++it;
+			_sessions.erase(toErase);
 		}
 		else
 		{
