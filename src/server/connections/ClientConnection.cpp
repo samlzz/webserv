@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/02 12:43:24 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/05 18:26:03 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@
 
 ClientConnection::ClientConnection(int cliSockFd, const ServerCtx &serverCtx)
 	: AConnection(cliSockFd), _serv(serverCtx)
-	, _req(), _resp(0)
+	, _req(_serv.config.maxBodySize), _resp(0)
 	, _offset(0), _cgiRead(0)
 	, _shouldRefresh(false)
 	, _state(CS_WAIT_FIRST_BYTE)

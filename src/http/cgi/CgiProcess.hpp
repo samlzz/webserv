@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/02 12:41:51 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/05 18:25:51 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@
 # include "server/connections/IWritableNotifier.hpp"
 
 # ifndef CGI_MAX_EXEC_TIME
-#  define CGI_MAX_EXEC_TIME 30 // ? in seconds
+#  define CGI_MAX_EXEC_TIME 3 // ? in seconds
 # endif
 
 // ============================================================================
@@ -46,12 +46,15 @@ private:
 	// ============================================================================
 	IOutputSink			&_sink;
 	IWritableNotifier	*_notifier;
+	
 	pid_t				_pid;
+	uint8_t				_exitCode;
+	
 	time_t				_startTs;
 
-	uint8_t				_exitCode;
 	bool				_terminated;
 	bool				_errOccur;
+	bool				_hasTimeout;
 
 	IConnection			*_read;
 	IConnection			*_write;
@@ -81,6 +84,8 @@ public:
 
 	bool				isTerminated(void) const;
 	bool				isError(void) const;
+	bool				isTimeout(void) const;
+
 	uint8_t				exitCode(void) const;
 
 	void				setDataNotify(IWritableNotifier *notifier);

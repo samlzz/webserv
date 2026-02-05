@@ -6,20 +6,21 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/02 12:42:12 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/05 18:25:59 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
+#include "HttpRequest.hpp"
+#include "http/response/BuffStream.hpp"
+
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <algorithm>
 #include <string>
 
-#include "HttpRequest.hpp"
 #include "http/HttpTypes.hpp"
-#include "http/response/BuffStream.hpp"
 
 #define CURRENT_STATE() _state
 #define UPDATE_STATE(S) _state = S
@@ -29,7 +30,8 @@
 //#****************************************************************************#
 #pragma region Construct & Destruct
 
-HttpRequest::HttpRequest(void) {
+HttpRequest::HttpRequest(size_t clientMaxBodySize)
+	: _maxBodySize(clientMaxBodySize) {
 	reset();
 }
 
@@ -54,9 +56,9 @@ void					HttpRequest::setPath(const std::string &pPath)
 
 	_request.uri.path = pPath.substr(0, queryPos);
 	if (queryPos != std::string::npos)
-		_request.uri.query = pPath.substr(queryPos, fragmentPos);
+		_request.uri.query = pPath.substr(queryPos + 1, fragmentPos - queryPos - 1);
 	if (fragmentPos != std::string::npos)
-		_request.uri.fragment = pPath.substr(fragmentPos);
+		_request.uri.fragment = pPath.substr(fragmentPos + 1);
 }
 
 const std::string		&HttpRequest::getQuery() const		{ return (_request.uri.query);    };
@@ -237,6 +239,8 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
+			else if (ch == '?')
+				return setError(http::SC_BAD_REQUEST);
 			else {
 				if (_buffer.length() > MAX_URI_LENGTH)
 					return setError(http::SC_URI_TOO_LONG);
@@ -305,6 +309,8 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case LINE_DONE:
 			if (ch != '\n') return setError(http::SC_BAD_REQUEST);
+			if (_request.verMaj != 1 || _request.verMin != 1)
+				return setError(http::SC_VERSION_NOT_SUPPORTED);
 			UPDATE_STATE(HEADER_START);
 			break;
 
@@ -393,7 +399,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				if (!isDec(_buffer))
 					return setError(http::SC_BAD_REQUEST);
 				_contentLength = std::atoi(_buffer.c_str());
-				if (_contentLength > CLIENT_MAX_BODY_SIZE)
+				if (_contentLength > _maxBodySize)
 					return setError(http::SC_CONTENT_TOO_LARGE);
 				UPDATE_STATE(BODY_CONTENT);
 			}
@@ -540,6 +546,7 @@ void	HttpRequest::checkTimeout(time_t now)
 void HttpRequest::setError(const http::e_status_code pCode)
 {
 	_code = pCode;
+	setField("Connection", "close");
 	UPDATE_STATE(PARSING_ERROR);
 }
 

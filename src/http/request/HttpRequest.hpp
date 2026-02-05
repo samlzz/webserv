@@ -6,25 +6,24 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/02/02 09:12:14 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/05 17:06:33 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_REQUEST_HPP__
 #define __HTTP_REQUEST_HPP__
 
-#include "http/request/IHttpRequest.hpp"
-
 #include <string>
 #include <vector>
 
 #include "http/HttpTypes.hpp"
 #include "http/response/BuffStream.hpp"
+#include "http/request/IHttpRequest.hpp"
+
 
 #define MAX_METHOD_LENGTH		8
 #define MAX_URI_LENGTH			2 * 1024
 #define MAX_HEADER_LENGTH		2 * 1024
-#define CLIENT_MAX_BODY_SIZE	1 * 1024 * 1024
 
 /* ? Timeout are in seconds */
 #define REQ_TIMEOUT_HEADER		10
@@ -89,6 +88,8 @@ private:
 	};
 
 	Request					_request;
+	size_t					_maxBodySize;
+
 	e_request_state			_state;
 	time_t					_tsStart;
 	http::e_status_code		_code;
@@ -104,7 +105,7 @@ private:
 	void	setError(const http::e_status_code pCode);
 
 public:
-	HttpRequest(void);
+	HttpRequest(size_t clientMaxBodySize);
 	~HttpRequest(void);
 
 	// ======== Lifecycle ========
