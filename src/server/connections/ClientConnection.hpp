@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 13:03:47 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 09:41:28 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,9 +28,10 @@
 #  define CLIENT_READ_BUF_SIZE	2048
 # endif
 
-# define CLIENT_TIMEOUT_ACCEPT	10000	// 10 s
-# define CLIENT_TIMEOUT_REQ		60000	// 60s
-# define CLIENT_TIMEOUT_RESP	30000	// 30s
+/* ? Timeout are in seconds */
+# define CLIENT_TIMEOUT_ACCEPT	10
+# define CLIENT_TIMEOUT_REQ		60
+# define CLIENT_TIMEOUT_RESP	30
 
 class ClientConnection: public AConnection, public IWritableNotifier {
 
@@ -44,24 +45,31 @@ private:
 	};
 
 	const ServerCtx			&_serv;
+
 	HttpRequest				_req;
 	HttpResponse			*_resp;
 	size_t					_offset;
 	IConnection				*_cgiRead;
+
+	bool					_shouldRefresh;
 	e_client_state			_state;
 	time_t					_tsLastActivity;
 
 public:
 	ClientConnection(int cliSockFd, const ServerCtx &servCtx);
+	virtual ~ClientConnection(void);
 
+	/* IConnection */
 	virtual ConnEvent	handleEvents(short revents);
 
 	virtual ConnEvent	checkTimeout(time_t now);
 
-	virtual void		notifyWritable(void);
-
 	virtual IConnection	*buddy(void);
 	virtual void		detachBuddy(void);
+
+	/* IWritableNotifier */
+	virtual void		notifyWritable(void);
+	virtual void		notifyEnd(void);
 
 private:
 	ConnEvent			handleRead(void);

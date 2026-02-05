@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 14:21:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 13:27:08 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 12:38:59 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,6 +96,14 @@ bool	Reactor::manageConnEvent(ConnEvent ev, size_t idx)
 		removeConnection(idx);
 		return true;
 	}
+
+	case ConnEvent::CE_REFRESH:
+	{
+		_pfds[idx].events = _connections[idx]->events();
+		_pfds[idx].revents = 0;
+		break;
+	}
+
 	case ConnEvent::CE_NONE:
 		__attribute__ ((fallthrough));
 	default:
@@ -117,6 +125,7 @@ void	Reactor::run(void)
 			throw SysError("poll");
 
 		size_t	i = 0;
+		time_t	now = std::time(0);
 		while (i < _pfds.size())
 		{
 			IConnection	*conn = _connections[i];
@@ -127,7 +136,7 @@ void	Reactor::run(void)
 				removeConnection(i);
 				continue;
 			}
-			if (manageConnEvent(conn->checkTimeout(std::time(0)), i))
+			if (manageConnEvent(conn->checkTimeout(now), i))
 				continue;
 			if (_pfds[i].revents == 0)
 			{

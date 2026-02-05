@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:32:10 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/01 20:07:32 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,12 +52,16 @@ ConnEvent	CgiReadConnection::handleEvents(short revents)
 		ssize_t	n = read(_fd, buf, CGI_READ_BUF_SIZE);
 
 		if (n < 0)
-			return (ConnEvent::none());
+			return (_ctx.onError(), ConnEvent::close());
 		if (n == 0)
 			return (_ctx.onEof(), ConnEvent::close());
 
 		_ctx.onRead(buf, static_cast<size_t>(n));
 	}
+
+	if (revents & POLLHUP)
+		return (_ctx.onEof(), ConnEvent::close());
+
 	return ConnEvent::none();
 }
 
@@ -70,6 +74,8 @@ ConnEvent	CgiReadConnection::checkTimeout(time_t now)
 	}
 	return ConnEvent::none();
 }
+
+// ---- Buddy's methods ----
 
 IConnection	*CgiReadConnection::buddy(void)			{ return _ctx.write(); }
 void		CgiReadConnection::detachBuddy(void)	{ _ctx.forgetWrite(); }

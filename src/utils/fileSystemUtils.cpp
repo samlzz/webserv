@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 14:41:48 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 14:42:29 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/31 12:21:41 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <cerrno>
 #include <stdint.h>
+#include <sstream>
 
 #include "fileSystemUtils.hpp"
 
@@ -88,26 +89,6 @@ int openReadOnly(const std::string &path)
 }
 
 // -----------------------------------------------------------------------------
-// subExt
-// -----------------------------------------------------------------------------
-std::string subExt(const std::string &filePath)
-{
-	size_t slash = filePath.find_last_of('/');
-	size_t dot   = filePath.find_last_of('.');
-
-	if (dot == std::string::npos)
-		return "";
-
-	if (slash != std::string::npos && dot < slash)
-		return "";
-
-	if (dot + 1 >= filePath.size())
-		return "";
-
-	return filePath.substr(dot + 1);
-}
-
-// -----------------------------------------------------------------------------
 // size
 // -----------------------------------------------------------------------------
 ssize_t size(const std::string &path)
@@ -117,6 +98,35 @@ ssize_t size(const std::string &path)
 		return -1;
 
 	return static_cast<ssize_t>(st.st_size);
+}
+
+/// -----------------------------------------------------------------------------
+// decode hexa
+/// -----------------------------------------------------------------------------
+//Decode URL encoded string (%XX -> character)
+std::string url_decode(const std::string &str)
+{
+	std::string result;
+	for (size_t i = 0; i < str.length(); i++)
+	{
+		if (str[i] == '%' && i + 2 < str.length())
+		{
+			int hex_val;
+			std::istringstream hex_stream(str.substr(i + 1, 2));
+			if (hex_stream >> std::hex >> hex_val)
+			{
+				result += static_cast<char>(hex_val);
+				i += 2;
+			}
+			else
+				result += str[i];
+		}
+		else if (str[i] == '+')
+			result += ' ';
+		else
+			result += str[i];
+	}
+	return result;
 }
 
 } // namespace fs

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 15:25:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:16:15 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/30 15:38:30 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,13 +130,22 @@ bool CgiOutputParser::tryParseHeaders()
 	else
 		return false;
 
-	std::string headerBlock = _headBuf.substr(0, pos);
-	parseHeaderLines(headerBlock);
+	if (pos > 0)
+	{
+		std::string headerBlock = _headBuf.substr(0, pos);
+		parseHeaderLines(headerBlock);
+	}
 
 	if (_headers.find("Location") != _headers.end())
 		_status = http::SC_FOUND;
+
 	if (_headers.find("Content-Length") == _headers.end())
-		_headers["Transfert-Encoding"] = "chunked";
+	{
+		if (_status == http::SC_FOUND || _status == http::SC_MOVED_PERMANENTLY)
+			_headers["Content-Length"] = "0";
+		else
+			_headers["Transfert-Encoding"] = "chunked";
+	}
 
 	_state = ST_BODY;
 

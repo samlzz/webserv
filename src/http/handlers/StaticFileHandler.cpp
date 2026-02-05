@@ -7,6 +7,7 @@
 #include "http/HttpData.hpp"
 #include "bodySrcs/MemoryBodySource.hpp"
 #include "bodySrcs/FileBodySource.hpp"
+#include "utils/pathUtils.hpp"
 #include "utils/stringUtils.hpp"
 #include "utils/fileSystemUtils.hpp"
 
@@ -71,7 +72,7 @@ ResponsePlan	StaticFileHandler::loadFile(const std::string &path, const routing:
 	struct stat st;
 
 	stat(path.c_str(), &st);
-	std::string	ext = fs::subExt(path);
+	std::string	ext = path::subExt(path);
 
 	int _fd;
 	// if ((_fd = open(path.c_str(), O_RDONLY)) < 0)
@@ -87,9 +88,9 @@ ResponsePlan	StaticFileHandler::loadFile(const std::string &path, const routing:
 	plan.headers["Content-Length"] = str::toString(st.st_size);
 	plan.headers["Content-Type"] = http::Data::getMimeType(ext);
 	
-	plan.body = new FileBodySource(_fd);
-
 	plan.status = http::SC_OK;
+
+	plan.body = new FileBodySource(_fd);
 
 	return (plan);
 }
@@ -100,7 +101,6 @@ ResponsePlan	StaticFileHandler::handle(
 {
 	(void)req;
 	(void)route;
-	// std::string		convertStr(vec.data(), vec.size());
 
 	ResponsePlan	plan;
 

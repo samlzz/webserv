@@ -3,21 +3,22 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/03 15:32:58 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/05 17:02:49 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <cstddef>
 #include "HttpRequest.hpp"
 #include "http/response/BuffStream.hpp"
-
 
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <algorithm>
+#include <string>
 
 #include "http/HttpTypes.hpp"
 
@@ -29,8 +30,8 @@
 //#****************************************************************************#
 #pragma region Construct & Destruct
 
-HttpRequest::HttpRequest(const Config::Server& pConfig) 
-	: _config(pConfig) {
+HttpRequest::HttpRequest(size_t clientMaxBodySize)
+	: _maxBodySize(clientMaxBodySize) {
 	reset();
 }
 
@@ -44,7 +45,22 @@ HttpRequest::~HttpRequest(void) {
 #pragma region Getter / Setter
 
 http::e_method			HttpRequest::getMethod() const		{ return (_request.method);       };
-const std::string		&HttpRequest::getPath() const  		{ return (_request.uri.path);     };
+void					HttpRequest::setMethod(
+									http::e_method pMethod)	{ _request.method = pMethod; }
+
+const std::string		&HttpRequest::getPath() const		{ return (_request.uri.path);     };
+void					HttpRequest::setPath(const std::string &pPath)
+{
+	size_t	queryPos = pPath.find('?');
+	size_t	fragmentPos = pPath.find('#');
+
+	_request.uri.path = pPath.substr(0, queryPos);
+	if (queryPos != std::string::npos)
+		_request.uri.query = pPath.substr(queryPos + 1, fragmentPos - queryPos - 1);
+	if (fragmentPos != std::string::npos)
+		_request.uri.fragment = pPath.substr(fragmentPos + 1);
+}
+
 const std::string		&HttpRequest::getQuery() const		{ return (_request.uri.query);    };
 const std::string		&HttpRequest::getFragment() const	{ return (_request.uri.fragment); };
 int						HttpRequest::getVerMaj() const		{ return (_request.verMaj);       };
@@ -223,6 +239,8 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
+			else if (ch == '?')
+				return setError(http::SC_BAD_REQUEST);
 			else {
 				if (_buffer.length() > MAX_URI_LENGTH)
 					return setError(http::SC_URI_TOO_LONG);
@@ -381,7 +399,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				if (!isDec(_buffer))
 					return setError(http::SC_BAD_REQUEST);
 				_contentLength = std::atoi(_buffer.c_str());
-				if (_contentLength > _config.maxBodySize)
+				if (_contentLength > _maxBodySize)
 					return setError(http::SC_CONTENT_TOO_LARGE);
 				UPDATE_STATE(BODY_CONTENT);
 			}

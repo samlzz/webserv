@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ClientConnection.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/03 15:38:12 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/05 17:15:19 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,12 +32,18 @@
 
 ClientConnection::ClientConnection(int cliSockFd, const ServerCtx &serverCtx)
 	: AConnection(cliSockFd), _serv(serverCtx)
-	, _req(_serv.config), _resp(0)
+	, _req(_serv.config.maxBodySize), _resp(0)
 	, _offset(0), _cgiRead(0)
+	, _shouldRefresh(false)
 	, _state(CS_WAIT_FIRST_BYTE)
 	, _tsLastActivity(std::time(0))
 {
 	setFdFlags();
+}
+
+ClientConnection::~ClientConnection(void)
+{
+	delete _resp;
 }
 
 // ============================================================================
@@ -54,16 +60,22 @@ ConnEvent	ClientConnection::buildResponse(void)
 		needs->setNotifier(*this);
 	if (plan.event.conn && plan.event.type == ConnEvent::CE_SPAWN)
 		_cgiRead = plan.event.conn;
-	_resp = new HttpResponse(plan);
+
+	_resp = new HttpResponse(plan, _req, route);
 	return plan.event;
 }
 
+/**
+ * This function was call only when _req.isDnone is false.
+ * Because when it's done we wait for POLLOUT only
+*/
 ConnEvent	ClientConnection::handleRead(void)
 {
 	char	buf[CLIENT_READ_BUF_SIZE];
 	ssize_t	n = recv(_fd, buf, CLIENT_READ_BUF_SIZE, 0);
 
-	if (n <= 0)
+	// ? If EOF was received: client sent an incomplete request
+	if (n <= 0) // ? error or EOF
 		return ConnEvent::close();
 
 	_tsLastActivity = std::time(0);
@@ -82,22 +94,28 @@ ConnEvent	ClientConnection::handleRead(void)
 
 ConnEvent	ClientConnection::handleWrite(void)
 {
-	_resp->fillStream();
+	if (!_resp->fillStream())
+		return ConnEvent::close();
+
 	IFifoStreamView<t_bytes>	&stream = _resp->stream();
+	if (!stream.hasBuffer())
+		return (_events = 0, ConnEvent::none());
 	const t_bytes				&buf = stream.front();
 
+	if (buf.empty())
+		return (stream.pop(), ConnEvent::none());
+	// ? _offset must always be strictly less than buf.size()
 	ssize_t n = send(_fd,
 					buf.data() + _offset,
 					buf.size() - _offset,
 					0);
-	if (n <= 0)
+	if (n <= 0) // ? so n should never be 0
 		return ConnEvent::close();
 
 	_tsLastActivity = std::time(0);
 	_offset += static_cast<size_t>(n);
 
-	// all curent buffer was sent
-	if (_offset == buf.size())
+	if (_offset == buf.size()) // ? all curent buffer was sent
 	{
 		stream.pop();
 		_offset = 0;
@@ -117,14 +135,14 @@ ConnEvent	ClientConnection::handleWrite(void)
 				_events = POLLIN;
 			}
 			else
-				_events = 0;
+				_events = 0; // ? No buffer to send, wait for notifyWritable
 		}
 	}
 	return ConnEvent::none();
 }
 
 // ============================================================================
-// Public methods
+// IConnection methods
 // ============================================================================
 
 ConnEvent	ClientConnection::handleEvents(short revents)
@@ -137,6 +155,9 @@ ConnEvent	ClientConnection::handleEvents(short revents)
 
 	if (revents & POLLOUT)
 		return handleWrite();
+
+	if (revents & POLLHUP)
+		return ConnEvent::close();
 
 	return ConnEvent::none();
 }
@@ -159,13 +180,30 @@ ConnEvent	ClientConnection::checkTimeout(time_t now)
 		return ConnEvent::close();
 
 	_req.checkTimeout(now);
+	if (_shouldRefresh)
+	{
+		_shouldRefresh = false;
+		return ConnEvent::refresh();
+	}
 	return ConnEvent::none();
-}
-
-void	ClientConnection::notifyWritable(void)
-{
-	addEvent(POLLOUT);
 }
 
 IConnection	*ClientConnection::buddy(void)		{ return _cgiRead; }
 void		ClientConnection::detachBuddy(void)	{ _cgiRead = 0; }
+
+// ============================================================================
+// IWritableNotifier methods
+// ============================================================================
+
+void	ClientConnection::notifyWritable(void)
+{
+	addEvent(POLLOUT);
+	_shouldRefresh = true;
+}
+
+// ? detach buddy and schedule a write attempt so HttpResponse can finalize (error/EOF)
+void	ClientConnection::notifyEnd(void)
+{
+	detachBuddy();
+	notifyWritable();
+}

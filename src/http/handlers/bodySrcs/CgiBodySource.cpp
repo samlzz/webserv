@@ -6,11 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 16:07:39 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 17:46:45 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 13:22:43 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CgiBodySource.hpp"
+#include "http/HttpTypes.hpp"
 #include "http/cgi/CgiOutputParser.hpp"
 #include "http/cgi/CgiProcess.hpp"
 
@@ -26,6 +27,7 @@ CgiBodySource::CgiBodySource(CgiProcess *proc, CgiOutputParser *parser)
 
 CgiBodySource::~CgiBodySource()
 {
+	_process->kill();
 	_process->release();
 	delete _parser;
 }
@@ -77,6 +79,13 @@ bool CgiBodySource::metaReady() const
 
 http::e_status_code CgiBodySource::status() const
 {
+	if (_process->isError())
+	{
+		if (_process->isTimeout())
+			return http::SC_GATEWAY_TIMEOUT;
+		return http::SC_BAD_GATEWAY;
+	}
+
 	return _parser->status();
 }
 

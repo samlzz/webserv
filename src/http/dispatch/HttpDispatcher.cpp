@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:55:10 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/31 12:28:29 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 #include "http/request/HttpRequest.hpp"
 #include "http/response/ResponsePlan.hpp"
 #include "http/routing/Router.hpp"
-#include "utils/fileSystemUtils.hpp"
+#include "utils/pathUtils.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -47,10 +47,12 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 		return &_redirectHandler;
 
 	http::e_method	method = req.getMethod();
-	if ((method == http::MTH_GET || method == http::MTH_POST)
-		&& loca.cgiExts.find(fs::subExt(route.normalizedPath)) != loca.cgiExts.end()
-	)
-		return &_cgiHandler;
+	if (method == http::MTH_GET || method == http::MTH_HEAD || method == http::MTH_POST)
+	{
+		std::string	cgiExt = path::subExt(path::subPath(route.normalizedPath));
+		if (loca.cgiExts.find(cgiExt) != loca.cgiExts.end())
+			return &_cgiHandler;
+	}
 	
 	if (method == http::MTH_GET || method == http::MTH_HEAD)
 		return &_staticHandler;

@@ -3,31 +3,31 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/02/03 15:24:23 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/05 17:06:33 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_REQUEST_HPP__
 #define __HTTP_REQUEST_HPP__
 
-#include "config/Config.hpp"
-#include "http/request/IHttpRequest.hpp"
-
 #include <string>
 #include <vector>
 
 #include "http/HttpTypes.hpp"
 #include "http/response/BuffStream.hpp"
+#include "http/request/IHttpRequest.hpp"
+
 
 #define MAX_METHOD_LENGTH		8
 #define MAX_URI_LENGTH			2 * 1024
 #define MAX_HEADER_LENGTH		2 * 1024
 
-#define REQ_TIMEOUT_HEADER		10000   // 10 s
-#define REQ_TIMEOUT_BODY		120000 // 120 s
+/* ? Timeout are in seconds */
+#define REQ_TIMEOUT_HEADER		10
+#define REQ_TIMEOUT_BODY		120
 
 enum	e_request_state
 	{ LINE_METHOD
@@ -87,8 +87,8 @@ private:
 		std::vector<char>	body;
 	};
 
-	Config::Server			_config;
 	Request					_request;
+	size_t					_maxBodySize;
 
 	e_request_state			_state;
 	time_t					_tsStart;
@@ -105,7 +105,7 @@ private:
 	void	setError(const http::e_status_code pCode);
 
 public:
-	HttpRequest(const Config::Server& pConfig);
+	HttpRequest(size_t clientMaxBodySize);
 	~HttpRequest(void);
 
 	// ======== Lifecycle ========
@@ -118,7 +118,9 @@ public:
 
 	// ===== Getter / Setter =====
 	http::e_method			getMethod() const;
+	void					setMethod(http::e_method pMethod);
 	const std::string		&getPath() const;
+	void					setPath(const std::string &pPath);
 	const std::string		&getQuery() const;
 	const std::string		&getFragment() const;
 	int						getVerMaj() const;

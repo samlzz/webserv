@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 14:30:19 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 14:38:26 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/01/31 12:21:32 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,9 @@ bool		isDir(const std::string &path);
 
 int			openReadOnly(const std::string &path);
 
-std::string	subExt(const std::string &filePath);
 ssize_t		size(const std::string &path);
+
+std::string	url_decode(const std::string &str);
 
 } // namespace fs
 

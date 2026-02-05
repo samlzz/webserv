@@ -19,10 +19,10 @@ ResponsePlan	DeleteHandler::handle(
 
 	std::string	path = route.location->root + route.normalizedPath;
 
-	if (path[0] == '/')
+	if (!path.empty() && path[0] == '/')
 		path = "." + path;
 
-	if (fs::checkPerms(path, fs::P_EXIST))
+	if (!(fs::checkPerms(path, fs::P_EXIST)))
 		return ErrorBuilder::build(http::SC_NOT_FOUND, route.location);
 	else if (fs::isDir(path))
 		return ErrorBuilder::build(http::SC_FORBIDDEN, route.location);

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 16:05:13 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 17:00:14 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/02 08:17:39 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 #include "http/dispatch/ErrorBuilder.hpp"
 #include "http/routing/Router.hpp"
 #include "server/connections/ConnEvent.hpp"
-#include "utils/fileSystemUtils.hpp"
+#include "utils/pathUtils.hpp"
 #include "utils/stringUtils.hpp"
 
 #include <cstddef>
@@ -29,46 +29,6 @@
 
 CgiHandler::CgiHandler() {}
 CgiHandler::~CgiHandler() {}
-
-static std::string	subPath(const std::string& pPath)
-{
-	std::string		result;
-	size_t			end;
-
-	end = pPath.find_last_of('.');
-	if (end == std::string::npos)
-		return pPath;
-
-	end = pPath.find_first_of('/', end);
-	if (end == std::string::npos)
-		return pPath;
-
-	result = pPath.substr(0, end);
-	if (result.empty())
-		return "";
-
-	return result;
-}
-
-static std::string	subInfo(const std::string& pPath)
-{
-	std::string		result;
-	size_t			start;
-
-	start = pPath.find_last_of('.');
-	if (start == std::string::npos)
-		return "";
-
-	start = pPath.find_first_of('/', start);
-	if (start == std::string::npos)
-		return "";
-
-	result = pPath.substr(start, pPath.length() - start);
-	if (result.empty())
-		return "";
-
-	return result;
-}
 
 // Create an uppered string
 std::string		toUpperEnv(const std::string& pStr)
@@ -99,10 +59,10 @@ static inline std::vector<std::string>	genEnvp(const routing::Context& route, co
 	addEnv(envp, "GATEWAY_INTERFACE", "CGI/1.1");
 	addEnv(envp, "REQUEST_METHOD", str::toString(req.getMethod()));
 	addEnv(envp, "QUERY_STRING", req.getQuery());
-	addEnv(envp, "PATH_INFO", subInfo(route.normalizedPath));
-	addEnv(envp, "PATH_TRANSLATED", route.location->root + subInfo(route.normalizedPath));
-	addEnv(envp, "SCRIPT_NAME", subPath(route.normalizedPath));
-	addEnv(envp, "SCRIPT_FILENAME", route.location->root + subPath(route.normalizedPath));
+	addEnv(envp, "PATH_INFO", path::subInfo(route.normalizedPath));
+	addEnv(envp, "PATH_TRANSLATED", route.location->root + path::subInfo(route.normalizedPath));
+	addEnv(envp, "SCRIPT_NAME", path::subPath(route.normalizedPath));
+	addEnv(envp, "SCRIPT_FILENAME", route.location->root + path::subPath(route.normalizedPath));
 	addEnv(envp, "REDIRECT_STATUS", "200");
 
 	addEnv(envp, "REMOTE_ADDR", "127.0.0.1");
@@ -133,13 +93,14 @@ static inline std::vector<std::string>	genEnvp(const routing::Context& route, co
 // Generate an vecor of string version of the argv for cgi
 static inline std::vector<std::string>	genArgv(const routing::Context& route)
 {
-	std::vector<std::string> vec;
+	std::vector<std::string>		vec;
+	std::string						ext = path::subExt(
+											path::subPath(route.normalizedPath)
+										);
+	Config::t_dict::const_iterator	it = route.location->cgiExts.find(ext);
 
-	Config::t_dict::const_iterator	it = route.location->cgiExts.find(fs::subExt(route.normalizedPath));
-	if (it != route.location->cgiExts.end())
-		vec.push_back(it->second);
-
-	vec.push_back(route.location->root + subPath(route.normalizedPath));
+	vec.push_back(it->second);
+	vec.push_back(route.location->root + path::subPath(route.normalizedPath));
 
 	return vec;
 }
