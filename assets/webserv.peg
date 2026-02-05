@@ -55,7 +55,7 @@ server_directive <- (listen / methods / root / index / autoindex / error_page
 
 location_body      <- ~(location_directive / fatal_directive)+
 location_directive <- methods / root / index / autoindex / error_page 
-                   / cgi / upload / return_redirect
+                   / cgi / upload / return_redirect / session_login
 
 # ============================================================================
 # Singles Directives
@@ -74,6 +74,7 @@ return_redirect      <- 'return' __ redirect:~redirect_value _ ~';' _
 
 # --- Location Directives ---
 upload               <- 'upload' __ upload:~path _ ~';' _
+session_login        <- 'session_login' __ session_login:~bool_value _ ~';' _
 
 # --- Unknow directives (throw error) ---
 fatal_block          <- !~!( [^;{}\t]+ _ '{' _ unknown_directive* _ '}' _ )

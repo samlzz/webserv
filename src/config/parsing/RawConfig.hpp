@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/13 13:57:56 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/05 15:29:09 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ struct RawServer
 
 		Optionnal<std::string>			uploadPath;
 		Optionnal<Config::StatusPath>	redirect;
-		Optionnal<bool> 				login_auth;
+		Optionnal<bool> 				sessionLogin;
 
 		RawLocation(const std::string &pPath);
 		Config::Server::Location
@@ -60,9 +60,9 @@ struct RawServer
 // RawServer properties
 // ============================================================================
 
-	Optionnal<std::string>				host;
-	Optionnal<uint16_t>					port;
-	Optionnal<size_t>					maxBodySize;
+	Optionnal<std::string>		host;
+	Optionnal<uint16_t>			port;
+	Optionnal<size_t>			maxBodySize;
 
 	/* Default values for location blocks */
 	std::vector<http::e_method>	d_methods;

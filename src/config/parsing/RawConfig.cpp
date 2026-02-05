@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:06 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/21 18:30:56 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/05 15:32:15 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ Config::Server::Location	RawServer::RawLocation::normalize(
 	out.root = root.getOr(parentRoot);
 	out.index = index.getOr(parentIndex);
 	out.autoindex = autoindex.getOr(parentAutoindex);
+	out.sessionLogin = sessionLogin.getOr(false);
 
 	out.errorPages = concatMap(parent.d_errorPages, errorPages);
 	out.defaultErrPage = defaultErrPage.getOr(parentDefaultErr);
@@ -59,7 +60,6 @@ Config::Server::Location	RawServer::RawLocation::normalize(
 	out.uploadPath = uploadPath;
 	out.redirect = redirect;
 	
-	out.login_auth = login_auth;
 	return out;
 }
 

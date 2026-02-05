@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/05 21:08:53 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 14:06:51 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/05 15:30:50 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,13 +71,13 @@ public:
 			std::string					root;
 			std::string					index;
 			bool						autoindex;
+			bool						sessionLogin;
 			t_errPages					errorPages;
 			std::string					defaultErrPage;
 			t_dict						cgiExts;
 
 			Optionnal<std::string>		uploadPath;
 			Optionnal<StatusPath>		redirect;
-			Optionnal<bool> 			login_auth;
 
 			bool	operator<(const Location &other) const;
 			bool	isMethodAllowed(http::e_method method) const;

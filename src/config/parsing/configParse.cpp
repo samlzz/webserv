@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:36:59 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/23 20:42:24 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/05 15:29:34 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,7 @@ RawServer::RawLocation	extractLocation(const AstNode *locationNode)
 	fillDest(loc.autoindex, locationNode, "autoindex", parseBool);
 	fillDest(loc.uploadPath, locationNode, "upload");
 	fillDest(loc.redirect, locationNode, "redirect", _extractReturn);
-	fillDest(loc.login_auth, locationNode, "login_auth", parseBool);
+	fillDest(loc.sessionLogin, locationNode, "session_login", parseBool);
 
 	const std::vector<AstNode *> &children = locationNode->children();
 	for (size_t i = 0; i < children.size(); ++i)
