@@ -110,6 +110,13 @@ void Config::print(std::ostream &os) const
 			}
 			else
 				os << "(none)\n";
+
+			// LOGIN_AUTH (Optionnal)
+			os << "    login_auth  : ";
+			if (loc.login_auth.isSome())
+				os << (*loc.login_auth ? "on" : "off") << "\n";
+			else
+				os << "(none)\n";
 		}
 		os << "\n";
 	}

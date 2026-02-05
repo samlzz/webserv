@@ -58,7 +58,8 @@ Config::Server::Location	RawServer::RawLocation::normalize(
 
 	out.uploadPath = uploadPath;
 	out.redirect = redirect;
-
+	
+	out.login_auth = login_auth;
 	return out;
 }
 

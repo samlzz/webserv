@@ -14,7 +14,6 @@
 #include <string>
 #include <dirent.h>
 #include <algorithm>
-#include <iostream>
 
 std::string readFileToString(const std::string &path)
 {
@@ -187,7 +186,7 @@ ResponsePlan	StaticFileHandler::handle(
 				content = replacePlaceholder(content, "{{USERNAME}}", username);
 
 				plan.status = http::SC_OK;
-				plan.headers["Content-Type"] = http::Data::getMimeType("html");
+				plan.headers["Content-Type"] = http::Data::getMimeType(fs::subExt(fullIndex));
 				plan.headers["Content-Length"] = str::toString(content.size());
 				plan.body = new MemoryBodySource(content);
 				return (plan);

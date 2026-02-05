@@ -77,6 +77,7 @@ public:
 
 			Optionnal<std::string>		uploadPath;
 			Optionnal<StatusPath>		redirect;
+			Optionnal<bool> 			login_auth;
 
 			bool	operator<(const Location &other) const;
 			bool	isMethodAllowed(http::e_method method) const;

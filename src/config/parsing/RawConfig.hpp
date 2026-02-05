@@ -45,6 +45,7 @@ struct RawServer
 
 		Optionnal<std::string>			uploadPath;
 		Optionnal<Config::StatusPath>	redirect;
+		Optionnal<bool> 				login_auth;
 
 		RawLocation(const std::string &pPath);
 		Config::Server::Location

@@ -9,6 +9,8 @@
 #include <sstream>
 #include <string>
 
+
+
 ResponsePlan	FormHandler::handle(
 								const HttpRequest &req,
 								const routing::Context &route) const
@@ -32,14 +34,24 @@ ResponsePlan	FormHandler::handle(
 		}
 	}
 
-	if (route.normalizedPath == "/set_name" && data.find("username") != data.end() && !data["username"].empty() && route.session)
+	if (route.normalizedPath.find("/set_name") != std::string::npos
+		&& data.find("username") != data.end()
+		&& !data["username"].empty()
+		&& route.session)
+	{
 		route.session->username = data["username"];
+		if (route.session->username == "admin")
+			route.session->setIsLoggedIn(true);
+		else
+			route.session->setIsLoggedIn(false);
+	}
 
 	std::string	body = "<html><body><ul>\n";
 	for (std::map<std::string, std::string>::iterator it = data.begin(); it != data.end(); it++)
 	{
 		body += "<li><b>" + it->first + "</b>:" + it->second + "</li>\n";
 	}
+	body += "<a href=\"/\">Back to home</a>\n";
 	body += "</ul></body></html>\n";
 
 	plan.headers["Content-Type"] = "text/html";

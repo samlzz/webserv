@@ -113,6 +113,7 @@ RawServer::RawLocation	extractLocation(const AstNode *locationNode)
 	fillDest(loc.autoindex, locationNode, "autoindex", parseBool);
 	fillDest(loc.uploadPath, locationNode, "upload");
 	fillDest(loc.redirect, locationNode, "redirect", _extractReturn);
+	fillDest(loc.login_auth, locationNode, "login_auth", parseBool);
 
 	const std::vector<AstNode *> &children = locationNode->children();
 	for (size_t i = 0; i < children.size(); ++i)
