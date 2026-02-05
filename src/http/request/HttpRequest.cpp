@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/05 16:48:18 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/05 17:02:49 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,8 +30,8 @@
 //#****************************************************************************#
 #pragma region Construct & Destruct
 
-HttpRequest::HttpRequest(const Config::Server& pConfig) 
-	: _config(pConfig) {
+HttpRequest::HttpRequest(size_t clientMaxBodySize)
+	: _maxBodySize(clientMaxBodySize) {
 	reset();
 }
 
@@ -399,7 +399,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				if (!isDec(_buffer))
 					return setError(http::SC_BAD_REQUEST);
 				_contentLength = std::atoi(_buffer.c_str());
-				if (_contentLength > _config.maxBodySize)
+				if (_contentLength > _maxBodySize)
 					return setError(http::SC_CONTENT_TOO_LARGE);
 				UPDATE_STATE(BODY_CONTENT);
 			}
