@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/01/30 13:54:28 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/05 16:45:00 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,9 +54,9 @@ void					HttpRequest::setPath(const std::string &pPath)
 
 	_request.uri.path = pPath.substr(0, queryPos);
 	if (queryPos != std::string::npos)
-		_request.uri.query = pPath.substr(queryPos, fragmentPos);
+		_request.uri.query = pPath.substr(queryPos + 1, fragmentPos - queryPos - 1);
 	if (fragmentPos != std::string::npos)
-		_request.uri.fragment = pPath.substr(fragmentPos);
+		_request.uri.fragment = pPath.substr(fragmentPos + 1);
 }
 
 const std::string		&HttpRequest::getQuery() const		{ return (_request.uri.query);    };
@@ -237,6 +237,8 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
+			else if (ch == '?')
+				return setError(http::SC_BAD_REQUEST);
 			else {
 				if (_buffer.length() > MAX_URI_LENGTH)
 					return setError(http::SC_URI_TOO_LONG);
