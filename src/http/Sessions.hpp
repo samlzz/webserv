@@ -14,7 +14,18 @@ public:
 	{
 		std::string							username;
 		time_t								last_activity;
+		bool 								is_logged_in;
 		std::map<std::string, std::string>	infos;
+
+		Session()
+			: username("Guest"), last_activity(std::time(0)), is_logged_in(false)
+		{}
+
+		~Session() {}
+
+		void 	updateActivity(void) 		{last_activity = std::time(0);}
+		bool 	getIsLoggedIn(void) const 	{return is_logged_in;}
+		void 	setIsLoggedIn(bool val) 	{is_logged_in = val;}
 	};
 
 private:

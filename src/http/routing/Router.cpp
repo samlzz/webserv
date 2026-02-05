@@ -116,7 +116,7 @@ Context	resolve(const HttpRequest &req,
 		ctx.cookies.setCookie("sessionId", sessionId);
 	}
 	SessionsManager::Session *session = &serv._sessions.getSession(sessionId);
-	session->last_activity = std::time(0);
+	session->updateActivity();
 	ctx.session = session;
 
 	return ctx;
