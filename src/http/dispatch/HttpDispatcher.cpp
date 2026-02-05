@@ -46,8 +46,9 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 	if (loca.redirect)
 		return &_redirectHandler;
 
-	// req.getQuery()
-	if (route.normalizedPath.find("theme") != std::string::npos)
+	if (route.normalizedPath.find("/theme") != std::string::npos
+		&& req.getQuery().find("mode=") != std::string::npos
+	)
 		return &_themeHandler;
 		
 	http::e_method	method = req.getMethod();
@@ -99,17 +100,6 @@ ResponsePlan	HttpDispatcher::dispatch(
 			http::SC_METHOD_NOT_ALLOWED,
 			route.location
 		);
-		
-	if ((loca.login_auth.isSome()
-		&& *loca.login_auth.get() == true
-		&& (!route.session || !route.session->getIsLoggedIn()))
-		|| (loca.login_auth.isSome() && *loca.login_auth.get() == false))
-	{
-			return ErrorBuilder::build(
-				http::SC_FORBIDDEN,
-				route.location
-			);
-	}
 
 	const IHttpHandler	*handler = findHandler(req, route);
 	if (!handler) // ? sould never happend cause of previous if

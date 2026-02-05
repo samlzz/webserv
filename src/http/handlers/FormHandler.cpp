@@ -34,10 +34,9 @@ ResponsePlan	FormHandler::handle(
 		}
 	}
 
-	if (route.normalizedPath.find("/set_name") != std::string::npos
+	if (route.location->sessionLogin == true && route.session
 		&& data.find("username") != data.end()
-		&& !data["username"].empty()
-		&& route.session)
+		&& !data["username"].empty())
 	{
 		route.session->username = data["username"];
 		if (route.session->username == "admin")

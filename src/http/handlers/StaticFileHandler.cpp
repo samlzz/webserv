@@ -161,6 +161,17 @@ ResponsePlan	StaticFileHandler::handle(
 			path = route.location->root + "/styles.css";
 	}
 
+	if (route.normalizedPath.find("/show_name") != std::string::npos)
+	{
+		std::string body = "<html><body><h1>Hello, " + (route.session ? route.session->username : "Guest") + "!</h1>";
+		body +=  "<a href=\"/\">Back to home</a></body></html>";
+		plan.status = http::SC_OK;
+		plan.headers["Content-Type"] = "text/html";
+		plan.headers["Content-Length"] = str::toString(body.size());
+		plan.body = new MemoryBodySource(body);
+		return (plan);
+	}
+
 	if (stat(path.c_str(), &st) != 0)
 		return (ErrorBuilder::build(http::SC_NOT_FOUND, route.location));
 
