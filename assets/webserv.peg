@@ -25,6 +25,7 @@ path              <- [^;\n\r\t {}]+
 
 
 extension         <- ('.' [a-zA-Z0-9]+) (__ ('.' [a-zA-Z0-9]+))*
+cookie_value      <- [a-zA-Z] [a-zA-Z0-9_-]*
 
 bool_value        <- 'on' / 'off' / 'true' / 'false' / '1' / '0'
 
@@ -75,6 +76,8 @@ return_redirect      <- 'return' __ redirect:~redirect_value _ ~';' _
 # --- Location Directives ---
 upload               <- 'upload' __ upload:~path _ ~';' _
 session_login        <- 'session_login' __ session_login:~bool_value _ ~';' _
+@set_cookie          <- 'set_cookie' __ name:~cookie_value _ ~';' _
+@vary_cookie         <- 'vary_cookie' __ name:~cookie_value _ ~';' _
 
 # --- Unknow directives (throw error) ---
 fatal_block          <- !~!( [^;{}\t]+ _ '{' _ unknown_directive* _ '}' _ )
