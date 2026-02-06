@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/05 21:08:53 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/05 15:30:50 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/06 11:27:55 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,6 @@ public:
 	typedef std::map<http::e_status_code, std::string>	t_errPages;
 	typedef std::map<std::string, std::string>			t_dict;
 
-
 	// ============================================================================
 	// Server configuration
 	// ============================================================================
@@ -78,6 +77,8 @@ public:
 
 			Optionnal<std::string>		uploadPath;
 			Optionnal<StatusPath>		redirect;
+			std::vector<std::string>	cookiesSet;
+			std::vector<std::string>	cookiesVary;
 
 			bool	operator<(const Location &other) const;
 			bool	isMethodAllowed(http::e_method method) const;

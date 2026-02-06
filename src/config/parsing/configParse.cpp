@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:36:59 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/05 15:29:34 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/06 11:26:10 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,7 @@ static Config::StatusPath	_extractReturn(const std::string &s)
 }
 
 // ========================================================================
-// Composite Directive Handlers (error_page, cgi)
+// Composite Directive Handlers (error_page, cgi, cookies)
 // ========================================================================
 
 static inline void	_appendErrorsPageItem(Config::t_errPages &errPages,
@@ -98,6 +98,12 @@ static inline void	_appendCgiItem(Config::t_dict &cgiExts,
 		cgiExts[*it] = path;
 }
 
+static inline void	_appendCookieItem(std::vector<std::string> &dest, const AstNode *cookieNode)
+{
+	Config::assertProp(cookieNode, "name", cookieNode->type());
+	dest.push_back(cookieNode->getAttr("name", ""));
+}
+
 // ========================================================================
 // Location Block Extraction
 // ========================================================================
@@ -122,10 +128,15 @@ RawServer::RawLocation	extractLocation(const AstNode *locationNode)
 
 		if (!prop)
 			continue;
-		if (prop->type() == "cgi")
+		const std::string	&type = prop->type();
+		if (type == "cgi")
 			_appendCgiItem(loc.cgiExts, prop);
-		else if (prop->type() == "error_page")
+		else if (type == "error_page")
 			_appendErrorsPageItem(loc.errorPages, loc.defaultErrPage, prop);
+		else if (type == "set_cookie")
+			_appendCookieItem(loc.cookiesSet, prop);
+		else if (type == "vary_cookie")
+			_appendCookieItem(loc.cookiesVary, prop);
 	}
 	return loc;
 }

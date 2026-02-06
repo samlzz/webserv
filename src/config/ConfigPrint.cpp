@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 21:00:34 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/09 21:14:03 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/06 11:34:21 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,12 +111,30 @@ void Config::print(std::ostream &os) const
 			else
 				os << "(none)\n";
 
-			// LOGIN_AUTH (Optionnal)
-			os << "    login_auth  : ";
-			if (loc.login_auth.isSome())
-				os << (*loc.login_auth ? "on" : "off") << "\n";
-			else
+			// SESSION LOGIN (Default to off)
+			os << "    sessionLogin  : " << (loc.sessionLogin ? "on\n" : "off\n");
+
+			// COOKIES SET
+			os << "    cookiesSet  :";
+			if (loc.cookiesSet.empty())
 				os << "(none)\n";
+			else
+			{
+				os << '\n';
+				for (size_t i = 0; i < loc.cookiesSet.size(); ++i)
+					os << "        " << loc.cookiesSet[i] << '\n';
+			}
+			
+			// COOKIES VARY
+			os << "    cookiesVary  :";
+			if (loc.cookiesVary.empty())
+				os << "(none)\n";
+			else
+			{
+				os << '\n';
+				for (size_t i = 0; i < loc.cookiesVary.size(); ++i)
+					os << "        " << loc.cookiesVary[i] << '\n';
+			}
 		}
 		os << "\n";
 	}

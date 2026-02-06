@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/05 15:29:09 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/06 11:14:54 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 
 # include <map>
 # include <stdint.h>
+# include <string>
+# include <vector>
 
 # include "config/Config.hpp"
 # include "config/Optionnal.hpp"
@@ -46,6 +48,8 @@ struct RawServer
 		Optionnal<std::string>			uploadPath;
 		Optionnal<Config::StatusPath>	redirect;
 		Optionnal<bool> 				sessionLogin;
+		std::vector<std::string>		cookiesSet;
+		std::vector<std::string>		cookiesVary;
 
 		RawLocation(const std::string &pPath);
 		Config::Server::Location

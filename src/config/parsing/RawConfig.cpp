@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:06 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/05 15:32:15 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/06 11:28:23 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,8 @@ Config::Server::Location	RawServer::RawLocation::normalize(
 
 	out.uploadPath = uploadPath;
 	out.redirect = redirect;
+	out.cookiesSet = cookiesSet;
+	out.cookiesVary = cookiesVary;
 	
 	return out;
 }
