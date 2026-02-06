@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 12:19:02 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/20 14:39:26 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/06 12:07:44 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 
 # include "connections/IConnection.hpp"
 
-# define POLL_TIMEOUT	-1
+# define POLL_TIMEOUT	500
 
 class Reactor {
 
