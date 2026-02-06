@@ -6,15 +6,16 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 12:19:02 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/20 14:39:26 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/06 10:47:06 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __REACTOR_HPP__
 # define __REACTOR_HPP__
 
+#include <csignal>
 # include <cstddef>
-#include <set>
+# include <set>
 # include <stdint.h>
 # include <sys/poll.h>
 # include <vector>
@@ -26,10 +27,11 @@
 class Reactor {
 
 private:
-	std::vector<IConnection *>	_connections;
-	std::vector<pollfd>			_pfds;
-	std::set<IConnection *>		_pendingClose;
-	bool						_running;
+	std::vector<IConnection *>		_connections;
+	std::vector<pollfd>				_pfds;
+	std::set<IConnection *>			_pendingClose;
+
+	static volatile sig_atomic_t	_running;
 
 public:
 
@@ -43,9 +45,10 @@ public:
 // Methods
 // ============================================================================
 
-	void	addConnection(IConnection *conn);
-	void	run(void);
-	void	stop(void);
+	void		addConnection(IConnection *conn);
+	void		run(void);
+
+	static void	stop(void);
 
 private:
 
