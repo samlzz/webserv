@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 16:07:39 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/02 13:22:43 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/06 12:03:59 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,9 @@ bool CgiBodySource::hasMore(void) const
 
 bool CgiBodySource::hasError(void) const
 {
-	return _process->isError();
+	if (_process->isError())
+		return true;
+	return _process->exitCode() != 0;
 }
 
 bool CgiBodySource::terminated() const
@@ -79,7 +81,7 @@ bool CgiBodySource::metaReady() const
 
 http::e_status_code CgiBodySource::status() const
 {
-	if (_process->isError())
+	if (hasError())
 	{
 		if (_process->isTimeout())
 			return http::SC_GATEWAY_TIMEOUT;
