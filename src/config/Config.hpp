@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/05 21:08:53 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 14:06:51 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/07 17:56:05 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,6 +86,7 @@ public:
 	// Server properties
 	// ============================================================================
 
+		const std::string		hostStr;
 		struct in_addr			host;
 		uint16_t				port; // According to RFC 793, the port is a 16 bit unsigned int.
 		size_t					maxBodySize;
@@ -97,6 +98,14 @@ public:
 	// Server methods
 	// ============================================================================
 		const Location	*findLocation(const std::string &path) const;
+
+	// ============================================================================
+	// Server construction
+	// ============================================================================
+		Server(const std::string &stringHost);
+
+	private:
+		Server();
 	};
 	// ============================================================================
 	// Default Server values

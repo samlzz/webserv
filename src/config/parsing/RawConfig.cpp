@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:06 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/21 18:30:56 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/07 17:56:12 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,9 +72,9 @@ static inline void	_setHost(struct in_addr *dest, std::string hostStr)
 
 Config::Server	RawServer::normalize(const Config::ServerDefaults &def)
 {
-	Config::Server out;
+	Config::Server out(host.getOr(def.host));
 
-	_setHost(&out.host, host.getOr(def.host));
+	_setHost(&out.host, out.hostStr);
 	out.port = port.getOr(def.port);
 	out.maxBodySize = maxBodySize.getOr(def.maxBodySize);
 
