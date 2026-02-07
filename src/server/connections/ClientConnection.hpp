@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/02 09:41:28 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/07 17:43:15 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,14 @@
 
 # include <cstddef>
 # include <ctime>
+# include <stdint.h>
+# include <sys/socket.h>
 
 # include "AConnection.hpp"
 # include "http/request/HttpRequest.hpp"
 # include "IWritableNotifier.hpp"
 # include "http/response/HttpResponse.hpp"
+# include "server/AddrInfo.hpp"
 # include "server/ServerCtx.hpp"
 # include "server/connections/ConnEvent.hpp"
 # include "server/connections/IConnection.hpp"
@@ -45,6 +48,8 @@ private:
 	};
 
 	const ServerCtx			&_serv;
+	const AddrInfo			_remote;
+	const AddrInfo			_local;
 
 	HttpRequest				_req;
 	HttpResponse			*_resp;
@@ -56,7 +61,11 @@ private:
 	time_t					_tsLastActivity;
 
 public:
-	ClientConnection(int cliSockFd, const ServerCtx &servCtx);
+	ClientConnection(
+		int cliSockFd,
+		const ServerCtx &servCtx,
+		const sockaddr_storage &remote
+	);
 	virtual ~ClientConnection(void);
 
 	/* IConnection */
