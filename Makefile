@@ -46,7 +46,10 @@ FILES =	main.cpp \
 		server/connections/AConnection.cpp \
 		server/connections/ClientConnection.cpp \
 		server/connections/ServerConnection.cpp \
-		utils/fileSystemUtils.cpp
+		utils/fileSystemUtils.cpp \
+		http/Sessions.cpp \
+		http/Cookies.cpp \
+		http/handlers/ThemeHandler.cpp
 ### END ###
 ifeq ($(FILES),)
     $(error FILES is empty: please define source files)
