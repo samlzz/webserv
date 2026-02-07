@@ -1,6 +1,9 @@
 #include "http/Cookies.hpp"
 
 #include <sstream>
+#include <iostream>
+#include <vector>
+
 Cookies::Cookies()
 {
 }
@@ -85,4 +88,36 @@ std::string Cookies::buildMultipleCookieHeader(void)
 		}
 	}
 	return cookieStream.str();
+}
+
+std::string Cookies::buildSetCookieHeaders(void) const
+{
+	std::vector<std::string> headers;
+	std::string allCookies;
+	
+	for (t_cookies::const_iterator it = _cookies.begin(); it != _cookies.end(); ++it)
+	{
+		std::ostringstream cookieStream;
+		cookieStream << it->first << "=" << it->second << "; Path=/; HttpOnly";
+		headers.push_back(cookieStream.str());
+	}
+	if (!headers.empty())
+	{
+		
+		for (size_t i = 0; i < headers.size(); ++i)
+		{
+			if (i > 0)
+				allCookies += "\r\nSet-Cookie: ";
+			allCookies += headers[i];
+		}
+	}
+	return allCookies;
+}
+
+void Cookies::print_cookies() const
+{
+	for (t_cookies::const_iterator it = _cookies.begin(); it != _cookies.end(); ++it)
+	{
+		std::cout << "Cookie: " << it->first << " = " << it->second << std::endl;
+	}
 }

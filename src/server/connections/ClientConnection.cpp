@@ -49,7 +49,8 @@ ConnEvent	ClientConnection::buildResponse(void)
 {
 	routing::Context	route = routing::resolve(_req, _serv);
 	ResponsePlan		plan = _serv.dispatcher.dispatch(_req, route);
-	plan.headers["Set-Cookie"] = route.cookies.buildMultipleCookieHeader();
+	plan.headers["Set-Cookie"] = route.cookies.buildSetCookieHeaders();
+	
 	INeedsNotifier		*needs = dynamic_cast<INeedsNotifier *>(plan.body);
 
 	if (needs)

@@ -14,6 +14,7 @@
 #include <string>
 #include <dirent.h>
 #include <algorithm>
+#include <vector>
 
 std::string readFileToString(const std::string &path)
 {
@@ -153,12 +154,27 @@ ResponsePlan	StaticFileHandler::handle(
 	std::string path = route.location->root + route.normalizedPath;
 
 	// Theme handling for styles.css
-	if (route.normalizedPath == "/styles.css")
+	std::vector<std::string>::const_iterator it = std::find(route.location->cookiesVary.begin(),
+										route.location->cookiesVary.end(),
+										"theme");
+	if (it != route.location->cookiesVary.end()
+		&& route.normalizedPath.find(".css") != std::string::npos)
 	{
-		if (req.getField("Cookie").find("theme=dark") != std::string::npos)
-			path = route.location->root + "/styles_dark.css";
+		std::string theme = route.cookies.getCookie("theme");
+		if (!theme.empty())
+		{
+			size_t dotPos = route.normalizedPath.find(".css");
+			std::string basePath = route.normalizedPath.substr(0, dotPos);
+			std::string themePath = route.location->root + basePath + "_" + theme + ".css";
+
+			struct stat themeSt;
+			if (stat(themePath.c_str(), &themeSt) == 0 && S_ISREG(themeSt.st_mode))
+				path = themePath;
+			else
+				path = route.location->root + route.normalizedPath;
+		}
 		else
-			path = route.location->root + "/styles.css";
+			path = route.location->root + route.normalizedPath;
 	}
 
 	if (route.normalizedPath.find("/show_name") != std::string::npos)
