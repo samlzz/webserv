@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stress / Timeout - Webserv Test Suite</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Stress &amp; Timeout</h1>
+            <p>Tests de charge, timeout, et connexions keep-alive</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html">GET / HEAD</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/upload.html">Upload / PUT</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/redirect.html">Redirections</a></li>
+                <li><a href="/headers.html">Headers</a></li>
+                <li><a href="/autoindex.html">Autoindex</a></li>
+                <li><a href="/chunked.html">Chunked</a></li>
+                <li><a href="/stress.html" class="active">Stress / Timeout</a></li>
+            </ul>
+        </nav>
+
+        <!-- Stress Tests -->
+        <div class="card">
+            <h2>Tests de charge</h2>
+            <div class="alert alert-warning">
+                Ces tests envoient de nombreuses requêtes simultanées. Utilisez avec précaution !
+            </div>
+
+            <div class="grid">
+                <div>
+                    <h3>Requêtes simultanées</h3>
+                    <div class="form-group">
+                        <label for="concurrent-count">Nombre :</label>
+                        <select id="concurrent-count">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-warning" onclick="runConcurrentTest()">Lancer concurrent</button>
+                </div>
+                <div>
+                    <h3>Requêtes séquentielles</h3>
+                    <div class="form-group">
+                        <label for="sequential-count">Nombre :</label>
+                        <select id="sequential-count">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="runSequentialTest()">Lancer séquentiel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Résultats stress -->
+        <div class="card">
+            <h2>Résultats</h2>
+            <div id="stress-progress" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress" id="progress-fill" style="width: 0%;"></div>
+                </div>
+                <p id="progress-text">0 / 0</p>
+            </div>
+            <div id="stress-results">
+                <p>Lancez un test pour voir les résultats.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Statistiques</h2>
+            <table>
+                <tr><th>Métrique</th><th>Valeur</th></tr>
+                <tr><td>Requêtes réussies</td><td id="stat-success">-</td></tr>
+                <tr><td>Requêtes échouées</td><td id="stat-failed">-</td></tr>
+                <tr><td>Temps total</td><td id="stat-total-time">-</td></tr>
+                <tr><td>Temps moyen</td><td id="stat-avg-time">-</td></tr>
+                <tr><td>Temps min</td><td id="stat-min-time">-</td></tr>
+                <tr><td>Temps max</td><td id="stat-max-time">-</td></tr>
+                <tr><td>Requêtes/seconde</td><td id="stat-rps">-</td></tr>
+            </table>
+        </div>
+
+        <!-- Timeout / Keep-alive -->
+        <div class="card">
+            <h2>Tests Timeout &amp; Keep-Alive</h2>
+
+            <h3>Timeout client (XMLHttpRequest)</h3>
+            <p>Envoie une requête avec un timeout très court pour tester la gestion du timeout côté client.</p>
+            <button class="btn btn-warning" onclick="testTimeout(100)">Timeout 100ms</button>
+            <button class="btn btn-warning" onclick="testTimeout(1000)">Timeout 1s</button>
+            <button class="btn btn-warning" onclick="testTimeout(5000)">Timeout 5s</button>
+
+            <h3 style="margin-top:15px;">Slow connection (attendre le timeout serveur)</h3>
+            <p>Ouvre une requête vers une URL inexistante et attend que le serveur timeout.</p>
+            <button class="btn btn-danger" onclick="testSlowConnection()">Slow Connection</button>
+
+            <h3 style="margin-top:15px;">Keep-Alive</h3>
+            <p>Envoie 5 requêtes séquentielles pour vérifier la réutilisation de la connexion.</p>
+            <button class="btn btn-primary" onclick="testKeepAlive()">Test Keep-Alive</button>
+        </div>
+
+        <div class="card">
+            <h2>Réponse Timeout</h2>
+            <div id="timeout-response" class="response-box">
+                <span class="status">En attente...</span>
+            </div>
+        </div>
+
+        <!-- CLI -->
+        <div class="card">
+            <h2>Tests en ligne de commande</h2>
+            <pre># Test simple
+curl -w "time_total: %{time_total}s\n" -o /dev/null -s http://localhost:8080/
+
+# 100 requêtes séquentielles
+for i in $(seq 1 100); do curl -s http://localhost:8080/ > /dev/null; done
+
+# Apache Benchmark
+ab -n 1000 -c 10 http://localhost:8080/
+
+# Siege
+siege -c 10 -t 30s http://localhost:8080/</pre>
+        </div>
+
+        <footer><p>Webserv Test Suite — 42 Project</p></footer>
+    </div>
+    <script src="/js/app.js"></script>
+</body>
+</html>
