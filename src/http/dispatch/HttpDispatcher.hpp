@@ -22,7 +22,8 @@
 # include "http/handlers/UploadFileHandler.hpp"
 # include "http/request/HttpRequest.hpp"
 # include "http/response/ResponsePlan.hpp"
-# include "http/handlers/ThemeHandler.hpp"
+
+// Forward Declaration
 namespace routing { struct Context; }
 
 class HttpDispatcher {
@@ -35,7 +36,6 @@ private:
 	FormHandler			_formHandler;
 	DeleteHandler		_deleteHandler;
 	CgiHandler			_cgiHandler;
-	ThemeHandler		_themeHandler;
 
 public:
 	HttpDispatcher();
