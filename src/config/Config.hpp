@@ -82,6 +82,8 @@ public:
 
 			bool	operator<(const Location &other) const;
 			bool	isMethodAllowed(http::e_method method) const;
+			bool	isCookiesSet(std::string queryKey) const;
+			bool	isCookiesVary(std::string queryKey) const;
 		};
 
 	// ============================================================================

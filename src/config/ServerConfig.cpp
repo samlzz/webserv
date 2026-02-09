@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "Config.hpp"
 #include "http/HttpTypes.hpp"
@@ -76,4 +77,20 @@ bool	Config::Server::Location::isMethodAllowed(http::e_method method) const
 			return true;
 	}
 	return false;
+}
+
+bool	Config::Server::Location::isCookiesSet(std::string queryKey) const
+{
+	std::vector<std::string>::const_iterator it = std::find(cookiesSet.begin(),
+											cookiesSet.end(),
+											queryKey);
+	return it != cookiesSet.end();
+}
+
+bool	Config::Server::Location::isCookiesVary(std::string queryKey) const
+{
+	std::vector<std::string>::const_iterator it = std::find(cookiesVary.begin(),
+											cookiesVary.end(),
+											queryKey);
+	return it != cookiesVary.end();
 }
