@@ -13,7 +13,8 @@
 #ifndef __HTTP_REQUEST_HPP__
 #define __HTTP_REQUEST_HPP__
 
-#include "http/request/IHttpRequest.hpp"
+#include "Cookies.hpp"
+#include "IHttpRequest.hpp"
 
 #include <string>
 #include <vector>
@@ -87,6 +88,7 @@ private:
 		std::vector<char>	body;
 	};
 
+	mutable Cookies			_cookies;
 	Request					_request;
 	e_request_state			_state;
 	time_t					_tsStart;
@@ -124,6 +126,7 @@ public:
 	const http::t_headers	&getHeaders() const;
 	const t_bytes			&getBody() const;
 	http::e_status_code		getStatusCode() const;
+	Cookies					&getCookies() const;
 
 	// ======= Header Utils =======
 	void				setField(const std::string& pKey, const std::string& pValue);

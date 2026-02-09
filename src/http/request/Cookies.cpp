@@ -1,4 +1,5 @@
-#include "http/Cookies.hpp"
+#include "Cookies.hpp"
+#include "utils/stringUtils.hpp"
 
 #include <sstream>
 #include <iostream>
@@ -21,21 +22,21 @@ void 			Cookies::parseCookies(const std::string &cookieHeader)
 		size_t	equalPos = cookiePair.find('=');
 		if (equalPos != std::string::npos)
 		{
-			std::string	key = cookiePair.substr(0, equalPos);
-			std::string	value = cookiePair.substr(equalPos + 1);
+			std::string	key = str::trim(cookiePair.substr(0, equalPos));
+			std::string	value = str::trim(cookiePair.substr(equalPos + 1));
 	
-			key.erase(0, key.find_first_not_of(" \t"));
-			key.erase(key.find_last_not_of(" \t") + 1);
-			value.erase(0, value.find_first_not_of(" \t"));
-			value.erase(value.find_last_not_of(" \t") + 1);
+			// key.erase(0, key.find_first_not_of(" \t"));
+			// key.erase(key.find_last_not_of(" \t") + 1);
+			// value.erase(0, value.find_first_not_of(" \t"));
+			// value.erase(value.find_last_not_of(" \t") + 1);
 
 			_cookies[key] = value;
 		}
 		else
 		{
-			std::string	key = cookiePair;
-			key.erase(0, key.find_first_not_of(" \t"));
-			key.erase(key.find_last_not_of(" \t") + 1);
+			std::string	key = str::trim(cookiePair);
+			// key.erase(0, key.find_first_not_of(" \t"));
+			// key.erase(key.find_last_not_of(" \t") + 1);
 			_cookies[key] = "";
 		}
 	}
@@ -63,32 +64,32 @@ void 			Cookies::setCookie(const std::string &key, const std::string &value)
 	_cookies[key] = value;
 }
 
-std::string 	Cookies::buildCookieHeader(void)
-{
-	std::ostringstream	cookieStream;
-	for (t_cookies::const_iterator it = _cookies.begin(); it != _cookies.end(); ++it)
-	{
-		cookieStream << it->first << "=" << it->second << "; ";
-	}
-	return cookieStream.str();
-}
+// std::string 	Cookies::buildCookieHeader(void)
+// {
+// 	std::ostringstream	cookieStream;
+// 	for (t_cookies::const_iterator it = _cookies.begin(); it != _cookies.end(); ++it)
+// 	{
+// 		cookieStream << it->first << "=" << it->second << "; ";
+// 	}
+// 	return cookieStream.str();
+// }
 
-std::string Cookies::buildMultipleCookieHeader(void)
-{
-	std::ostringstream	cookieStream;
-	for (t_cookies::const_iterator it = _cookies.begin(); it != _cookies.end(); ++it)
-	{
-		if (it == _cookies.begin())
-		{
-			cookieStream << it->first << "=" << it->second << "; ";
-		}
-		else
-		{
-			cookieStream << "\r\nSet-Cookie: " << it->first << "=" << it->second << "; ";
-		}
-	}
-	return cookieStream.str();
-}
+// std::string Cookies::buildMultipleCookieHeader(void)
+// {
+// 	std::ostringstream	cookieStream;
+// 	for (t_cookies::const_iterator it = _cookies.begin(); it != _cookies.end(); ++it)
+// 	{
+// 		if (it == _cookies.begin())
+// 		{
+// 			cookieStream << it->first << "=" << it->second << "; ";
+// 		}
+// 		else
+// 		{
+// 			cookieStream << "\r\nSet-Cookie: " << it->first << "=" << it->second << "; ";
+// 		}
+// 	}
+// 	return cookieStream.str();
+// }
 
 std::string Cookies::buildSetCookieHeaders(void) const
 {
@@ -111,6 +112,7 @@ std::string Cookies::buildSetCookieHeaders(void) const
 			allCookies += headers[i];
 		}
 	}
+	// allCookies += "\r\n";
 	return allCookies;
 }
 

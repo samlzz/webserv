@@ -16,6 +16,7 @@
 #include <algorithm>
 
 #include "HttpRequest.hpp"
+#include "Cookies.hpp"
 #include "http/HttpTypes.hpp"
 #include "http/response/BuffStream.hpp"
 
@@ -49,6 +50,7 @@ int						HttpRequest::getVerMin() const		{ return (_request.verMin);       };
 const http::t_headers	&HttpRequest::getHeaders() const 	{ return (_request.headers);      };
 const t_bytes			&HttpRequest::getBody() const		{ return (_request.body);         };
 http::e_status_code		HttpRequest::getStatusCode() const	{ return (_code);                 };
+Cookies					&HttpRequest::getCookies() const	{ return (_cookies);              };
 
 void	HttpRequest::setField(const std::string& pKey, const std::string& pValue) {
 	_request.headers[pKey] = pValue;
@@ -361,6 +363,8 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				break;
 			}
 			UPDATE_STATE(BODY_START);
+			if (hasField("Cookies"))
+				_cookies.parseCookies(getField("Cookies"));
 			__attribute__ ((fallthrough));
 		}
 
