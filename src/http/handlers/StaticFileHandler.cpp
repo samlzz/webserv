@@ -15,6 +15,53 @@
 #include <string>
 #include <dirent.h>
 #include <algorithm>
+#include <vector>
+
+std::string readFileToString(const std::string &path)
+{
+	std::string content;
+	int fd = fs::openReadOnly(path);
+	if (fd < 0)
+		return content;
+
+	struct stat st;
+	if (fstat(fd, &st) != 0)
+	{
+		close(fd);
+		return content;
+	}
+
+	content.resize(st.st_size);
+	ssize_t totalRead = 0;
+	while (totalRead < static_cast<ssize_t>(st.st_size))
+	{
+		ssize_t bytesRead = read(fd, &content[totalRead], st.st_size - totalRead);
+		if (bytesRead <= 0)
+		{
+			content.clear();
+			break;
+		}
+		totalRead += bytesRead;
+	}
+
+	close(fd);
+	return content;
+}
+
+std::string replacePlaceholder(
+					const std::string &content,
+					const std::string &placeholder,
+					const std::string &value)
+{
+	std::string result = content;
+	size_t pos = 0;
+	while ((pos = result.find(placeholder, pos)) != std::string::npos)
+	{
+		result.replace(pos, placeholder.length(), value);
+		pos += value.length();
+	}
+	return result;
+}
 
 ResponsePlan	StaticFileHandler::loadAutoindex(const std::string &path, const routing::Context &route) const
 {
@@ -107,6 +154,41 @@ ResponsePlan	StaticFileHandler::handle(
 	struct stat st;
 	std::string path = route.location->root + route.normalizedPath;
 
+	// Theme handling for styles.css
+	std::vector<std::string>::const_iterator it = std::find(route.location->cookiesVary.begin(),
+										route.location->cookiesVary.end(),
+										"theme");
+	if (it != route.location->cookiesVary.end()
+		&& route.normalizedPath.find(".css") != std::string::npos)
+	{
+		std::string theme = route.cookies.getCookie("theme");
+		if (!theme.empty())
+		{
+			size_t dotPos = route.normalizedPath.find(".css");
+			std::string basePath = route.normalizedPath.substr(0, dotPos);
+			std::string themePath = route.location->root + basePath + "_" + theme + ".css";
+
+			struct stat themeSt;
+			if (stat(themePath.c_str(), &themeSt) == 0 && S_ISREG(themeSt.st_mode))
+				path = themePath;
+			else
+				path = route.location->root + route.normalizedPath;
+		}
+		else
+			path = route.location->root + route.normalizedPath;
+	}
+
+	if (route.normalizedPath.find("/show_name") != std::string::npos)
+	{
+		std::string body = "<html><body><h1>Hello, " + (route.session ? route.session->username : "Guest") + "!</h1>";
+		body +=  "<a href=\"/\">Back to home</a></body></html>";
+		plan.status = http::SC_OK;
+		plan.headers["Content-Type"] = "text/html";
+		plan.headers["Content-Length"] = str::toString(body.size());
+		plan.body = new MemoryBodySource(body);
+		return (plan);
+	}
+
 	if (stat(path.c_str(), &st) != 0)
 		return (ErrorBuilder::build(http::SC_NOT_FOUND, route.location));
 
@@ -124,7 +206,19 @@ ResponsePlan	StaticFileHandler::handle(
 		std::string fullIndex = path + route.location->index;
 		if (fs::isFile(fullIndex))
 		{
-			return loadFile(fullIndex, route);
+			// return loadFile(fullIndex, route);
+			if (fullIndex.find("index.html") != std::string::npos && req.hasField("Cookie"))
+			{
+				std::string content = readFileToString(fullIndex);
+				std::string username = route.session ? route.session->username : "Guest";
+				content = replacePlaceholder(content, "{{USERNAME}}", username);
+
+				plan.status = http::SC_OK;
+				plan.headers["Content-Type"] = http::Data::getMimeType(fs::subExt(fullIndex));
+				plan.headers["Content-Length"] = str::toString(content.size());
+				plan.body = new MemoryBodySource(content);
+				return (plan);
+			}
 		}
 
 		if (route.location->autoindex)

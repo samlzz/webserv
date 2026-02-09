@@ -64,6 +64,21 @@ static inline std::string	_normalizeUri(const std::string &path)
 	return result;
 }
 
+static inline std::string _trailingSlash(const std::string &path)
+{
+	std::string result;
+	
+	for (size_t i = 0; i < path.length(); ++i)
+	{
+		if (path[i] != '/' || (i == 0 || path[i - 1] != '/'))
+		{
+			result += path[i];
+		}
+	}
+
+	return (result);
+}
+
 Context	resolve(const HttpRequest &req,
 				const ServerCtx &serv)
 {
@@ -86,7 +101,24 @@ Context	resolve(const HttpRequest &req,
 
 		ctx.normalizedPath = lp + suffix;
 	}
+	ctx.normalizedPath = _trailingSlash(ctx.normalizedPath);
 	
+	//parse cookies
+	ctx.cookies.parseCookies(req.getHeaders());
+
+	//manage sessions
+	std::string sessionId = ctx.cookies.getCookie("sessionId");
+
+	serv._sessions.clearExpiredSessions(SESSION_TIMEOUT);
+	if (sessionId.empty() || !serv._sessions.sessionExists(sessionId))
+	{
+		sessionId = serv._sessions.createSession("guest");
+		ctx.cookies.setCookie("sessionId", sessionId);
+	}
+	SessionsManager::Session *session = &serv._sessions.getSession(sessionId);
+	session->updateActivity();
+	ctx.session = session;
+
 	return ctx;
 }
 

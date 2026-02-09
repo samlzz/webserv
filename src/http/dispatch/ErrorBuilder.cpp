@@ -49,6 +49,7 @@ ResponsePlan	ErrorBuilder::buildDefault(http::e_status_code status)
 			<< "<body>\r\n"
 			<< "<h1>" << status << " " << reason << "</h1>\r\n"
 			<< "<p> An error has occured. </p>\r\n"
+			<< "<a href=\"/\">Back to home</a>\r\n"
 			<< "</body>\r\n"
 			<< "</html>\r\n";
 	std::string			body = stream.str();

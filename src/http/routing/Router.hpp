@@ -16,13 +16,16 @@
 # include <string>
 
 # include "config/Config.hpp"
+#include "http/Cookies.hpp"
+#include "http/Sessions.hpp"
 
+#define SESSION_TIMEOUT 1800 // 30 minutes
 // ============================================================================
 // Forward declarations
 // ============================================================================
 class HttpRequest;
 struct ServerCtx;
-
+struct Session;
 // ============================================================================
 // Routes resolving
 // ============================================================================
@@ -31,12 +34,14 @@ namespace routing
 
 struct Context
 {
-	const ServerCtx					&server;
-	const Config::Server::Location	*location;
-	std::string						normalizedPath;
+	const ServerCtx						&server;
+	const Config::Server::Location		*location;
+	std::string							normalizedPath;
+	mutable Cookies						cookies;
+	mutable SessionsManager::Session	*session;
 
 	Context(const ServerCtx &serv)
-		: server(serv), location(0), normalizedPath()
+		: server(serv), location(0), normalizedPath(), cookies(), session(0)
 	{}
 private:
 	Context();

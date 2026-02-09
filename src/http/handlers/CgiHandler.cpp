@@ -87,6 +87,7 @@ static inline std::vector<std::string>	genEnvp(const routing::Context& route, co
 		addEnv(envp, "HTTP_" + toUpperEnv(it->first), it->second);
 	}
 
+	addEnv(envp, "SESSION_USERNAME", route.session->username);
 	return envp;
 }
 

@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include <string>
+#include <algorithm>
+#include <vector>
 
 #include "HttpDispatcher.hpp"
 #include "http/HttpData.hpp"
@@ -45,6 +47,14 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 
 	if (loca.redirect)
 		return &_redirectHandler;
+
+	std::vector<std::string>::const_iterator it = std::find(route.location->cookiesSet.begin(),
+									route.location->cookiesSet.end(),
+									"theme");
+	if (it != route.location->cookiesSet.end()
+		&& req.getQuery().find("mode=") != std::string::npos
+	)
+		return &_themeHandler;
 
 	http::e_method	method = req.getMethod();
 	if (method == http::MTH_GET || method == http::MTH_HEAD || method == http::MTH_POST)

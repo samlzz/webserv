@@ -14,6 +14,7 @@
 # define __SERVER_CTX_HPP__
 
 # include "config/Config.hpp"
+#include "http/Sessions.hpp"
 # include "http/dispatch/HttpDispatcher.hpp"
 
 // ============================================================================
@@ -24,9 +25,10 @@ struct ServerCtx {
 
 	const HttpDispatcher	&dispatcher;
 	const Config::Server	&config;
+	mutable SessionsManager 		_sessions;
 
 	ServerCtx(const HttpDispatcher &pDispatcher, const Config::Server &pConfig)
-		: dispatcher(pDispatcher), config(pConfig)
+		: dispatcher(pDispatcher), config(pConfig), _sessions()
 	{}
 };
 

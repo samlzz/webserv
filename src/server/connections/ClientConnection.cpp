@@ -18,6 +18,7 @@
 #include "ClientConnection.hpp"
 #include "AConnection.hpp"
 #include "ConnEvent.hpp"
+#include "http/Cookies.hpp"
 #include "http/cgi/INeedsNotifier.hpp"
 #include "http/response/HttpResponse.hpp"
 #include "http/response/BuffStream.hpp"
@@ -30,7 +31,7 @@
 // Construction / Destruction
 // ============================================================================
 
-ClientConnection::ClientConnection(int cliSockFd, const ServerCtx &serverCtx)
+ClientConnection::ClientConnection(int cliSockFd, ServerCtx &serverCtx)
 	: AConnection(cliSockFd), _serv(serverCtx)
 	, _req(_serv.config.maxBodySize), _resp(0)
 	, _offset(0), _cgiRead(0)
@@ -54,6 +55,8 @@ ConnEvent	ClientConnection::buildResponse(void)
 {
 	routing::Context	route = routing::resolve(_req, _serv);
 	ResponsePlan		plan = _serv.dispatcher.dispatch(_req, route);
+	plan.headers["Set-Cookie"] = route.cookies.buildSetCookieHeaders();
+	
 	INeedsNotifier		*needs = dynamic_cast<INeedsNotifier *>(plan.body);
 
 	if (needs)
