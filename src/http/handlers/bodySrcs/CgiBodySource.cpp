@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 16:07:39 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/09 02:10:00 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/09 15:44:20 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,8 +63,6 @@ size_t CgiBodySource::read(char* dst, size_t max)
 {
 	if (!dst || max == 0)
 		return 0;
-
-	// _parser->bodyChunk(dest, max);
 
 	if (_parser->bodyHasData())
 		return _parser->bodyRead(dst, max);

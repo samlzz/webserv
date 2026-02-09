@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 15:25:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/09 02:36:34 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/09 15:59:20 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,26 +22,14 @@
 #include "http/response/BuffStream.hpp"
 #include "utils/stringUtils.hpp"
 
-#define EPSILON 10
+#define EPSILON 4
 
 // (int)Decimal to (std::string)Hexadecimal
 static inline std::string	dtoh(int pDec)
 {
-	std::string hex = "0123456789ABCDEF";
-	std::string result = "";
-
-	if (pDec == 0)
-		return "00";
-
-	while (pDec > 0) {
-		result = hex[pDec % 16] + result;
-		pDec /= 16;
-	}
-
-	if (result.length() == 1)
-		result = "0" + result;
-
-	return result;
+	std::stringstream out;
+	out << std::hex << pDec;
+	return out.str();
 }
 
 // ============================================================================
@@ -54,6 +42,7 @@ CgiOutputParser::CgiOutputParser()
 	, _bodyStream()
 	, _status(http::SC_OK)
 	, _headers()
+	, _chunked(false)
 {}
 
 CgiOutputParser::~CgiOutputParser()
@@ -81,6 +70,8 @@ void CgiOutputParser::append(const char* buf, size_t n)
 void CgiOutputParser::finalize(void)
 {
 	_state = ST_DONE;
+	if (_chunked)
+		_bodyStream.push("");
 }
 
 // ============================================================================
@@ -117,26 +108,27 @@ size_t CgiOutputParser::bodyChunk(char* dst, size_t max)
 		return 0;
 
 	t_bytes &front = _bodyStream.front();
-	size_t n = front.size();
-	if (n > max - EPSILON)
-		n = max - EPSILON;
+	size_t	headerMaxSize = dtoh(front.size()).length() + 4;
 
+	if (max < headerMaxSize)
+		return 0;
+	size_t len = std::min(front.size(), max - headerMaxSize);
 	size_t written = 0;
-	std::string header = dtoh(n) + "\r\n";
+	std::string header = dtoh(len) + "\r\n";
 
 	std::memcpy(dst + written, header.data(), header.length());
 	written += header.length();
 
-	std::memcpy(dst + written, front.data(), n);
-	written += n;
+	std::memcpy(dst + written, front.data(), len);
+	written += len;
 
 	std::memcpy(dst + written, "\r\n", 2);
 	written += 2;
 
-	if (n == front.size())
+	if (len == front.size())
 		_bodyStream.pop();
 	else
-		front.erase(front.begin(), front.begin() + n);
+		front.erase(front.begin(), front.begin() + len);
 
 	return written;
 }
@@ -145,6 +137,8 @@ size_t CgiOutputParser::bodyRead(char* dst, size_t max)
 {
 	if (!dst || max == 0 || !_bodyStream.hasBuffer())
 		return 0;
+	if (_chunked)
+		return bodyChunk(dst, max);
 
 	t_bytes &front = _bodyStream.front();
 	size_t n = front.size();
@@ -196,7 +190,10 @@ bool CgiOutputParser::tryParseHeaders()
 		if (_status == http::SC_FOUND || _status == http::SC_MOVED_PERMANENTLY)
 			_headers["Content-Length"] = "0";
 		else
+		{
 			_headers["Transfert-Encoding"] = "chunked";
+			_chunked = true;
+		}
 	}
 
 	_state = ST_BODY;

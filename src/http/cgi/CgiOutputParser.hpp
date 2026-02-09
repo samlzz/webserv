@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 14:50:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/09 02:10:51 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/09 15:39:50 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ private:
 
 	http::e_status_code		_status;
 	http::t_headers			_headers;
+	bool					_chunked;
 
 public:
 	CgiOutputParser();
@@ -47,14 +48,15 @@ public:
 
 	// body access
 	bool							bodyHasData() const;
-	size_t							bodyChunk(char* dst, size_t max);
 	size_t							bodyRead(char* dst, size_t max);
 	bool							eof() const; // EOF CGI atteint
 
 private:
 
-	bool tryParseHeaders(); // ? returns true when headers completed+parsed
-	void parseHeaderLines(const std::string& headerBlock);
+	bool							tryParseHeaders(); // ? returns true when headers completed+parsed
+	void							parseHeaderLines(const std::string& headerBlock);
+	size_t							bodyChunk(char* dst, size_t max);
+
 
 	// forbidden
 	CgiOutputParser(const CgiOutputParser &other);
