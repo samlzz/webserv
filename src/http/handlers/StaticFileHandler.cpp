@@ -69,19 +69,12 @@ ResponsePlan	StaticFileHandler::loadAutoindex(const std::string &path, const rou
 ResponsePlan	StaticFileHandler::loadFile(const std::string &path, const routing::Context &route) const
 {
 	ResponsePlan	plan;
-	struct stat st;
+	struct stat		st;
 
 	stat(path.c_str(), &st);
 	std::string	ext = path::subExt(path);
 
-	int _fd;
-	// if ((_fd = open(path.c_str(), O_RDONLY)) < 0)
-	// {
-		// return (ErrorBuilder::build(http::SC_FORBIDDEN, route.location));
-	// }
-
-	//CHECK SORTIE ERREUR ATTENDUE
-	_fd = fs::openReadOnly(path);
+	int _fd = fs::openReadOnly(path);
 	if (_fd < 0)
 		return (ErrorBuilder::build(http::SC_FORBIDDEN, route.location));
 
@@ -100,22 +93,21 @@ ResponsePlan	StaticFileHandler::handle(
 								const routing::Context &route) const
 {
 	(void)req;
-	(void)route;
-
-	ResponsePlan	plan;
-
-	struct stat st;
-	std::string path = route.location->root + route.normalizedPath;
+	struct stat	st;
+	std::string	path = route.location->root + route.normalizedPath;
 
 	if (stat(path.c_str(), &st) != 0)
 		return (ErrorBuilder::build(http::SC_NOT_FOUND, route.location));
+
+	if (S_ISREG(st.st_mode))
+		return loadFile(path, route);
 
 	if (S_ISDIR(st.st_mode))
 	{
 		if (path[path.length() - 1] != '/')
 		{
-			std::string redirectPath = route.normalizedPath + "/";
-			plan.headers["Location"] = redirectPath;
+			ResponsePlan	plan;
+			plan.headers["Location"] = route.normalizedPath + "/";
 			plan.headers["Content-Length"] = "0";
 			plan.status = http::SC_MOVED_PERMANENTLY;
 			return (plan);
@@ -133,9 +125,5 @@ ResponsePlan	StaticFileHandler::handle(
 		}
 	}
 
-	if (S_ISREG(st.st_mode)) {
-		return loadFile(path, route);
-	}
-
-	return (plan);
+	return (ErrorBuilder::build(http::SC_NOT_FOUND, route.location));
 }
