@@ -16,8 +16,7 @@
 # include <string>
 
 # include "config/Config.hpp"
-#include "http/Cookies.hpp"
-#include "http/Sessions.hpp"
+# include "http/Sessions.hpp"
 
 #define SESSION_TIMEOUT 1800 // 30 minutes
 // ============================================================================
@@ -37,11 +36,10 @@ struct Context
 	const ServerCtx						&server;
 	const Config::Server::Location		*location;
 	std::string							normalizedPath;
-	mutable Cookies						cookies;
-	mutable SessionsManager::Session	*session;
+	mutable SessionsManager::Session	*currSession;
 
 	Context(const ServerCtx &serv)
-		: server(serv), location(0), normalizedPath(), cookies(), session(0)
+		: server(serv), location(0), normalizedPath(), currSession(0)
 	{}
 private:
 	Context();

@@ -25,10 +25,10 @@ struct ServerCtx {
 
 	const HttpDispatcher	&dispatcher;
 	const Config::Server	&config;
-	mutable SessionsManager 		_sessions;
+	mutable SessionsManager	sessions;
 
 	ServerCtx(const HttpDispatcher &pDispatcher, const Config::Server &pConfig)
-		: dispatcher(pDispatcher), config(pConfig), _sessions()
+		: dispatcher(pDispatcher), config(pConfig), sessions()
 	{}
 };
 

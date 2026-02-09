@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "Router.hpp"
+#include "http/request/Cookies.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "server/ServerCtx.hpp"
 
@@ -103,21 +104,20 @@ Context	resolve(const HttpRequest &req,
 	}
 	ctx.normalizedPath = _trailingSlash(ctx.normalizedPath);
 	
-	//parse cookies
-	ctx.cookies.parseCookies(req.getHeaders());
 
 	//manage sessions
-	std::string sessionId = ctx.cookies.getCookie("sessionId");
+	Cookies		&cookies = req.getCookies();
+	std::string	sessionId = cookies.getCookie("sessionId");
 
-	serv._sessions.clearExpiredSessions(SESSION_TIMEOUT);
-	if (sessionId.empty() || !serv._sessions.sessionExists(sessionId))
+	serv.sessions.clearExpiredSessions(SESSION_TIMEOUT);
+	if (sessionId.empty() || !serv.sessions.sessionExists(sessionId))
 	{
-		sessionId = serv._sessions.createSession("guest");
-		ctx.cookies.setCookie("sessionId", sessionId);
+		sessionId = serv.sessions.createSession("guest");
+		cookies.setCookie("sessionId", sessionId);
 	}
-	SessionsManager::Session *session = &serv._sessions.getSession(sessionId);
+	SessionsManager::Session *session = &serv.sessions.getSession(sessionId);
 	session->updateActivity();
-	ctx.session = session;
+	ctx.currSession = session;
 
 	return ctx;
 }
