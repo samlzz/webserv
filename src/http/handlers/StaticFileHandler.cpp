@@ -205,26 +205,10 @@ ResponsePlan	StaticFileHandler::handle(
 
 		std::string fullIndex = path + route.location->index;
 		if (fs::isFile(fullIndex))
-		{
-			// return loadFile(fullIndex, route);
-			if (fullIndex.find("index.html") != std::string::npos && req.hasField("Cookie"))
-			{
-				std::string content = readFileToString(fullIndex);
-				std::string username = route.session ? route.session->username : "Guest";
-				content = replacePlaceholder(content, "{{USERNAME}}", username);
-
-				plan.status = http::SC_OK;
-				plan.headers["Content-Type"] = http::Data::getMimeType(fs::subExt(fullIndex));
-				plan.headers["Content-Length"] = str::toString(content.size());
-				plan.body = new MemoryBodySource(content);
-				return (plan);
-			}
-		}
+			return loadFile(fullIndex, route);
 
 		if (route.location->autoindex)
-		{		
-			return loadAutoindex(path, route);	
-		}
+			return loadAutoindex(path, route);
 	}
 
 	if (S_ISREG(st.st_mode)) {
