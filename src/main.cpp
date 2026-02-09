@@ -18,6 +18,7 @@
 #include "config/Config.hpp"
 #include "config/validation/configValidate.hpp"
 #include "ft_log/ft_log.hpp"
+#include "ft_log/level.hpp"
 #include "log.h"
 #include "server/Exceptions.hpp"
 #include "http/dispatch/HttpDispatcher.hpp"
@@ -37,6 +38,8 @@ int main(int ac, char **av)
 	ft_log::enableCategory(WS_LOG_CONFIG);
 	ft_log::enableCategory(WS_LOG_SERVER);
 	ft_log::enableCategory(WS_LOG_SERVER_CLI);
+	ft_log::enableCategory(WS_LOG_CLI);
+	ft_log::enableCategory(WS_LOG_CLI_ROUTING);
 	ft_log::enableCategory(WS_LOG_CGI);
 	ft_log::setLevel(ft_log::LOG_DEBUG);
 	ft_log::setShowLevel(true);
