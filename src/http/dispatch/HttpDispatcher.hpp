@@ -49,6 +49,7 @@ public:
 	ResponsePlan	handleStaticFile(const routing::Context &route) const;
 
 private:
+	ResponsePlan		findPlan(const HttpRequest &req, const routing::Context &route) const;
 	const IHttpHandler	*findHandler(
 						const HttpRequest &req,
 						const routing::Context &route

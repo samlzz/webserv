@@ -88,10 +88,9 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 	return NULL;
 }
 
-ResponsePlan	HttpDispatcher::dispatch(
-									const HttpRequest &req,
-									const routing::Context &route
-								) const
+ResponsePlan	HttpDispatcher::findPlan(
+	const HttpRequest &req, const routing::Context &route
+) const
 {
 	if (!route.location)
 		return ErrorBuilder::build(
@@ -121,4 +120,13 @@ ResponsePlan	HttpDispatcher::dispatch(
 		);
 
 	return handler->handle(req, route);
+}
+
+ResponsePlan	HttpDispatcher::dispatch(
+	const HttpRequest &req, const routing::Context &route
+) const
+{
+	ResponsePlan	plan(findPlan(req, route));
+	plan.headers["Set-Cookie"] = req.getCookies().buildSetCookieHeaders();
+	return plan;
 }
