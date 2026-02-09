@@ -4,14 +4,12 @@
 
 
 #include "http/HttpTypes.hpp"
-#include <map>
 #include <string>
 
 class Cookies
 {
 private:
-	typedef std::map<std::string, std::string> t_cookies ;
-	t_cookies	_cookies;
+	http::t_cookies	_cookies;
 
 public:
 	Cookies();
@@ -22,6 +20,7 @@ public:
 
 	std::string 	getCookie(const std::string &key) const;
 	void 			setCookie(const std::string &key, const std::string &value);
+
 	// std::string 	buildCookieHeader(void);
 	// std::string 	buildMultipleCookieHeader(void);
 	std::string		buildSetCookieHeaders(void) const;

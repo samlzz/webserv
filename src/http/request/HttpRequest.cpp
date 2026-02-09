@@ -362,9 +362,8 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				UPDATE_STATE(PARSING_DONE);
 				break;
 			}
+			_cookies.parseCookies(_request.headers);
 			UPDATE_STATE(BODY_START);
-			if (hasField("Cookies"))
-				_cookies.parseCookies(getField("Cookies"));
 			__attribute__ ((fallthrough));
 		}
 

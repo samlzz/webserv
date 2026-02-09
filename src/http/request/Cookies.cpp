@@ -1,4 +1,5 @@
 #include "Cookies.hpp"
+#include "http/HttpTypes.hpp"
 #include "utils/stringUtils.hpp"
 
 #include <sstream>
@@ -6,12 +7,11 @@
 #include <vector>
 
 Cookies::Cookies()
-{
-}
+{}
 
 Cookies::~Cookies()
-{
-}
+{}
+
 void 			Cookies::parseCookies(const std::string &cookieHeader)
 {
 	std::istringstream	stream(cookieHeader);
@@ -53,7 +53,7 @@ void 			Cookies::parseCookies(const http::t_headers &cookieHeader)
 
 std::string 	Cookies::getCookie(const std::string &key) const
 {
-	t_cookies::const_iterator it = _cookies.find(key);
+	http::t_cookies::const_iterator it = _cookies.find(key);
 	if (it != _cookies.end())
 		return it->second;
 	return "";
@@ -96,7 +96,7 @@ std::string Cookies::buildSetCookieHeaders(void) const
 	std::vector<std::string> headers;
 	std::string allCookies;
 	
-	for (t_cookies::const_iterator it = _cookies.begin(); it != _cookies.end(); ++it)
+	for (http::t_cookies::const_iterator it = _cookies.begin(); it != _cookies.end(); ++it)
 	{
 		std::ostringstream cookieStream;
 		cookieStream << it->first << "=" << it->second << "; Path=/; HttpOnly";
@@ -118,7 +118,7 @@ std::string Cookies::buildSetCookieHeaders(void) const
 
 void Cookies::print_cookies() const
 {
-	for (t_cookies::const_iterator it = _cookies.begin(); it != _cookies.end(); ++it)
+	for (http::t_cookies::const_iterator it = _cookies.begin(); it != _cookies.end(); ++it)
 	{
 		std::cout << "Cookie: " << it->first << " = " << it->second << std::endl;
 	}
