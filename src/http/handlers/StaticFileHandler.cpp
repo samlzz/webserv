@@ -153,41 +153,6 @@ ResponsePlan	StaticFileHandler::handle(
 	struct stat st;
 	std::string path = route.location->root + route.normalizedPath;
 
-	// Theme handling for styles.css
-	std::vector<std::string>::const_iterator it = std::find(route.location->cookiesVary.begin(),
-										route.location->cookiesVary.end(),
-										"theme");
-	if (it != route.location->cookiesVary.end()
-		&& route.normalizedPath.find(".css") != std::string::npos)
-	{
-		std::string theme = route.cookies.getCookie("theme");
-		if (!theme.empty())
-		{
-			size_t dotPos = route.normalizedPath.find(".css");
-			std::string basePath = route.normalizedPath.substr(0, dotPos);
-			std::string themePath = route.location->root + basePath + "_" + theme + ".css";
-
-			struct stat themeSt;
-			if (stat(themePath.c_str(), &themeSt) == 0 && S_ISREG(themeSt.st_mode))
-				path = themePath;
-			else
-				path = route.location->root + route.normalizedPath;
-		}
-		else
-			path = route.location->root + route.normalizedPath;
-	}
-
-	if (route.normalizedPath.find("/show_name") != std::string::npos)
-	{
-		std::string body = "<html><body><h1>Hello, " + (route.session ? route.session->username : "Guest") + "!</h1>";
-		body +=  "<a href=\"/\">Back to home</a></body></html>";
-		plan.status = http::SC_OK;
-		plan.headers["Content-Type"] = "text/html";
-		plan.headers["Content-Length"] = str::toString(body.size());
-		plan.body = new MemoryBodySource(body);
-		return (plan);
-	}
-
 	if (stat(path.c_str(), &st) != 0)
 		return (ErrorBuilder::build(http::SC_NOT_FOUND, route.location));
 
@@ -204,26 +169,10 @@ ResponsePlan	StaticFileHandler::handle(
 
 		std::string fullIndex = path + route.location->index;
 		if (fs::isFile(fullIndex))
-		{
-			// return loadFile(fullIndex, route);
-			if (fullIndex.find("index.html") != std::string::npos && req.hasField("Cookie"))
-			{
-				std::string content = readFileToString(fullIndex);
-				std::string username = route.session ? route.session->username : "Guest";
-				content = replacePlaceholder(content, "{{USERNAME}}", username);
-
-				plan.status = http::SC_OK;
-				plan.headers["Content-Type"] = http::Data::getMimeType(fs::subExt(fullIndex));
-				plan.headers["Content-Length"] = str::toString(content.size());
-				plan.body = new MemoryBodySource(content);
-				return (plan);
-			}
-		}
+			return loadFile(fullIndex, route);
 
 		if (route.location->autoindex)
-		{		
-			return loadAutoindex(path, route);	
-		}
+			return loadAutoindex(path, route);
 	}
 
 	if (S_ISREG(st.st_mode)) {

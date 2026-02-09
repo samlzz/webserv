@@ -19,6 +19,7 @@
 #include "http/request/Cookies.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "server/ServerCtx.hpp"
+#include "utils/fileSystemUtils.hpp"
 
 namespace routing
 {
@@ -80,6 +81,16 @@ static inline std::string	_normalizeUri(const std::string &path)
 // 	return (result);
 // }
 
+static inline std::string	_prefixExtension(const std::string &path, const std::string &prefix)
+{
+	size_t		extPos = path.find('.');
+	std::string	result = path.substr(0, extPos) + prefix;
+
+	if (extPos != std::string::npos)
+		result += path.substr(extPos);
+
+	return result;
+}
 
 Context	resolve(const HttpRequest &req,
 				const ServerCtx &serv)
@@ -102,11 +113,27 @@ Context	resolve(const HttpRequest &req,
 			suffix = uri;
 
 		ctx.normalizedPath = lp + suffix;
+
+		// ? Serve files dynamically from cookies 
+		const std::vector<std::string>	&cookiesVary = ctx.location->cookiesVary;
+		for (size_t i = 0; i < cookiesVary.size(); ++i)
+		{
+			std::string cookieValue = req.getCookies().getCookie(cookiesVary[i]);
+			if (cookieValue.empty())
+				continue;
+			std::string	newPath = _prefixExtension(
+						ctx.normalizedPath, "_" + cookieValue);
+			if (fs::checkPerms(newPath, fs::P_EXIST))
+			{
+				ctx.normalizedPath = newPath;
+				break;
+			}
+		}
 	}
 	// ctx.normalizedPath = _trailingSlash(ctx.normalizedPath);
 	
 
-	//manage sessions
+	// manage sessions
 	Cookies		&cookies = req.getCookies();
 	std::string	sessionId = cookies.getCookie("sessionId");
 
