@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CgiOutputParser.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 14:50:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 15:32:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/09 02:10:51 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ public:
 
 	// body access
 	bool							bodyHasData() const;
+	size_t							bodyChunk(char* dst, size_t max);
 	size_t							bodyRead(char* dst, size_t max);
 	bool							eof() const; // EOF CGI atteint
 

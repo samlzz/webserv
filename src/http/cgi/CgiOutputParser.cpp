@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CgiOutputParser.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 15:25:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 15:38:30 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/09 02:36:34 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,28 @@
 #include "http/HttpTypes.hpp"
 #include "http/response/BuffStream.hpp"
 #include "utils/stringUtils.hpp"
+
+#define EPSILON 10
+
+// (int)Decimal to (std::string)Hexadecimal
+static inline std::string	dtoh(int pDec)
+{
+	std::string hex = "0123456789ABCDEF";
+	std::string result = "";
+
+	if (pDec == 0)
+		return "00";
+
+	while (pDec > 0) {
+		result = hex[pDec % 16] + result;
+		pDec /= 16;
+	}
+
+	if (result.length() == 1)
+		result = "0" + result;
+
+	return result;
+}
 
 // ============================================================================
 // Construction / Destruction
@@ -87,6 +109,36 @@ const http::t_headers& CgiOutputParser::headers() const
 bool CgiOutputParser::bodyHasData() const
 {
 	return _bodyStream.hasBuffer();
+}
+
+size_t CgiOutputParser::bodyChunk(char* dst, size_t max)
+{
+	if (!dst || max == 0 || !_bodyStream.hasBuffer())
+		return 0;
+
+	t_bytes &front = _bodyStream.front();
+	size_t n = front.size();
+	if (n > max - EPSILON)
+		n = max - EPSILON;
+
+	size_t written = 0;
+	std::string header = dtoh(n) + "\r\n";
+
+	std::memcpy(dst + written, header.data(), header.length());
+	written += header.length();
+
+	std::memcpy(dst + written, front.data(), n);
+	written += n;
+
+	std::memcpy(dst + written, "\r\n", 2);
+	written += 2;
+
+	if (n == front.size())
+		_bodyStream.pop();
+	else
+		front.erase(front.begin(), front.begin() + n);
+
+	return written;
 }
 
 size_t CgiOutputParser::bodyRead(char* dst, size_t max)
