@@ -34,15 +34,15 @@ ResponsePlan	FormHandler::handle(
 		}
 	}
 
-	if (route.location->sessionLogin == true && route.session
+	if (route.location->sessionLogin == true && route.currSession
 		&& data.find("username") != data.end()
 		&& !data["username"].empty())
 	{
-		route.session->username = data["username"];
-		if (route.session->username == "admin")
-			route.session->setIsLoggedIn(true);
+		route.currSession->username = data["username"];
+		if (route.currSession->username == "admin")
+			route.currSession->setIsLoggedIn(true);
 		else
-			route.session->setIsLoggedIn(false);
+			route.currSession->setIsLoggedIn(false);
 	}
 
 	std::string	body = "<html><body><ul>\n";
