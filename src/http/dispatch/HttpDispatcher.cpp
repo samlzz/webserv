@@ -13,6 +13,7 @@
 #include <string>
 
 #include "HttpDispatcher.hpp"
+#include "ft_log/LogOp.hpp"
 #include "http/HttpData.hpp"
 #include "http/HttpTypes.hpp"
 #include "http/dispatch/ErrorBuilder.hpp"
@@ -20,6 +21,7 @@
 #include "http/request/HttpRequest.hpp"
 #include "http/response/ResponsePlan.hpp"
 #include "http/routing/Router.hpp"
+#include "log.h"
 #include "utils/pathUtils.hpp"
 
 // ============================================================================
@@ -44,21 +46,37 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 	const Config::Server::Location	&loca = *route.location;
 
 	if (loca.redirect)
+	{
+		ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
+			<< "Handler selected: RedirectHandler" << std::endl;
 		return &_redirectHandler;
+	}
 
 	http::e_method	method = req.getMethod();
 	if (method == http::MTH_GET || method == http::MTH_HEAD || method == http::MTH_POST)
 	{
 		std::string	cgiExt = path::subExt(path::subPath(route.normalizedPath));
 		if (loca.cgiExts.find(cgiExt) != loca.cgiExts.end())
+		{
+			ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
+				<< "Handler selected: CgiHandler (ext: " << cgiExt << ")" << std::endl;
 			return &_cgiHandler;
+		}
 	}
 	
 	if (method == http::MTH_GET || method == http::MTH_HEAD)
+	{
+		ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
+			<< "Handler selected: StaticHandler" << std::endl;
 		return &_staticHandler;
+	}
 
 	if (method == http::MTH_DELETE)
+	{
+		ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
+			<< "Handler selected: DeleteHandler" << std::endl;
 		return &_deleteHandler;
+	}
 
 	if (method == http::MTH_POST || method == http::MTH_PUT)
 	{
@@ -66,10 +84,18 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 			req.getField("Content-Type")
 			) == http::CT_APPLICATION_X_WWW_FORM_URLENCODED
 		)
+		{
+			ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
+				<< "Handler selected: FormHandler" << std::endl;
 			return &_formHandler;
+		}
+		ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
+			<< "Handler selected: UploadHandler" << std::endl;
 		return &_uploadHandler;
 	}
 
+	ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_WARN)
+		<< "No handler found for request" << std::endl;
 	return NULL;
 }
 
@@ -79,10 +105,14 @@ ResponsePlan	HttpDispatcher::dispatch(
 								) const
 {
 	if (!route.location)
+	{
+		ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_ERROR)
+			<< "No location found for: " << req.getPath() << std::endl;
 		return ErrorBuilder::build(
 			http::SC_NOT_FOUND,
 			NULL
 		);
+	}
 
 	if (req.isError())
 		return ErrorBuilder::build(

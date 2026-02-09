@@ -10,10 +10,14 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <ostream>
 #include <sstream>
 #include <stdint.h>
 
+#include "ft_log/LogOp.hpp"
+#include "ft_log/level.hpp"
 #include "http/HttpData.hpp"
+#include "log.h"
 #include "server/ServerCtx.hpp"
 #include "HttpResponse.hpp"
 #include "http/HttpTypes.hpp"
@@ -34,7 +38,17 @@ HttpResponse::HttpResponse(const ResponsePlan &plan,
 	, _status(plan.status), _headers(plan.headers), _body(plan.body)
 	, _out()
 	, _commited(false), _done(false)
-{}
+{
+	ft_log::log(WS_LOG_CGI, ft_log::LOG_DEBUG)
+		<< "Response plan: status=" << plan.status
+		<< ", headers_count=" << plan.headers.size()
+		<< ", has_body=" << (plan.body != NULL) << std::endl;
+	std::ostream &os = ft_log::log(WS_LOG_CLI, ft_log::LOG_TRACE) << "Response plan Headers:\n";
+	for (http::t_headers::const_iterator it = plan.headers.begin(); it != plan.headers.end(); ++it)
+	{
+		os << it->first << ": " << it->second << std::endl;
+	}
+}
 
 HttpResponse::~HttpResponse()
 {
