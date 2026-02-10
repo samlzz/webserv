@@ -6,6 +6,7 @@
 #include "http/routing/Router.hpp"
 #include "utils/fileSystemUtils.hpp"
 
+#include <cerrno>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -14,23 +15,24 @@ ResponsePlan	DeleteHandler::handle(
 								const routing::Context &route) const
 {
 	(void)req;
+	std::string		path = route.location->root + route.normalizedPath;
+	struct stat		st;
 
-	ResponsePlan	plan;
-
-	std::string	path = route.location->root + route.normalizedPath;
-
-	if (!path.empty() && path[0] == '/')
-		path = "." + path;
-
-	if (!(fs::checkPerms(path, fs::P_EXIST)))
+	if (!(fs::isExist(path, &st)))
 		return ErrorBuilder::build(http::SC_NOT_FOUND, route.location);
-	else if (fs::isDir(path))
+	if (!fs::isFile(st))
 		return ErrorBuilder::build(http::SC_FORBIDDEN, route.location);
-	else if (unlink(path.c_str()) != 0)
-		return ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
-	else
-		plan.status = http::SC_NO_CONTENT;
-
+	
+	if (unlink(path.c_str()) != 0)
+		return ErrorBuilder::build(
+			(errno == EACCES || errno == EPERM)
+				? http::SC_FORBIDDEN
+				: http::SC_INTERNAL_SERVER_ERROR,
+			route.location
+		);
+	
+	ResponsePlan	plan;
+	plan.status = http::SC_NO_CONTENT;
 	plan.headers["Content-Length"] = "0";
 	return (plan);
 }
