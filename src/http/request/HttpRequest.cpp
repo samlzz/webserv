@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/10 14:13:51 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 14:17:20 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,6 +140,25 @@ static int		htod(const std::string& pHex)
 	return (result);
 }
 
+static inline std::string	decode(const std::string& pUri)
+{
+	std::string path;
+	int dec;
+
+	for (size_t i = 0; i < pUri.length(); i++) {
+		if (pUri[i] == '%' && i + 2 < pUri.length()) {
+			dec = htod(pUri.substr(i + 1, 2));
+			if (dec != -1) {
+				path.push_back(dec);
+				i+=2;
+				continue;	
+			}
+		}
+		path.push_back(pUri[i]);
+	}
+	return path;
+}
+
 // ========================================================================== //
 //                             MEMBER FUNCTION                                //
 // ========================================================================== //
@@ -193,13 +212,13 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case LINE_URI_PATH: {
 			if (ch == ' ') {
-				_request.uri.path = _buffer;
+				_request.uri.path = decode(_buffer);
 				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '?' || ch == '#') {
-				_request.uri.path = _buffer;
+				_request.uri.path = decode(_buffer);
 				UPDATE_STATE(ch == '?' ? LINE_URI_QUERY : LINE_URI_FRAGMENT);
 				_buffer.clear();
 				break;
