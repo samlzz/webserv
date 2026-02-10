@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 16:05:13 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 14:35:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 19:21:26 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,20 +18,23 @@
 #include "http/dispatch/ErrorBuilder.hpp"
 #include "http/routing/Router.hpp"
 #include "server/connections/ConnEvent.hpp"
+#include "utils/fileSystemUtils.hpp"
 #include "utils/pathUtils.hpp"
 #include "utils/stringUtils.hpp"
 
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
+#include <string>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <vector>
 
 
 CgiHandler::CgiHandler() {}
 CgiHandler::~CgiHandler() {}
 
-// Create an uppered string
-std::string		toUpperEnv(const std::string& pStr)
+static std::string		_toUpperEnv(const std::string& pStr)
 {
 	unsigned char ch;
 	std::string upper;
@@ -52,21 +55,26 @@ static inline void	addEnv(std::vector<std::string>& pVec, const std::string& pKe
 	pVec.push_back(pKey + "=" + pValue);
 }
 
-static inline std::vector<std::string>	genEnvp(const routing::Context& route, const HttpRequest& req)
+static inline std::vector<std::string>	genEnvp(
+											const std::string &scriptName,
+											const HttpRequest& req,
+											const routing::Context& route
+										)
 {
 	std::vector<std::string>	envp;
+	std::string					pathInfo = path::subInfo(route.normalizedPath);
 
 	addEnv(envp, "GATEWAY_INTERFACE", "CGI/1.1");
 	addEnv(envp, "SERVER_PROTOCOL", "HTTP/1.1");
 	addEnv(envp, "SERVER_SOFTWARE", "Webserv/1.0");
 
-	addEnv(envp, "PATH_INFO", path::subInfo(route.normalizedPath));
-	addEnv(envp, "PATH_TRANSLATED", route.location->root + path::subInfo(route.normalizedPath));
+	addEnv(envp, "PATH_INFO", pathInfo);
+	addEnv(envp, "PATH_TRANSLATED", route.location->root + pathInfo);
 	addEnv(envp, "QUERY_STRING", req.getQuery());
 
 	addEnv(envp, "REQUEST_METHOD", str::toString(req.getMethod()));
-	addEnv(envp, "SCRIPT_NAME", path::subPath(route.normalizedPath));
-	addEnv(envp, "SCRIPT_FILENAME", route.location->root + path::subPath(route.normalizedPath));
+	addEnv(envp, "SCRIPT_NAME", scriptName);
+	addEnv(envp, "SCRIPT_FILENAME", route.location->root + scriptName);
 
 	std::string	remoteAddr = route.remote ? route.remote->addr : "";
 	std::string	serverPort = route.local ? str::toString(route.local->port) : "";
@@ -84,12 +92,13 @@ static inline std::vector<std::string>	genEnvp(const routing::Context& route, co
 	if (req.hasField("Content-Type"))
 		addEnv(envp, "CONTENT_TYPE", req.getField("Content-Type"));
 
-	http::t_headers headers = req.getHeaders();
-	http::t_headers::const_iterator it;
-	for (it = headers.begin(); it != headers.end(); ++it) {
+	http::t_headers					headers = req.getHeaders();
+	http::t_headers::const_iterator	it;
+	for (it = headers.begin(); it != headers.end(); ++it)
+	{
 		if (it->first == "Content-Type" || it->first == "Content-Length")
 			continue;
-		addEnv(envp, "HTTP_" + toUpperEnv(it->first), it->second);
+		addEnv(envp, "HTTP_" + _toUpperEnv(it->first), it->second);
 	}
 
 	addEnv(envp, "SESSION_USERNAME", route.currSession ? route.currSession->username : "");
@@ -97,17 +106,14 @@ static inline std::vector<std::string>	genEnvp(const routing::Context& route, co
 }
 
 // Generate an vecor of string version of the argv for cgi
-static inline std::vector<std::string>	genArgv(const routing::Context& route)
+static inline std::vector<std::string>	genArgv(const std::string &scriptName, const routing::Context& route)
 {
 	std::vector<std::string>		vec;
-	std::string						ext = path::subExt(
-											path::subPath(route.normalizedPath)
-										);
+	std::string						ext = path::subExt(scriptName);
 	Config::t_dict::const_iterator	it = route.location->cgiExts.find(ext);
 
 	vec.push_back(it->second);
-	vec.push_back(route.location->root + path::subPath(route.normalizedPath));
-
+	vec.push_back(route.location->root + scriptName);
 	return vec;
 }
 
@@ -116,15 +122,28 @@ ResponsePlan CgiHandler::handle(
 	const routing::Context& route
 ) const
 {
-	ResponsePlan plan;
+	std::string	scriptName = path::subPath(route.normalizedPath);
+	std::string	scriptPath = route.location->root + scriptName;
+	struct stat	st;
 
-	CgiOutputParser* parser = new CgiOutputParser();
-	CgiProcess* process = new CgiProcess(*parser);
+	if (!fs::isExist(scriptPath, &st))
+		return ErrorBuilder::build(
+			http::SC_NOT_FOUND,
+			route.location
+		);
+	if (!fs::isFile(st) || access(scriptPath.c_str(), R_OK) != 0)
+		return ErrorBuilder::build(
+			http::SC_FORBIDDEN,
+			route.location
+		);
+
+	CgiOutputParser	*parser = new CgiOutputParser();
+	CgiProcess		*process = new CgiProcess(*parser);
 	process->retain();
 
 	IConnection* readConn = process->start(
-		genArgv(route),
-		genEnvp(route, req),
+		genArgv(scriptName, route),
+		genEnvp(scriptName, req, route),
 		req.getBody()
 	);
 
@@ -132,18 +151,17 @@ ResponsePlan CgiHandler::handle(
 	{
 		process->release();
 		delete parser;
-
 		return ErrorBuilder::build(
 				http::SC_INTERNAL_SERVER_ERROR,
 				route.location);
 	}
 
-	CgiBodySource* body = new CgiBodySource(process, parser);
-	process->release();
+	ResponsePlan	plan;
 
 	plan.status = http::SC_OK;
-	plan.body = body;
 	plan.event = ConnEvent::spawn(readConn);
+	plan.body = new CgiBodySource(process, parser);;
+	process->release();
 
 	return plan;
 }
