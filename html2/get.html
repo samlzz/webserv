@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GET / HEAD - Webserv Test Suite</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Test GET &amp; HEAD</h1>
+            <p>Récupération de ressources et inspection de headers</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html" class="active">GET / HEAD</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/upload.html">Upload / PUT</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/redirect.html">Redirections</a></li>
+                <li><a href="/headers.html">Headers</a></li>
+                <li><a href="/autoindex.html">Autoindex</a></li>
+                <li><a href="/chunked.html">Chunked</a></li>
+                <li><a href="/stress.html">Stress / Timeout</a></li>
+            </ul>
+        </nav>
+
+        <!-- ===== GET ===== -->
+        <div class="card">
+            <h2><span class="method-badge method-get">GET</span> Tests prédéfinis</h2>
+
+            <h3>Fichiers statiques</h3>
+            <button class="btn btn-primary" onclick="testGetFile('/')">GET /</button>
+            <button class="btn btn-primary" onclick="testGetFile('/index.html')">GET /index.html</button>
+            <button class="btn btn-primary" onclick="testGetFile('/css/style.css')">GET /css/style.css</button>
+            <button class="btn btn-primary" onclick="testGetFile('/js/app.js')">GET /js/app.js</button>
+
+            <h3>Autoindex &amp; CGI</h3>
+            <button class="btn btn-success" onclick="testGetFile('/uploads/')">GET /uploads/</button>
+            <button class="btn btn-success" onclick="testGetFile('/cgi-bin/test.py?name=Webserv&test=42')">GET CGI + Query String</button>
+
+            <h3>Erreurs attendues</h3>
+            <button class="btn btn-danger" onclick="testGetFile('/page-inexistante-' + Date.now())">GET 404</button>
+            <button class="btn btn-danger" onclick="testGetFile('/forbidden/')">GET 403</button>
+
+            <h3>URL personnalisée</h3>
+            <div class="form-group">
+                <label for="get-url">URL :</label>
+                <input type="text" id="get-url" placeholder="/chemin/vers/ressource" value="/">
+            </div>
+            <button class="btn btn-primary" onclick="testGetCustom()">Envoyer GET</button>
+        </div>
+
+        <div class="card">
+            <h2>� Réponse GET</h2>
+            <div id="get-response" class="response-box">
+                <span class="status">En attente d'une requête...</span>
+            </div>
+        </div>
+
+        <!-- ===== HEAD ===== -->
+        <div class="card">
+            <h2><span class="method-badge method-get">HEAD</span> Tests HEAD</h2>
+            <p>HEAD retourne les mêmes headers que GET, mais <strong>sans body</strong>. Utile pour vérifier Content-Type, Content-Length, etc.</p>
+
+            <button class="btn btn-primary" onclick="testHeadFile('/index.html')">HEAD /index.html</button>
+            <button class="btn btn-primary" onclick="testHeadFile('/css/style.css')">HEAD /css/style.css</button>
+            <button class="btn btn-primary" onclick="testHeadFile('/js/app.js')">HEAD /js/app.js</button>
+            <button class="btn btn-danger"  onclick="testHeadFile('/nope-' + Date.now())">HEAD 404</button>
+
+            <h3>URL personnalisée</h3>
+            <div class="form-group">
+                <label for="head-url">URL :</label>
+                <input type="text" id="head-url" placeholder="/index.html" value="/index.html">
+            </div>
+            <button class="btn btn-primary" onclick="testHeadCustom()">Envoyer HEAD</button>
+        </div>
+
+        <div class="card">
+            <h2>Réponse HEAD</h2>
+            <div id="head-response" class="response-box">
+                <span class="status">En attente d'une requête...</span>
+            </div>
+        </div>
+
+        <!-- ===== Documentation ===== -->
+        <div class="card">
+            <h2>Documentation</h2>
+            <table>
+                <tr><th>Code</th><th>Signification</th><th>Description</th></tr>
+                <tr><td><span class="badge badge-success">200</span></td><td>OK</td><td>Ressource trouvée et renvoyée</td></tr>
+                <tr><td><span class="badge badge-warning">301</span></td><td>Moved Permanently</td><td>Redirection permanente</td></tr>
+                <tr><td><span class="badge badge-danger">400</span></td><td>Bad Request</td><td>Requête malformée</td></tr>
+                <tr><td><span class="badge badge-danger">403</span></td><td>Forbidden</td><td>Accès refusé</td></tr>
+                <tr><td><span class="badge badge-danger">404</span></td><td>Not Found</td><td>Ressource non trouvée</td></tr>
+                <tr><td><span class="badge badge-danger">500</span></td><td>Internal Server Error</td><td>Erreur interne du serveur</td></tr>
+            </table>
+            <h3>Différence GET vs HEAD</h3>
+            <p>HEAD est identique à GET sauf qu'il ne retourne aucun body. Les headers (Content-Type, Content-Length, etc.) doivent être identiques.</p>
+        </div>
+
+        <footer><p>Webserv Test Suite — 42 Project</p></footer>
+    </div>
+    <script src="/js/app.js"></script>
+</body>
+</html>
