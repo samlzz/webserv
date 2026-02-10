@@ -55,7 +55,6 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 		std::string	val = pos != std::string::npos
 							? queryPart.substr(pos + 1)
 							: "";
-
 		if (loca.isCookiesSet(key))
 			req.getCookies().setCookie(key, val);
 	}

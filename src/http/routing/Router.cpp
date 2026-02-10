@@ -123,7 +123,7 @@ Context	resolve(const HttpRequest &req,
 				continue;
 			std::string	newPath = _prefixExtension(
 						ctx.normalizedPath, "_" + cookieValue);
-			if (fs::checkPerms(newPath, fs::P_EXIST))
+			if (fs::checkPerms( ctx.location->root + newPath, fs::P_EXIST))
 			{
 				ctx.normalizedPath = newPath;
 				break;
