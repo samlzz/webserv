@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/02 13:28:13 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/06 13:01:18 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,7 +125,7 @@ static t_never	_execChild(
 	execve(argv[0], argv, envp);
 	freeCharArray(argv);
 	freeCharArray(envp);
-	_exit(1);
+	_exit(127);
 }
 
 // Takes a vector of string and convert it to an allocated array of char ptr

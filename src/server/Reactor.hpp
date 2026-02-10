@@ -6,14 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 12:19:02 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/06 10:47:06 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 14:20:59 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __REACTOR_HPP__
 # define __REACTOR_HPP__
 
-#include <csignal>
+# include <csignal>
 # include <cstddef>
 # include <set>
 # include <stdint.h>
@@ -22,7 +22,7 @@
 
 # include "connections/IConnection.hpp"
 
-# define POLL_TIMEOUT	-1
+# define POLL_TIMEOUT	500
 
 class Reactor {
 

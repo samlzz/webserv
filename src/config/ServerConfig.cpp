@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 21:09:01 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 14:06:55 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/07 18:00:43 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,17 @@ const char				*Config::ServerDefaults::root = "html";
 const char				*Config::ServerDefaults::index = "index.html";
 const bool				Config::ServerDefaults::autoindex = false;
 const char				*Config::ServerDefaults::defaultErrPage = "/errors/default.html";
+
+// ============================================================================
+// Constructor
+// ============================================================================
+
+Config::Server::Server(const std::string &stringHost)
+	: hostStr(stringHost), host()
+	, port(0)
+	, maxBodySize(0)
+	, locations()
+{}
 
 // ============================================================================
 // Operator
