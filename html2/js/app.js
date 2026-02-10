@@ -263,7 +263,7 @@ async function testPostJSON() {
     const jsonData = document.getElementById('post-json')?.value || '{}';
     try {
         const data = JSON.parse(jsonData);
-        const response = await API.postJSON('/cgi-bin/test.py', data);
+        const response = await API.postJSON('/uploads', data);
         displayResponse('post-response', response);
     } catch (e) {
         displayResponse('post-response', {
@@ -621,7 +621,7 @@ async function testSlowConnection() {
         body: 'Opening connection and waiting for server timeout...', duration: 0
     });
     // Ouvre une connexion sans envoyer de données, attend le timeout serveur
-    const r = await API.rawRequest('GET', '/slow-test-' + Date.now(), null, 120000);
+    const r = await API.rawRequest('GET', '/index.html', null, 120000);
     displayResponse('timeout-response', r);
 }
 
