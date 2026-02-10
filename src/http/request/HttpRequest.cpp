@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/10 14:17:20 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 19:33:17 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,23 +140,25 @@ static int		htod(const std::string& pHex)
 	return (result);
 }
 
-static inline std::string	decode(const std::string& pUri)
+static inline bool	decode(const std::string& pUri, std::string& pPath)
 {
 	std::string path;
 	int dec;
 
-	for (size_t i = 0; i < pUri.length(); i++) {
+	for (size_t i = 0; i < pUri.length(); i++)
+	{
 		if (pUri[i] == '%' && i + 2 < pUri.length()) {
 			dec = htod(pUri.substr(i + 1, 2));
-			if (dec != -1) {
-				path.push_back(dec);
-				i+=2;
-				continue;	
-			}
+			if (dec < 0)
+				return false;
+			path.push_back(dec);
+			i+=2;
+			continue;
 		}
 		path.push_back(pUri[i]);
 	}
-	return path;
+	pPath = path;
+	return true;
 }
 
 // ========================================================================== //
@@ -212,7 +214,8 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case LINE_URI_PATH: {
 			if (ch == ' ') {
-				_request.uri.path = decode(_buffer);
+				if (!decode(_buffer, _request.uri.path))
+					return setError(http::SC_BAD_REQUEST);
 				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
 				_buffer.clear();
 				__attribute__ ((fallthrough));
