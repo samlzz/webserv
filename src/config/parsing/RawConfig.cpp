@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:06 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/21 18:30:56 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 14:18:33 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ Config::Server::Location	RawServer::RawLocation::normalize(
 	out.root = root.getOr(parentRoot);
 	out.index = index.getOr(parentIndex);
 	out.autoindex = autoindex.getOr(parentAutoindex);
+	out.sessionLogin = sessionLogin.getOr(false);
 
 	out.errorPages = concatMap(parent.d_errorPages, errorPages);
 	out.defaultErrPage = defaultErrPage.getOr(parentDefaultErr);
@@ -58,7 +59,9 @@ Config::Server::Location	RawServer::RawLocation::normalize(
 
 	out.uploadPath = uploadPath;
 	out.redirect = redirect;
-
+	out.cookiesSet = cookiesSet;
+	out.cookiesVary = cookiesVary;
+	
 	return out;
 }
 
@@ -72,9 +75,9 @@ static inline void	_setHost(struct in_addr *dest, std::string hostStr)
 
 Config::Server	RawServer::normalize(const Config::ServerDefaults &def)
 {
-	Config::Server out;
+	Config::Server out(host.getOr(def.host));
 
-	_setHost(&out.host, host.getOr(def.host));
+	_setHost(&out.host, out.hostStr);
 	out.port = port.getOr(def.port);
 	out.maxBodySize = maxBodySize.getOr(def.maxBodySize);
 

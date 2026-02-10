@@ -72,6 +72,7 @@ namespace http
 	};
 
 	typedef std::map<std::string, std::string>	t_headers;
+	typedef std::map<std::string, std::string>	t_cookies;
 
 } // namespace http
 

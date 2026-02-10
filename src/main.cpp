@@ -6,10 +6,11 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/08 18:07:04 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 12:54:08 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/06 10:57:15 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <csignal>
 #include <cstddef>
 #include <exception>
 #include <iostream>
@@ -21,6 +22,11 @@
 #include "ftpp/FtppException.hpp"
 
 #define ERR_USAGE	"Usage: webserv <configuration file>"
+
+extern "C" void signalHandler(int)
+{
+	Reactor::stop();
+}
 
 int main(int ac, char **av)
 {
@@ -40,6 +46,7 @@ int main(int ac, char **av)
 		for (size_t i = 0; i < servs.size(); ++i)
 			pollManager.addConnection(new ServerConnection(servs[i], dispatch));
 
+		signal(SIGINT, signalHandler);
 		pollManager.run();
 	}
 	catch (const FtppException &parseErr)

@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Test WebServ</title>
+	<link rel="stylesheet" type="text/css" href="/styles.css">
 </head>
 <body>
     <h1>Serveur de Test C++98</h1>
     <p>Statut : Connecté au serveur.</p>
-
+	<p>Bienvenue, {{USERNAME}}!</p>
     <hr>
     
     <h3>Test de POST (Upload de texte)</h3>
@@ -24,5 +25,20 @@
         <li><a href="/docs/big_file.txt">Télécharger un gros fichier</a></li>
         <li><a href="/page_qui_n_existe_pas">Tester la 404</a></li>
     </ul>
+
+	<hr>
+	<h3>Test Theme</h3>
+	<p>Changer le theme du site :</p>
+	<ul>
+		<li><a href="/theme?mode=light">Thème Clair</a></li>
+		<li><a href="/theme?mode=dark">Thème Sombre</a></li>
+	</ul>
+
+	<hr>
+	<h4>Votre nom:</h4>
+	<form action="/set_name" method="post">
+		<input type="text" name="username" placeholder="Entrez votre nom">
+		<input type="submit" value="Envoyer">
+	</form>
 </body>
 </html>

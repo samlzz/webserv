@@ -6,13 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/05 17:15:19 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 14:20:42 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
 #include <ctime>
 #include <sys/poll.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 
 #include "ClientConnection.hpp"
@@ -24,14 +25,39 @@
 #include "http/response/ResponsePlan.hpp"
 #include "http/response/interfaces/IFifoStream.hpp"
 #include "http/routing/Router.hpp"
+#include "server/AddrInfo.hpp"
 #include "server/ServerCtx.hpp"
 
 // ============================================================================
 // Construction / Destruction
 // ============================================================================
 
-ClientConnection::ClientConnection(int cliSockFd, const ServerCtx &serverCtx)
+static AddrInfo	_getLocalInfo(int sockfd, const Config::Server &conf)
+{
+	sockaddr_storage	addr;
+	socklen_t			len = sizeof(addr);
+
+	if (getsockname(sockfd,
+					reinterpret_cast<sockaddr *>(&addr),
+					&len) == 0
+	)
+		return AddrInfo(addr);
+
+	if (!conf.hostStr.empty()
+		&& conf.hostStr != "0.0.0.0" && conf.hostStr != "::")
+		return AddrInfo(conf.hostStr, conf.port);
+
+	return AddrInfo("localhost", conf.port);
+}
+
+ClientConnection::ClientConnection(
+							int cliSockFd,
+							const ServerCtx &serverCtx,
+							const struct sockaddr_storage &remote
+						)
 	: AConnection(cliSockFd), _serv(serverCtx)
+	, _remote(AddrInfo(remote))
+	, _local(_getLocalInfo(cliSockFd, serverCtx.config))
 	, _req(_serv.config.maxBodySize), _resp(0)
 	, _offset(0), _cgiRead(0)
 	, _shouldRefresh(false)
@@ -53,6 +79,9 @@ ClientConnection::~ClientConnection(void)
 ConnEvent	ClientConnection::buildResponse(void)
 {
 	routing::Context	route = routing::resolve(_req, _serv);
+	route.local = &_local;
+	route.remote = &_remote;
+
 	ResponsePlan		plan = _serv.dispatcher.dispatch(_req, route);
 	INeedsNotifier		*needs = dynamic_cast<INeedsNotifier *>(plan.body);
 

@@ -23,6 +23,7 @@
 # include "http/request/HttpRequest.hpp"
 # include "http/response/ResponsePlan.hpp"
 
+// Forward Declaration
 namespace routing { struct Context; }
 
 class HttpDispatcher {
@@ -48,6 +49,7 @@ public:
 	ResponsePlan	handleStaticFile(const routing::Context &route) const;
 
 private:
+	ResponsePlan		findPlan(const HttpRequest &req, const routing::Context &route) const;
 	const IHttpHandler	*findHandler(
 						const HttpRequest &req,
 						const routing::Context &route
