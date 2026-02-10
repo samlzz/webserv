@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:30:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 15:33:23 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 20:08:27 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,20 @@ bool						HttpResponse::isDone() const	{ return _done; }
 
 bool						HttpResponse::shouldCloseConnection(void) const
 {
-	// TODO: check internal state to determine keep-alive/close
+	setField("Connection", "keep-alive");
+
+	http::e_status_code code = _ctx.request.getStatusCode();
+	if (code == 400 || code == 408 || code == 411 || code == 413 || code ==  414 || code == 431 || code == 505) {
+		setField("Connection", "close");
+		return true;
+	}
+
+	if (_ctx.request.hasField("Connection")) {
+		if (_ctx.request.getField("Connection") == "close")
+			setField("Connection", "close");
+			return true;
+	}
+
 	return false;
 }
 

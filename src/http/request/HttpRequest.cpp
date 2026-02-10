@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/10 14:17:20 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 20:05:51 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -567,7 +567,6 @@ void	HttpRequest::checkTimeout(time_t now)
 void HttpRequest::setError(const http::e_status_code pCode)
 {
 	_code = pCode;
-	setField("Connection", "close");
 	UPDATE_STATE(PARSING_ERROR);
 }
 
