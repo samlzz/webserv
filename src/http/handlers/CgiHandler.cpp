@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 16:05:13 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/02 08:17:39 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/07 17:48:07 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,27 +54,32 @@ static inline void	addEnv(std::vector<std::string>& pVec, const std::string& pKe
 
 static inline std::vector<std::string>	genEnvp(const routing::Context& route, const HttpRequest& req)
 {
-	std::vector<std::string> envp;
+	std::vector<std::string>	envp;
 
 	addEnv(envp, "GATEWAY_INTERFACE", "CGI/1.1");
-	addEnv(envp, "REQUEST_METHOD", str::toString(req.getMethod()));
-	addEnv(envp, "QUERY_STRING", req.getQuery());
-	addEnv(envp, "PATH_INFO", path::subInfo(route.normalizedPath));
-	addEnv(envp, "PATH_TRANSLATED", route.location->root + path::subInfo(route.normalizedPath));
-	addEnv(envp, "SCRIPT_NAME", path::subPath(route.normalizedPath));
-	addEnv(envp, "SCRIPT_FILENAME", route.location->root + path::subPath(route.normalizedPath));
-	addEnv(envp, "REDIRECT_STATUS", "200");
-
-	addEnv(envp, "REMOTE_ADDR", "127.0.0.1");
-	addEnv(envp, "SERVER_PORT", "8080");
-	addEnv(envp, "SERVER_NAME", "localhost");
 	addEnv(envp, "SERVER_PROTOCOL", "HTTP/1.1");
 	addEnv(envp, "SERVER_SOFTWARE", "Webserv/1.0");
 
-	if (req.hasField("Content-Length"))
-		addEnv(envp, "CONTENT_LENGTH", req.getField("Content-Length"));
-	else
-		addEnv(envp, "CONTENT_LENGTH", str::toString(req.getBody().size()));
+	addEnv(envp, "PATH_INFO", path::subInfo(route.normalizedPath));
+	addEnv(envp, "PATH_TRANSLATED", route.location->root + path::subInfo(route.normalizedPath));
+	addEnv(envp, "QUERY_STRING", req.getQuery());
+
+	addEnv(envp, "REQUEST_METHOD", str::toString(req.getMethod()));
+	addEnv(envp, "SCRIPT_NAME", path::subPath(route.normalizedPath));
+	addEnv(envp, "SCRIPT_FILENAME", route.location->root + path::subPath(route.normalizedPath));
+
+	std::string	remoteAddr = route.remote ? route.remote->addr : "";
+	std::string	serverPort = route.local ? str::toString(route.local->port) : "";
+	std::string	serverName = route.local ? route.local->addr : "";
+
+	addEnv(envp, "REMOTE_ADDR", remoteAddr);
+	addEnv(envp, "SERVER_PORT", serverPort);
+	addEnv(envp, "SERVER_NAME", serverName);
+
+	std::string	contentLength = req.hasField("Content-Length")
+									? req.getField("Content-Length")
+									: str::toString(req.getBody().size());
+	addEnv(envp, "CONTENT_LENGTH", contentLength);
 	
 	if (req.hasField("Content-Type"))
 		addEnv(envp, "CONTENT_TYPE", req.getField("Content-Type"));
@@ -87,6 +92,7 @@ static inline std::vector<std::string>	genEnvp(const routing::Context& route, co
 		addEnv(envp, "HTTP_" + toUpperEnv(it->first), it->second);
 	}
 
+	addEnv(envp, "SESSION_USERNAME", route.session->username);
 	return envp;
 }
 

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/05 18:25:51 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 14:24:34 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@
 # include "server/connections/IWritableNotifier.hpp"
 
 # ifndef CGI_MAX_EXEC_TIME
-#  define CGI_MAX_EXEC_TIME 3 // ? in seconds
+#  define CGI_MAX_EXEC_TIME 30 // ? in seconds
 # endif
 
 // ============================================================================

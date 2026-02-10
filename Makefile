@@ -40,8 +40,11 @@ FILES =	main.cpp \
 		http/handlers/bodySrcs/FileBodySource.cpp \
 		http/handlers/bodySrcs/MemoryBodySource.cpp \
 		http/request/HttpRequest.cpp \
+		http/request/Cookies.cpp \
 		http/response/HttpResponse.cpp \
 		http/routing/Router.cpp \
+		http/Sessions.cpp \
+		server/AddrInfo.cpp \
 		server/Reactor.cpp \
 		server/connections/AConnection.cpp \
 		server/connections/ClientConnection.cpp \

@@ -10,6 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <sstream>
 #include <string>
 
 #include "HttpDispatcher.hpp"
@@ -44,6 +45,21 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 								) const
 {
 	const Config::Server::Location	&loca = *route.location;
+
+	std::istringstream	queryIss(req.getQuery());
+	std::string			queryPart;
+	
+	// ? Set cookie
+	while (std::getline(queryIss, queryPart, '&'))
+	{
+		size_t		pos = queryPart.find('=');
+		std::string	key = queryPart.substr(0, pos);
+		std::string	val = pos != std::string::npos
+							? queryPart.substr(pos + 1)
+							: "";
+		if (loca.isCookiesSet(key))
+			req.getCookies().setCookie(key, val);
+	}
 
 	if (loca.redirect)
 	{
@@ -99,10 +115,9 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 	return NULL;
 }
 
-ResponsePlan	HttpDispatcher::dispatch(
-									const HttpRequest &req,
-									const routing::Context &route
-								) const
+ResponsePlan	HttpDispatcher::findPlan(
+	const HttpRequest &req, const routing::Context &route
+) const
 {
 	if (!route.location)
 	{
@@ -136,4 +151,13 @@ ResponsePlan	HttpDispatcher::dispatch(
 		);
 
 	return handler->handle(req, route);
+}
+
+ResponsePlan	HttpDispatcher::dispatch(
+	const HttpRequest &req, const routing::Context &route
+) const
+{
+	ResponsePlan	plan(findPlan(req, route));
+	plan.headers["Set-Cookie"] = req.getCookies().buildSetCookieHeaders();
+	return plan;
 }
