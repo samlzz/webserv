@@ -16,8 +16,10 @@
 #include <vector>
 
 #include "Router.hpp"
+#include "http/request/Cookies.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "server/ServerCtx.hpp"
+#include "utils/fileSystemUtils.hpp"
 
 namespace routing
 {
@@ -58,8 +60,34 @@ static inline std::string	_normalizeUri(const std::string &path)
 		if (i + 1 < stack.size())
 			result += '/';
 	}
-	if (trailingSlash && result.size() > 1)
+	if (trailingSlash && result.size() > 1 && result[result.size() - 1] != '/')
 		result += '/';
+
+	return result;
+}
+
+// static inline std::string _trailingSlash(const std::string &path)
+// {
+// 	std::string result;
+	
+// 	for (size_t i = 0; i < path.length(); ++i)
+// 	{
+// 		if (path[i] != '/' || (i == 0 || path[i - 1] != '/'))
+// 		{
+// 			result += path[i];
+// 		}
+// 	}
+
+// 	return (result);
+// }
+
+static inline std::string	_prefixExtension(const std::string &path, const std::string &prefix)
+{
+	size_t		extPos = path.find('.');
+	std::string	result = path.substr(0, extPos) + prefix;
+
+	if (extPos != std::string::npos)
+		result += path.substr(extPos);
 
 	return result;
 }
@@ -85,8 +113,40 @@ Context	resolve(const HttpRequest &req,
 			suffix = uri;
 
 		ctx.normalizedPath = lp + suffix;
+
+		// ? Serve files dynamically from cookies 
+		const std::vector<std::string>	&cookiesVary = ctx.location->cookiesVary;
+		for (size_t i = 0; i < cookiesVary.size(); ++i)
+		{
+			std::string cookieValue = req.getCookies().getCookie(cookiesVary[i]);
+			if (cookieValue.empty())
+				continue;
+			std::string	newPath = _prefixExtension(
+						ctx.normalizedPath, "_" + cookieValue);
+			if (fs::checkPerms( ctx.location->root + newPath, fs::P_EXIST))
+			{
+				ctx.normalizedPath = newPath;
+				break;
+			}
+		}
 	}
+	// ctx.normalizedPath = _trailingSlash(ctx.normalizedPath);
 	
+
+	// manage sessions
+	Cookies		&cookies = req.getCookies();
+	std::string	sessionId = cookies.getCookie("sessionId");
+
+	serv.sessions.clearExpiredSessions(SESSION_TIMEOUT);
+	if (sessionId.empty() || !serv.sessions.sessionExists(sessionId))
+	{
+		sessionId = serv.sessions.createSession("guest");
+		cookies.setCookie("sessionId", sessionId);
+	}
+	SessionsManager::Session *session = &serv.sessions.getSession(sessionId);
+	session->updateActivity();
+	ctx.currSession = session;
+
 	return ctx;
 }
 

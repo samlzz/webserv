@@ -6,19 +6,21 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/02/05 17:06:33 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 14:12:47 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_REQUEST_HPP__
 #define __HTTP_REQUEST_HPP__
 
+#include "Cookies.hpp"
+#include "IHttpRequest.hpp"
+
 #include <string>
 #include <vector>
 
 #include "http/HttpTypes.hpp"
 #include "http/response/BuffStream.hpp"
-#include "http/request/IHttpRequest.hpp"
 
 
 #define MAX_METHOD_LENGTH		8
@@ -87,6 +89,7 @@ private:
 		std::vector<char>	body;
 	};
 
+	mutable Cookies			_cookies;
 	Request					_request;
 	size_t					_maxBodySize;
 
@@ -128,6 +131,7 @@ public:
 	const http::t_headers	&getHeaders() const;
 	const t_bytes			&getBody() const;
 	http::e_status_code		getStatusCode() const;
+	Cookies					&getCookies() const;
 
 	// ======= Header Utils =======
 	void				setField(const std::string& pKey, const std::string& pValue);

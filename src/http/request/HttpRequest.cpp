@@ -6,21 +6,21 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/05 17:02:49 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 14:13:51 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
-#include "HttpRequest.hpp"
-#include "http/response/BuffStream.hpp"
-
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <algorithm>
 #include <string>
 
+#include "HttpRequest.hpp"
+#include "Cookies.hpp"
 #include "http/HttpTypes.hpp"
+#include "http/response/BuffStream.hpp"
 
 #define CURRENT_STATE() _state
 #define UPDATE_STATE(S) _state = S
@@ -68,6 +68,7 @@ int						HttpRequest::getVerMin() const		{ return (_request.verMin);       };
 const http::t_headers	&HttpRequest::getHeaders() const 	{ return (_request.headers);      };
 const t_bytes			&HttpRequest::getBody() const		{ return (_request.body);         };
 http::e_status_code		HttpRequest::getStatusCode() const	{ return (_code);                 };
+Cookies					&HttpRequest::getCookies() const	{ return (_cookies);              };
 
 void	HttpRequest::setField(const std::string& pKey, const std::string& pValue) {
 	_request.headers[pKey] = pValue;
@@ -383,6 +384,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				UPDATE_STATE(PARSING_DONE);
 				break;
 			}
+			_cookies.parseCookies(_request.headers);
 			UPDATE_STATE(BODY_START);
 			__attribute__ ((fallthrough));
 		}

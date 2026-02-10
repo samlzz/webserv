@@ -30,7 +30,7 @@
 // Construction / Destruction
 // ============================================================================
 
-ClientConnection::ClientConnection(int cliSockFd, const ServerCtx &serverCtx)
+ClientConnection::ClientConnection(int cliSockFd, ServerCtx &serverCtx)
 	: AConnection(cliSockFd), _serv(serverCtx)
 	, _req(_serv.config.maxBodySize), _resp(0)
 	, _offset(0), _cgiRead(0)
@@ -53,7 +53,7 @@ ClientConnection::~ClientConnection(void)
 ConnEvent	ClientConnection::buildResponse(void)
 {
 	routing::Context	route = routing::resolve(_req, _serv);
-	ResponsePlan		plan = _serv.dispatcher.dispatch(_req, route);
+	ResponsePlan		plan = _serv.dispatcher.dispatch(_req, route);	
 	INeedsNotifier		*needs = dynamic_cast<INeedsNotifier *>(plan.body);
 
 	if (needs)
