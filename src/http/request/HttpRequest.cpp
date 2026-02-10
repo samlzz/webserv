@@ -6,21 +6,21 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/05 17:02:49 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 14:17:20 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
-#include "HttpRequest.hpp"
-#include "http/response/BuffStream.hpp"
-
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <algorithm>
 #include <string>
 
+#include "HttpRequest.hpp"
+#include "Cookies.hpp"
 #include "http/HttpTypes.hpp"
+#include "http/response/BuffStream.hpp"
 
 #define CURRENT_STATE() _state
 #define UPDATE_STATE(S) _state = S
@@ -68,6 +68,7 @@ int						HttpRequest::getVerMin() const		{ return (_request.verMin);       };
 const http::t_headers	&HttpRequest::getHeaders() const 	{ return (_request.headers);      };
 const t_bytes			&HttpRequest::getBody() const		{ return (_request.body);         };
 http::e_status_code		HttpRequest::getStatusCode() const	{ return (_code);                 };
+Cookies					&HttpRequest::getCookies() const	{ return (_cookies);              };
 
 void	HttpRequest::setField(const std::string& pKey, const std::string& pValue) {
 	_request.headers[pKey] = pValue;
@@ -139,6 +140,25 @@ static int		htod(const std::string& pHex)
 	return (result);
 }
 
+static inline std::string	decode(const std::string& pUri)
+{
+	std::string path;
+	int dec;
+
+	for (size_t i = 0; i < pUri.length(); i++) {
+		if (pUri[i] == '%' && i + 2 < pUri.length()) {
+			dec = htod(pUri.substr(i + 1, 2));
+			if (dec != -1) {
+				path.push_back(dec);
+				i+=2;
+				continue;	
+			}
+		}
+		path.push_back(pUri[i]);
+	}
+	return path;
+}
+
 // ========================================================================== //
 //                             MEMBER FUNCTION                                //
 // ========================================================================== //
@@ -192,13 +212,13 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case LINE_URI_PATH: {
 			if (ch == ' ') {
-				_request.uri.path = _buffer;
+				_request.uri.path = decode(_buffer);
 				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '?' || ch == '#') {
-				_request.uri.path = _buffer;
+				_request.uri.path = decode(_buffer);
 				UPDATE_STATE(ch == '?' ? LINE_URI_QUERY : LINE_URI_FRAGMENT);
 				_buffer.clear();
 				break;
@@ -383,6 +403,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				UPDATE_STATE(PARSING_DONE);
 				break;
 			}
+			_cookies.parseCookies(_request.headers);
 			UPDATE_STATE(BODY_START);
 			__attribute__ ((fallthrough));
 		}

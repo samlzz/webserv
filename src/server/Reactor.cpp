@@ -6,10 +6,11 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 14:21:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/02 12:38:59 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/06 10:56:08 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <csignal>
 #include <cstddef>
 #include <ctime>
 #include <set>
@@ -24,7 +25,9 @@
 // Construction / Destruction
 // ============================================================================
 
-Reactor::Reactor(): _running(false)
+volatile sig_atomic_t	Reactor::_running = 0;
+
+Reactor::Reactor()
 {}
 
 Reactor::~Reactor()
@@ -57,7 +60,7 @@ void	Reactor::addConnection(IConnection* conn)
 
 void	Reactor::stop(void)
 {
-	_running = false;
+	_running = 0;
 }
 
 static inline void	_reapChildsProcess(void)
@@ -117,10 +120,12 @@ bool	Reactor::manageConnEvent(ConnEvent ev, size_t idx)
  */
 void	Reactor::run(void)
 {
-	_running = true;
+	_running = 1;
 	while (_running)
 	{
 		int ret = poll(_pfds.data(), _pfds.size(), POLL_TIMEOUT);
+		if (!_running)
+			return;
 		if (ret < 0)
 			throw SysError("poll");
 

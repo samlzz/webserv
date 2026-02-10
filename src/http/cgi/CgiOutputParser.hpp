@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CgiOutputParser.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 14:50:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 15:32:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/09 15:39:50 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ private:
 
 	http::e_status_code		_status;
 	http::t_headers			_headers;
+	bool					_chunked;
 
 public:
 	CgiOutputParser();
@@ -52,8 +53,10 @@ public:
 
 private:
 
-	bool tryParseHeaders(); // ? returns true when headers completed+parsed
-	void parseHeaderLines(const std::string& headerBlock);
+	bool							tryParseHeaders(); // ? returns true when headers completed+parsed
+	void							parseHeaderLines(const std::string& headerBlock);
+	size_t							bodyChunk(char* dst, size_t max);
+
 
 	// forbidden
 	CgiOutputParser(const CgiOutputParser &other);

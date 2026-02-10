@@ -15,6 +15,53 @@
 #include <string>
 #include <dirent.h>
 #include <algorithm>
+#include <vector>
+
+std::string readFileToString(const std::string &path)
+{
+	std::string content;
+	int fd = fs::openReadOnly(path);
+	if (fd < 0)
+		return content;
+
+	struct stat st;
+	if (fstat(fd, &st) != 0)
+	{
+		close(fd);
+		return content;
+	}
+
+	content.resize(st.st_size);
+	ssize_t totalRead = 0;
+	while (totalRead < static_cast<ssize_t>(st.st_size))
+	{
+		ssize_t bytesRead = read(fd, &content[totalRead], st.st_size - totalRead);
+		if (bytesRead <= 0)
+		{
+			content.clear();
+			break;
+		}
+		totalRead += bytesRead;
+	}
+
+	close(fd);
+	return content;
+}
+
+std::string replacePlaceholder(
+					const std::string &content,
+					const std::string &placeholder,
+					const std::string &value)
+{
+	std::string result = content;
+	size_t pos = 0;
+	while ((pos = result.find(placeholder, pos)) != std::string::npos)
+	{
+		result.replace(pos, placeholder.length(), value);
+		pos += value.length();
+	}
+	return result;
+}
 
 ResponsePlan	StaticFileHandler::loadAutoindex(const std::string &path, const routing::Context &route) const
 {
@@ -69,19 +116,12 @@ ResponsePlan	StaticFileHandler::loadAutoindex(const std::string &path, const rou
 ResponsePlan	StaticFileHandler::loadFile(const std::string &path, const routing::Context &route) const
 {
 	ResponsePlan	plan;
-	struct stat st;
+	struct stat		st;
 
 	stat(path.c_str(), &st);
 	std::string	ext = path::subExt(path);
 
-	int _fd;
-	// if ((_fd = open(path.c_str(), O_RDONLY)) < 0)
-	// {
-		// return (ErrorBuilder::build(http::SC_FORBIDDEN, route.location));
-	// }
-
-	//CHECK SORTIE ERREUR ATTENDUE
-	_fd = fs::openReadOnly(path);
+	int _fd = fs::openReadOnly(path);
 	if (_fd < 0)
 		return (ErrorBuilder::build(http::SC_FORBIDDEN, route.location));
 
@@ -100,22 +140,21 @@ ResponsePlan	StaticFileHandler::handle(
 								const routing::Context &route) const
 {
 	(void)req;
-	(void)route;
-
-	ResponsePlan	plan;
-
 	struct stat st;
 	std::string path = route.location->root + route.normalizedPath;
 
 	if (stat(path.c_str(), &st) != 0)
 		return (ErrorBuilder::build(http::SC_NOT_FOUND, route.location));
 
+	if (S_ISREG(st.st_mode))
+		return loadFile(path, route);
+
 	if (S_ISDIR(st.st_mode))
 	{
 		if (path[path.length() - 1] != '/')
 		{
-			std::string redirectPath = route.normalizedPath + "/";
-			plan.headers["Location"] = redirectPath;
+			ResponsePlan	plan;
+			plan.headers["Location"] = route.normalizedPath + "/";
 			plan.headers["Content-Length"] = "0";
 			plan.status = http::SC_MOVED_PERMANENTLY;
 			return (plan);
@@ -123,19 +162,11 @@ ResponsePlan	StaticFileHandler::handle(
 
 		std::string fullIndex = path + route.location->index;
 		if (fs::isFile(fullIndex))
-		{
 			return loadFile(fullIndex, route);
-		}
 
 		if (route.location->autoindex)
-		{		
-			return loadAutoindex(path, route);	
-		}
+			return loadAutoindex(path, route);
 	}
 
-	if (S_ISREG(st.st_mode)) {
-		return loadFile(path, route);
-	}
-
-	return (plan);
+	return (ErrorBuilder::build(http::SC_NOT_FOUND, route.location));
 }

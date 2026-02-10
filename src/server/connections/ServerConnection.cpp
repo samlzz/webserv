@@ -6,11 +6,13 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 08:50:37 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 18:01:49 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/07 17:13:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <arpa/inet.h>
 #include <netinet/in.h>
+#include <string>
 #include <sys/poll.h>
 #include <sys/socket.h>
 
@@ -20,6 +22,7 @@
 #include "ConnEvent.hpp"
 #include "http/dispatch/HttpDispatcher.hpp"
 #include "server/Exceptions.hpp"
+#include "server/connections/IConnection.hpp"
 
 // ============================================================================
 // Construction 
@@ -60,14 +63,20 @@ ConnEvent	ServerConnection::handleEvents(short revents)
 
 	if (revents & POLLIN)
 	{
-		int	cliSock = accept(_fd, 0, 0);
-		if (cliSock < 0)
+		sockaddr_storage	addr;
+		socklen_t			len = sizeof(addr);
+		int					cliSockFd = accept(
+									_fd,
+									reinterpret_cast<struct sockaddr *>(&addr),
+									&len);
+		if (cliSockFd < 0)
 		{
 			if (isNonBlockingErrno())
 				return ConnEvent::none();
 			throw SysError("accept");
 		}
-		return ConnEvent::spawn(new ClientConnection(cliSock, _ctx));
+		IConnection	*cliConn = new ClientConnection(cliSockFd, _ctx, addr);
+		return ConnEvent::spawn(cliConn);
 	}
 
 	return ConnEvent::none();
