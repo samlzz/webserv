@@ -33,6 +33,5 @@ ResponsePlan	DeleteHandler::handle(
 	
 	ResponsePlan	plan;
 	plan.status = http::SC_NO_CONTENT;
-	plan.headers["Content-Length"] = "0";
 	return (plan);
 }
