@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 12:00:19 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 17:31:33 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 18:49:50 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,7 +122,7 @@ Context	resolve(const HttpRequest &req,
 				continue;
 			std::string	newPath = _prefixExtension(
 						ctx.normalizedPath, "_" + cookieValue);
-			if (fs::checkPerms( ctx.location->root + newPath, fs::P_EXIST))
+			if (fs::isExist(ctx.location->root + newPath))
 			{
 				ctx.normalizedPath = newPath;
 				break;
