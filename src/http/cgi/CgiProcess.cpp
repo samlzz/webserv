@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 23:18:53 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 23:31:30 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,7 +104,6 @@ static inline void	freeCharArray(char **array)
 
 static inline t_never	_childEnd(uint8_t exitCode)
 {
-	_closeFds(0, 1);
 	throw CgiChildExit(exitCode);
 }
 
