@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 16:05:13 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/07 17:48:07 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 14:35:27 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,7 +92,7 @@ static inline std::vector<std::string>	genEnvp(const routing::Context& route, co
 		addEnv(envp, "HTTP_" + toUpperEnv(it->first), it->second);
 	}
 
-	addEnv(envp, "SESSION_USERNAME", route.session->username);
+	addEnv(envp, "SESSION_USERNAME", route.currSession ? route.currSession->username : "");
 	return envp;
 }
 
