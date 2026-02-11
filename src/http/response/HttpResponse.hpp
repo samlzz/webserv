@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:03:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 15:33:16 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/11 13:45:33 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,6 +86,9 @@ private:
 	bool						handleCgiRedirect(const std::string &redirectPath);
 
 	void						commitMeta(void);
+
+	std::string					getField(const std::string& pKey) const;
+
 	
 	// forbidden
 	HttpResponse();

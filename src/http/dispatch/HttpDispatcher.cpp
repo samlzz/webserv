@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpDispatcher.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/31 12:28:29 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/11 13:42:31 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,6 +128,22 @@ ResponsePlan	HttpDispatcher::dispatch(
 ) const
 {
 	ResponsePlan	plan(findPlan(req, route));
+
 	plan.headers["Set-Cookie"] = req.getCookies().buildSetCookieHeaders();
+	plan.headers["Connection"] = "keep-alive";
+
+	http::e_status_code code = req.getStatusCode();
+	if (code == 400 || code == 408 || code == 411 || code == 413 || code ==  414 || code == 431 || code == 505) {
+		plan.headers["Connection"] = "close";
+		return plan;
+	}
+
+	if (req.hasField("Connection")) {
+		if (req.getField("Connection") == "close") {
+			plan.headers["Connection"] = "close";
+			return plan;
+		}
+	}
+
 	return plan;
 }
