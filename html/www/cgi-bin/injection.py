@@ -13,7 +13,6 @@ content_length = int(os.environ.get('CONTENT_LENGTH', 0))
 username = os.environ.get('SESSION_USERNAME', 'Guest')
 
 # time.sleep(2)
-print("Content-Length: 150")
 print("Content-Type: text/html\r\n\r\n")
 
 print("<html><body>")
@@ -26,5 +25,5 @@ print(f"<p>Content Length: {content_length}</p>")
 #     # Lire le body depuis STDIN
 #     post_data = sys.stdin.read(content_length)
 #     print(f"<p>POST Data: {post_data}</p>")
-print("<a title=\"test\" href=\"/\">go back</a></p>")
+print("<a title=\"test\" href=\"/\">go back</a>")
 print("</body></html>")
