@@ -1,0 +1,141 @@
+body {
+	background-image: url("bob.png");
+    background-size: cover;
+	margin:0;
+	font-family:Georgia;
+	font-weight:300;
+}
+
+.container{
+	width:100%;
+}
+
+header{
+	background: #7FDBFF;
+	position: fixed;
+  	top: 0;
+ 	width: 100%;	
+}
+
+header::after{
+	content:'';
+	display:table;
+	clear:both;
+}
+
+.logo{
+	float :left;
+	height: 55px;
+  	width: 55px;
+	padding :10px 10;
+
+}
+
+nav{
+	text-align: center;
+	position: fixed;
+  	top: 0;
+ 	width: 100%;
+}
+
+nav ul{
+	margin:0;
+	padding:0;
+	list-style:none;
+}
+
+nav li{
+	display:inline-block;
+	margin :10 35px;
+	padding-top:20px;
+
+	position: relative;
+}
+
+nav a{
+	color:#444;
+	text-decoration: none;
+	text-transform: uppercase;
+	font-size:16px;
+}
+
+nav a:hover {
+	color: #cc6699;
+}
+
+nav a::before{
+	content:'';
+	display:block;
+	height:2px;
+	background-color: #cc6699;
+
+	position: absolute;
+	top:15;
+	width:0%;
+
+	transition: all ease-in-out 150ms;
+}
+
+nav a:hover::before{
+	width:100%;
+}
+
+.home{
+	padding-bottom: : 300px;
+}
+
+
+h1{
+	text-align: center;
+	color : white;
+	text-transform: uppercase;
+	font-size: 70px;
+	margin-top: 275px;
+}
+
+.menu{
+	text-align: center;
+	margin-bottom: 500px;
+}
+
+.amenu{
+	text-transform: uppercase;
+	font-size:40px;
+	text-decoration: none;
+	color :white;
+	border:5px solid white;
+	padding:10px 30px;
+}
+
+.amenu:hover{
+	background-color:black;
+}
+
+.divstaff{
+	color: black;
+	background-color: #ffff99;
+	border: 5px solid black;
+	padding: 30px;
+	border-radius: 15px;
+	width: 800px;
+	margin:auto;
+	margin-bottom: 25px;
+}
+
+.bobcuisine{
+	float :left;
+	width: 250px;
+	padding-right: 20px;
+}
+
+.carlo{
+	float:right;
+	width: 250px;
+	padding-left: 20px;
+}
+
+.crabe{
+	float:left;
+	width: 250px;
+	padding-right: 20px;
+}
