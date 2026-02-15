@@ -8,7 +8,6 @@ path_info = os.environ.get('PATH_INFO', '')
 content_length = int(os.environ.get('CONTENT_LENGTH', 0))
 
 # time.sleep(2)
-print("Content-Length: 150")
 print("Content-Type: text/html\r\n\r\n")
 
 print("<html><body>")
