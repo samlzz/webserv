@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:30:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 15:33:23 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/11 13:48:12 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,8 +50,17 @@ bool						HttpResponse::isDone() const	{ return _done; }
 
 bool						HttpResponse::shouldCloseConnection(void) const
 {
-	// TODO: check internal state to determine keep-alive/close
-	return false;
+	std::string connection = getField("Connection");
+	if (connection.empty())
+		return false;
+
+	if (connection == "keep-alive")
+		return false;
+
+	if (connection == "close")
+		return  true;
+
+	return true;
 }
 
 // ============================================================================
@@ -207,3 +216,14 @@ void	HttpResponse::commitMeta(void)
 	oss << "\r\n";
 	_out.push(oss.str());
 }
+
+std::string		HttpResponse::getField(const std::string& pKey) const
+{
+	http::t_headers	headers = _headers;
+	http::t_headers::const_iterator	it = headers.find(pKey);
+
+	if (it == headers.end())
+		return ("");
+
+	return (it->second);
+};

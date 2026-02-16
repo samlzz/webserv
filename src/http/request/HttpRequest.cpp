@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/10 19:33:17 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/10 20:05:51 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,7 +140,7 @@ static int		htod(const std::string& pHex)
 	return (result);
 }
 
-static inline bool	decode(const std::string& pUri, std::string& pPath)
+static bool	decode(const std::string& pUri, std::string& pPath)
 {
 	std::string path;
 	int dec;
@@ -221,7 +221,8 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '?' || ch == '#') {
-				_request.uri.path = decode(_buffer);
+				if (!decode(_buffer, _request.uri.path))
+					return setError(http::SC_BAD_REQUEST);
 				UPDATE_STATE(ch == '?' ? LINE_URI_QUERY : LINE_URI_FRAGMENT);
 				_buffer.clear();
 				break;
@@ -570,7 +571,6 @@ void	HttpRequest::checkTimeout(time_t now)
 void HttpRequest::setError(const http::e_status_code pCode)
 {
 	_code = pCode;
-	setField("Connection", "close");
 	UPDATE_STATE(PARSING_ERROR);
 }
 
