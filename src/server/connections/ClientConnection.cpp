@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/11 14:16:25 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 14:20:42 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,8 +59,7 @@ ClientConnection::ClientConnection(
 	, _remote(AddrInfo(remote))
 	, _local(_getLocalInfo(cliSockFd, serverCtx.config))
 	, _req(_serv.config.maxBodySize), _resp(0)
-	, _reqCount(0), _offset(0)
-	, _cgiRead(0)
+	, _offset(0), _cgiRead(0)
 	, _shouldRefresh(false)
 	, _state(CS_WAIT_FIRST_BYTE)
 	, _tsLastActivity(std::time(0))
@@ -117,7 +116,6 @@ ConnEvent	ClientConnection::handleRead(void)
 	{
 		_state = CS_WAIT_RESPONSE;
 		_events = POLLOUT;
-		++_reqCount;
 		return buildResponse();
 	}
 	return ConnEvent::none();
@@ -178,9 +176,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 
 ConnEvent	ClientConnection::handleEvents(short revents)
 {
-	if (isErrEvent(revents)
-		|| _reqCount > CLIENT_MAX_REQ_COUNT
-	)
+	if (isErrEvent(revents))
 		return ConnEvent::close();
 
 	if (revents & POLLIN)

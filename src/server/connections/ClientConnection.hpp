@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/11 14:13:19 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 14:20:11 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,10 +31,6 @@
 #  define CLIENT_READ_BUF_SIZE	2048
 # endif
 
-# ifndef CLIENT_MAX_REQ_COUNT
-#  define CLIENT_MAX_REQ_COUNT	100
-# endif
-
 /* ? Timeout are in seconds */
 # define CLIENT_TIMEOUT_ACCEPT	10
 # define CLIENT_TIMEOUT_REQ		60
@@ -57,7 +53,6 @@ private:
 
 	HttpRequest				_req;
 	HttpResponse			*_resp;
-	size_t					_reqCount;
 	size_t					_offset;
 	IConnection				*_cgiRead;
 
