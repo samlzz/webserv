@@ -161,6 +161,23 @@ static bool	decode(const std::string& pUri, std::string& pPath)
 	return true;
 }
 
+static bool	decode(const std::string& pUri)
+{
+	int dec;
+
+	for (size_t i = 0; i < pUri.length(); i++)
+	{
+		if (pUri[i] == '%' && i + 2 < pUri.length()) {
+			dec = htod(pUri.substr(i + 1, 2));
+			if (dec < 0)
+				return false;
+			i+=2;
+			continue;
+		}
+	}
+	return true;
+}
+
 // ========================================================================== //
 //                             MEMBER FUNCTION                                //
 // ========================================================================== //
@@ -237,12 +254,16 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case LINE_URI_QUERY: {
 			if (ch == ' ') {
+				if (!decode(_buffer))
+					return setError(http::SC_BAD_REQUEST);
 				_request.uri.query = _buffer;
 				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '#') {
+				if (!decode(_buffer))
+					return setError(http::SC_BAD_REQUEST);
 				_request.uri.query = _buffer;
 				UPDATE_STATE(LINE_URI_FRAGMENT);
 				_buffer.clear();
