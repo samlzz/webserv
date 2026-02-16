@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 15:32:44 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/06 13:01:03 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 23:13:11 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,22 @@
 // Type Utils
 // ============================================================================
 typedef void	t_never;
+
+class CgiChildExit : public std::exception {
+private:
+	uint8_t	_exitCode;
+
+public:
+	explicit CgiChildExit(uint8_t exitCode) : _exitCode(exitCode) {}
+	virtual ~CgiChildExit() throw() {}
+
+	virtual const char* what() const throw()
+	{
+		return "CGI child process exit";
+	}
+
+	uint8_t exitCode() const throw() { return _exitCode; }
+};
 
 // ============================================================================
 // Cgi context class

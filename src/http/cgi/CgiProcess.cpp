@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/06 13:01:18 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 23:31:30 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,11 @@ static inline void	freeCharArray(char **array)
 	delete []array;
 }
 
+static inline t_never	_childEnd(uint8_t exitCode)
+{
+	throw CgiChildExit(exitCode);
+}
+
 // never return
 static t_never	_execChild(
 	char **argv, char **envp,
@@ -110,7 +115,7 @@ static t_never	_execChild(
 	if (dup2(stdoutFd, STDOUT_FILENO) < 0)
 	{
 		_closeFds(stdoutFd, stdinFd);
-		_exit(1);
+		_childEnd(1);
 	}
 	close(stdoutFd);
 
@@ -119,13 +124,13 @@ static t_never	_execChild(
 		int dupFailed = dup2(stdinFd, STDIN_FILENO) < 0;
 		close(stdinFd);
 		if (dupFailed)
-			_exit(1);
+			_childEnd(1);
 	}
 
 	execve(argv[0], argv, envp);
 	freeCharArray(argv);
 	freeCharArray(envp);
-	_exit(127);
+	_childEnd(127);
 }
 
 // Takes a vector of string and convert it to an allocated array of char ptr

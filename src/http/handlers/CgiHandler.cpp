@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 16:05:13 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 19:21:26 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 23:08:36 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,27 +141,33 @@ ResponsePlan CgiHandler::handle(
 	CgiProcess		*process = new CgiProcess(*parser);
 	process->retain();
 
-	IConnection* readConn = process->start(
-		genArgv(scriptName, route),
-		genEnvp(scriptName, req, route),
-		req.getBody()
-	);
+	try {
+		IConnection* readConn = process->start(
+			genArgv(scriptName, route),
+			genEnvp(scriptName, req, route),
+			req.getBody()
+		);
 
-	if (!readConn)
-	{
+		if (!readConn)
+		{
+			process->release();
+			delete parser;
+			return ErrorBuilder::build(
+					http::SC_INTERNAL_SERVER_ERROR,
+					route.location);
+		}
+
+		ResponsePlan	plan;
+
+		plan.status = http::SC_OK;
+		plan.event = ConnEvent::spawn(readConn);
+		plan.body = new CgiBodySource(process, parser);;
 		process->release();
+
+		return plan;
+	} catch (...) {
+		delete process;
 		delete parser;
-		return ErrorBuilder::build(
-				http::SC_INTERNAL_SERVER_ERROR,
-				route.location);
+		throw ;
 	}
-
-	ResponsePlan	plan;
-
-	plan.status = http::SC_OK;
-	plan.event = ConnEvent::spawn(readConn);
-	plan.body = new CgiBodySource(process, parser);;
-	process->release();
-
-	return plan;
 }
