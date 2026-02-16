@@ -11,62 +11,18 @@
 #include "utils/stringUtils.hpp"
 #include "utils/fileSystemUtils.hpp"
 
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <string>
 #include <dirent.h>
 #include <algorithm>
 #include <vector>
 
-std::string readFileToString(const std::string &path)
+ResponsePlan	StaticFileHandler::loadAutoindex(
+										const std::string &path,
+										http::e_method method,
+										const routing::Context &route) const
 {
-	std::string content;
-	int fd = fs::openReadOnly(path);
-	if (fd < 0)
-		return content;
-
-	struct stat st;
-	if (fstat(fd, &st) != 0)
-	{
-		close(fd);
-		return content;
-	}
-
-	content.resize(st.st_size);
-	ssize_t totalRead = 0;
-	while (totalRead < static_cast<ssize_t>(st.st_size))
-	{
-		ssize_t bytesRead = read(fd, &content[totalRead], st.st_size - totalRead);
-		if (bytesRead <= 0)
-		{
-			content.clear();
-			break;
-		}
-		totalRead += bytesRead;
-	}
-
-	close(fd);
-	return content;
-}
-
-std::string replacePlaceholder(
-					const std::string &content,
-					const std::string &placeholder,
-					const std::string &value)
-{
-	std::string result = content;
-	size_t pos = 0;
-	while ((pos = result.find(placeholder, pos)) != std::string::npos)
-	{
-		result.replace(pos, placeholder.length(), value);
-		pos += value.length();
-	}
-	return result;
-}
-
-ResponsePlan	StaticFileHandler::loadAutoindex(const std::string &path, const routing::Context &route) const
-{
-	ResponsePlan	plan;
-
 	DIR *dir = opendir(path.c_str());
 	if (!dir)
 		return (ErrorBuilder::build(http::SC_FORBIDDEN, route.location));
@@ -77,13 +33,14 @@ ResponsePlan	StaticFileHandler::loadAutoindex(const std::string &path, const rou
 
 	while ((entry = readdir(dir)) != NULL)
 	{
-		struct stat s;
-		std::string fullEntryPath = path + "/" + entry->d_name;
-		if (stat(fullEntryPath.c_str(), &s) == 0)
+		if (*entry->d_name == '.')
+			continue;
+		struct stat st;
+		if (fs::isExist(path + "/" + entry->d_name, &st))
 		{
-			if (S_ISDIR(s.st_mode))
-				folders.push_back(entry->d_name);
-			if (S_ISREG(s.st_mode))
+			if (fs::isDir(st))
+				folders.push_back(std::string(entry->d_name) + '/');
+			if (fs::isFile(st))
 				files.push_back(entry->d_name);
 		}
 	}
@@ -103,34 +60,35 @@ ResponsePlan	StaticFileHandler::loadAutoindex(const std::string &path, const rou
 
 	closedir(dir);
 
+	ResponsePlan	plan;
 	plan.status = http::SC_OK;
-
 	plan.headers["Content-Type"] = http::Data::getMimeType("html");
 	plan.headers["Content-Length"] = str::toString(body.size());
-
-	plan.body = new MemoryBodySource(body);
+	if (method != http::MTH_HEAD)
+		plan.body = new MemoryBodySource(body);
 	
 	return (plan);
 }
 
-ResponsePlan	StaticFileHandler::loadFile(const std::string &path, const routing::Context &route) const
+ResponsePlan	StaticFileHandler::loadFile(
+									const std::string &path,
+									size_t fileSize,
+									http::e_method method,
+									const routing::Context &route
+) const
 {
-	ResponsePlan	plan;
-	struct stat		st;
-
-	stat(path.c_str(), &st);
-	std::string	ext = path::subExt(path);
-
-	int _fd = fs::openReadOnly(path);
-	if (_fd < 0)
+	int fd = fs::openReadOnly(path);
+	if (fd < 0)
 		return (ErrorBuilder::build(http::SC_FORBIDDEN, route.location));
 
-	plan.headers["Content-Length"] = str::toString(st.st_size);
-	plan.headers["Content-Type"] = http::Data::getMimeType(ext);
-	
-	plan.status = http::SC_OK;
+	ResponsePlan	plan;
 
-	plan.body = new FileBodySource(_fd);
+	plan.status = http::SC_OK;
+	plan.headers["Content-Length"] = str::toString(fileSize);
+	plan.headers["Content-Type"] = http::Data::getMimeType(path::subExt(path));
+
+	if (method != http::MTH_HEAD)
+		plan.body = new FileBodySource(fd);
 
 	return (plan);
 }
@@ -139,17 +97,16 @@ ResponsePlan	StaticFileHandler::handle(
 								const HttpRequest &req,
 								const routing::Context &route) const
 {
-	(void)req;
 	struct stat st;
 	std::string path = route.location->root + route.normalizedPath;
 
-	if (stat(path.c_str(), &st) != 0)
-		return (ErrorBuilder::build(http::SC_NOT_FOUND, route.location));
+	if (!fs::isExist(path, &st))
+		return ErrorBuilder::build(http::SC_NOT_FOUND, route.location);
 
-	if (S_ISREG(st.st_mode))
-		return loadFile(path, route);
+	if (fs::isFile(st))
+		return loadFile(path, st.st_size, req.getMethod(), route);
 
-	if (S_ISDIR(st.st_mode))
+	if (fs::isDir(st))
 	{
 		if (path[path.length() - 1] != '/')
 		{
@@ -161,12 +118,14 @@ ResponsePlan	StaticFileHandler::handle(
 		}
 
 		std::string fullIndex = path + route.location->index;
-		if (fs::isFile(fullIndex))
-			return loadFile(fullIndex, route);
+		if (fs::isExist(fullIndex, &st) && fs::isFile(st))
+			return loadFile(fullIndex, st.st_size, req.getMethod(), route);
 
 		if (route.location->autoindex)
-			return loadAutoindex(path, route);
+			return loadAutoindex(path, req.getMethod(), route);
+		else
+			return ErrorBuilder::build(http::SC_FORBIDDEN, route.location);
 	}
 
-	return (ErrorBuilder::build(http::SC_NOT_FOUND, route.location));
+	return ErrorBuilder::build(http::SC_NOT_FOUND, route.location);
 }

@@ -1,4 +1,5 @@
 #include "http/handlers/UploadFileHandler.hpp"
+#include "config/Config.hpp"
 #include "http/HttpTypes.hpp"
 #include "http/response/BuffStream.hpp"
 #include "http/response/ResponsePlan.hpp"
@@ -22,8 +23,7 @@
 #include <vector>
 #include <algorithm>
 
-std::string 	UploadFileHandler::removeTrailingSlashes(
-						const std::string &path) const
+static std::string 	_removeTrailingSlashes(const std::string &path)
 {
 	std::string result;
 	
@@ -38,11 +38,10 @@ std::string 	UploadFileHandler::removeTrailingSlashes(
 	return (result);
 }
 
-std::string 	UploadFileHandler::generateFilename(
-						const std::string &filename,
-						http::e_body_kind contentType) const
+static inline std::string 	_generateFilename(const std::string &filename, http::e_body_kind contentType)
 {
-	std::string new_filename = "";
+	std::string new_filename("");
+	std::string	ext("");
 
 	switch(contentType)
 	{
@@ -51,9 +50,13 @@ std::string 	UploadFileHandler::generateFilename(
 			size_t ext_pos = filename.find_last_of(".");
 			
 			if (ext_pos != std::string::npos)
-				new_filename = filename.substr(0, ext_pos) + "_" + str::toString(std::time(0)) + filename.substr(ext_pos);
+			{
+				new_filename = filename.substr(0, ext_pos);
+				ext = filename.substr(ext_pos);
+			}
 			else
-				new_filename = filename + "_" + str::toString(std::time(0));
+				new_filename = filename;
+			new_filename += "_" + str::toString(std::time(0)) + ext;
 			break;
 		}
 		
@@ -65,96 +68,64 @@ std::string 	UploadFileHandler::generateFilename(
 			new_filename = "raw_post_" + str::toString(std::time(0));
 			break;
 
-		case http::CT_APPLICATION_X_WWW_FORM_URLENCODED:
-			break;
-		
-		case http::CT_UNKNOWN:
-			break;
-
-		default:
-			break;
+		case http::CT_APPLICATION_X_WWW_FORM_URLENCODED: break;
+		case http::CT_UNKNOWN: break;
+		default: break;
 	}
 	return (new_filename);
 }
 
-std::string 	UploadFileHandler::generateFilePath(
-						const routing::Context &route,
+static std::string 	_generateFilePath(
 						const std::string &filename,
 						http::e_body_kind contentType,
 						http::e_method method,
-						ResponsePlan &plan) const
+						const Config::Server::Location *loc,
+						ResponsePlan &plan)
 {
 	std::string uploadDir;
-	std::string new_filename = filename;
-	if (method == http::MTH_POST)
+	std::string new_filename;
+
+	if (method == http::MTH_PUT)
 	{
-		if (!route.location->uploadPath.isSome())
+		uploadDir = loc->root;
+		new_filename = filename;
+	}
+	else
+	{
+		if (loc->uploadPath.isNone())
 		{
-			plan = ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
+			plan = ErrorBuilder::build(http::SC_FORBIDDEN, loc);
 			return ("");
 		}
-		uploadDir = *route.location->uploadPath.get();
-		if (uploadDir.empty())
-			return ("");
-		if (uploadDir[uploadDir.length() - 1] == '/')
-			uploadDir = uploadDir.substr(0, uploadDir.length() - 1);
-		switch(contentType)
-		{
-			case http::CT_MULTIPART_FORM_DATA:
-				new_filename = generateFilename(filename, http::CT_MULTIPART_FORM_DATA);
-				break;
-
-			case http::CT_TEXT_PLAIN:
-				new_filename = generateFilename(filename, http::CT_TEXT_PLAIN);
-				break;
-
-			case http::CT_BINARY:
-				new_filename = generateFilename(filename, http::CT_BINARY);
-				break;
-
-			case http::CT_APPLICATION_X_WWW_FORM_URLENCODED:
-				break;
-
-			case http::CT_UNKNOWN:
-				break;
-
-			default:
-				break;
-		}
-	}
-	else if (method == http::MTH_PUT)
-	{
-		uploadDir = route.location->root;
-		if (!new_filename.empty() && new_filename[0] == '/')
-			new_filename = new_filename.substr(1);
+		uploadDir = *loc->uploadPath;
+		new_filename = _generateFilename(filename, contentType);
 	}
 
-	//check uploadDir
-	if (!fs::isDir(uploadDir))
+	if (!uploadDir.empty() && uploadDir[uploadDir.length() - 1] == '/')
+		uploadDir = uploadDir.substr(0, uploadDir.length() - 1);
+	if (!new_filename.empty() && new_filename[0] == '/')
+		new_filename = new_filename.substr(1);
+
+	if (!fs::isDir(uploadDir) || access(uploadDir.c_str(), X_OK | W_OK) != 0)
 	{
-		plan = ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
-		return ("");
-	}
-	if (!(fs::checkPerms(uploadDir, fs::P_WRITE | fs::P_EXEC)))
-	{
-		plan = ErrorBuilder::build(http::SC_FORBIDDEN, route.location);
+		plan = ErrorBuilder::build(http::SC_FORBIDDEN, loc);
 		return ("");
 	}
 	if (new_filename.empty())
 	{
-		plan = ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
+		plan = ErrorBuilder::build(http::SC_BAD_REQUEST, loc);
 		return ("");
 	}
 
 	return (uploadDir + "/" + new_filename);
 }
 
-bool			UploadFileHandler::writeFile(
-						const std::string &path,
-						const t_bytes &data,
-						http::e_method method,
-						ResponsePlan &plan,
-						const routing::Context &route) const
+static bool	writeFile(
+				const std::string &path,
+				const t_bytes &data,
+				http::e_method method,
+				ResponsePlan &plan,
+				const Config::Server::Location *loc)
 {
 	int fd = -1;
 	if (method == http::MTH_PUT)
@@ -165,31 +136,29 @@ bool			UploadFileHandler::writeFile(
 	if (fd < 0)
 	{
 		if (errno == EACCES)
-			plan = ErrorBuilder::build(http::SC_FORBIDDEN, route.location);
+			plan = ErrorBuilder::build(http::SC_FORBIDDEN, loc);
 		else if (errno == EEXIST)
-			plan = ErrorBuilder::build(http::SC_CONFLICT, route.location);
+			plan = ErrorBuilder::build(http::SC_CONFLICT, loc);
 		else 
-			plan = ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
+			plan = ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, loc);
 		return (false);
 	}
 
-	size_t totalWritten = 0;
-	ssize_t written;
+	size_t	totalWritten = 0;
+	ssize_t	written;
 	while (totalWritten < data.size())
 	{
 		written = write(fd, data.data() + totalWritten, data.size() - totalWritten);
 		if (written < 0)
 		{
 			close(fd);
-			plan = ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, route.location);
+			plan = ErrorBuilder::build(http::SC_INTERNAL_SERVER_ERROR, loc);
 			return (false);
 		}
 		totalWritten += static_cast<size_t>(written);
 	}
 	close(fd);
-	if (written < 0)
-		return (false);
-	return (true);
+	return (written >= 0);
 }
 
 ResponsePlan	UploadFileHandler::handleTextPlain(
@@ -198,21 +167,18 @@ ResponsePlan	UploadFileHandler::handleTextPlain(
 {
 	ResponsePlan	plan;
 	std::string filename = route.normalizedPath;
-	std::string fullPath = generateFilePath(route, filename,
-			http::CT_TEXT_PLAIN, req.getMethod(), plan);
+	std::string fullPath = _generateFilePath(filename,
+										http::CT_TEXT_PLAIN,
+										req.getMethod(),
+										route.location, plan);
 	if (fullPath.empty())
 		return (plan);
 
-	if (!fullPath.empty() && fullPath[0] == '/')
-		fullPath = '.' + fullPath;
-
-	if (!writeFile(fullPath, req.getBody(), req.getMethod(), plan, route))
+	if (!writeFile(fullPath, req.getBody(), req.getMethod(), plan, route.location))
 		return (plan);
 
-	//code 201 Created
 	plan.status = http::SC_CREATED;
-
-	plan.headers["Location"] = removeTrailingSlashes(filename);
+	plan.headers["Location"] = _removeTrailingSlashes(filename);
 	plan.headers["Content-Length"] = "0";
 
 	return (plan);
@@ -225,20 +191,18 @@ ResponsePlan	UploadFileHandler::handleOctetStream(
 	ResponsePlan	plan;
 
 	std::string filename = route.normalizedPath;
-	std::string fullPath = generateFilePath(route, filename,
-			http::CT_BINARY, req.getMethod(), plan);
+	std::string fullPath = _generateFilePath(filename,
+										http::CT_BINARY,
+										req.getMethod(),
+										route.location, plan);
 	if (fullPath.empty())
 		return (plan);
 
-	// std::string body(req.getBody().data(), req.getBody().size());
-
-	if (!writeFile(fullPath, req.getBody(), req.getMethod(), plan, route))
+	if (!writeFile(fullPath, req.getBody(), req.getMethod(), plan, route.location))
 		return (plan);
 
-	//code 201 Created
 	plan.status = http::SC_CREATED;
-
-	plan.headers["Location"] = removeTrailingSlashes(filename);
+	plan.headers["Location"] = _removeTrailingSlashes(filename);
 	plan.headers["Content-Length"] = "0";
 
 	return (plan);
@@ -319,14 +283,16 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 					if (fileContent.size() >= 2)
 						fileContent.resize(fileContent.size() - 2);
 
-					std::string fullPath = generateFilePath(route, filename,
-							http::CT_MULTIPART_FORM_DATA, req.getMethod(), plan);
+					std::string fullPath = _generateFilePath(filename,
+														http::CT_MULTIPART_FORM_DATA,
+														req.getMethod(),
+														route.location, plan);
 					if (fullPath.empty())
 						return (plan);
 
-					if (!writeFile(fullPath, fileContent, req.getMethod(), plan, route))
+					if (!writeFile(fullPath, fileContent, req.getMethod(), plan, route.location))
 						return (plan);
-					plan.headers["Location"] = removeTrailingSlashes(filename);
+					plan.headers["Location"] = _removeTrailingSlashes(filename);
 				}
 				else
 				{
@@ -350,7 +316,7 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 	return (plan);
 }
 
-ResponsePlan	UploadFileHandler::handleContentType(
+ResponsePlan	UploadFileHandler::handle(
 								const HttpRequest &req,
 								const routing::Context &route) const
 {
@@ -363,8 +329,7 @@ ResponsePlan	UploadFileHandler::handleContentType(
 	switch(http::Data::getContentTypeKind(contentType))
 	{
 		case http::CT_APPLICATION_X_WWW_FORM_URLENCODED:
-			//check return erreur bad request???
-			break;
+			return ErrorBuilder::build(http::SC_BAD_REQUEST, route.location);
 
 		case http::CT_MULTIPART_FORM_DATA:
 			plan = handleMultipart(req, route);
@@ -393,17 +358,4 @@ ResponsePlan	UploadFileHandler::handleContentType(
 		plan.body = new MemoryBodySource(body_response);
 	}
 	return (plan);
-}
-
-ResponsePlan	UploadFileHandler::handle(
-								const HttpRequest &req,
-								const routing::Context &route) const
-{
-	if (req.getMethod() == http::MTH_PUT || req.getMethod() == http::MTH_POST)
-	{
-		return (handleContentType(req, route));
-	}
-	else
-		return (ErrorBuilder::build(http::SC_METHOD_NOT_ALLOWED,
-				route.location));
 }

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 12:00:19 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 14:19:49 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 18:49:50 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,24 +80,9 @@ static inline std::string	_normalizeUri(const std::string &path)
 	return result;
 }
 
-// static inline std::string _trailingSlash(const std::string &path)
-// {
-// 	std::string result;
-	
-// 	for (size_t i = 0; i < path.length(); ++i)
-// 	{
-// 		if (path[i] != '/' || (i == 0 || path[i - 1] != '/'))
-// 		{
-// 			result += path[i];
-// 		}
-// 	}
-
-// 	return (result);
-// }
-
 static inline std::string	_prefixExtension(const std::string &path, const std::string &prefix)
 {
-	size_t		extPos = path.find('.');
+	size_t		extPos = path.find_last_of('.');
 	std::string	result = path.substr(0, extPos) + prefix;
 
 	if (extPos != std::string::npos)
@@ -137,15 +122,13 @@ Context	resolve(const HttpRequest &req,
 				continue;
 			std::string	newPath = _prefixExtension(
 						ctx.normalizedPath, "_" + cookieValue);
-			if (fs::checkPerms( ctx.location->root + newPath, fs::P_EXIST))
+			if (fs::isExist(ctx.location->root + newPath))
 			{
 				ctx.normalizedPath = newPath;
 				break;
 			}
 		}
 	}
-	// ctx.normalizedPath = _trailingSlash(ctx.normalizedPath);
-	
 
 	// manage sessions
 	Cookies		&cookies = req.getCookies();

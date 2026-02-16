@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 14:30:19 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/31 12:21:32 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 18:55:03 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,21 +16,18 @@
 # include <string>
 # include <stdint.h>
 # include <unistd.h>
+# include <sys/stat.h>
 
 namespace fs
 {
 
-enum e_perm
-{
-	P_EXIST = 1 << 0,
-	P_READ = 1 << 1,
-	P_WRITE = 1 << 2,
-	P_EXEC = 1 << 3
-};
+bool		isExist(const std::string &path, struct stat *st = NULL);
 
-bool		checkPerms(const std::string &path, int32_t perms);
 bool		isFile(const std::string &path);
+bool		isFile(struct stat st);
+
 bool		isDir(const std::string &path);
+bool		isDir(struct stat st);
 
 int			openReadOnly(const std::string &path);
 

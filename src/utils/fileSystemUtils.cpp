@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 14:41:48 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/31 12:21:41 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 18:54:00 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <cerrno>
 #include <stdint.h>
 #include <sstream>
 
@@ -24,36 +23,15 @@ namespace fs
 {
 
 // -----------------------------------------------------------------------------
-// checkPerms
+// isExist
 // -----------------------------------------------------------------------------
-bool checkPerms(const std::string &path, int32_t perms)
+
+bool isExist(const std::string &path, struct stat *st)
 {
-	struct stat st;
+	struct stat st__;
 
-	if (stat(path.c_str(), &st) != 0)
+	if (stat(path.c_str(), st ? st : &st__) != 0)
 		return false;
-
-	if ((perms & P_EXIST) && errno == ENOENT)
-		return false;
-
-	if (perms & P_READ)
-	{
-		if (!(st.st_mode & S_IRUSR))
-			return false;
-	}
-
-	if (perms & P_WRITE)
-	{
-		if (!(st.st_mode & S_IWUSR))
-			return false;
-	}
-
-	if (perms & P_EXEC)
-	{
-		if (!(st.st_mode & S_IXUSR))
-			return false;
-	}
-
 	return true;
 }
 
@@ -65,6 +43,11 @@ bool isFile(const std::string &path)
 	struct stat st;
 	if (stat(path.c_str(), &st) != 0)
 		return false;
+	return S_ISREG(st.st_mode) && (st.st_mode & S_IRUSR);
+}
+
+bool isFile(struct stat st)
+{
 	return S_ISREG(st.st_mode);
 }
 
@@ -76,6 +59,11 @@ bool isDir(const std::string &path)
 	struct stat st;
 	if (stat(path.c_str(), &st) != 0)
 		return false;
+	return S_ISDIR(st.st_mode);
+}
+
+bool isDir(struct stat st)
+{
 	return S_ISDIR(st.st_mode);
 }
 
