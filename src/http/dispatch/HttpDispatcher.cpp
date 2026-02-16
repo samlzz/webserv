@@ -132,8 +132,9 @@ ResponsePlan	HttpDispatcher::dispatch(
 	plan.headers["Set-Cookie"] = req.getCookies().buildSetCookieHeaders();
 	plan.headers["Connection"] = "keep-alive";
 
-	http::e_status_code code = req.getStatusCode();
-	if (code == 400 || code == 408 || code == 411 || code == 413 || code ==  414 || code == 431 || code == 505) {
+	http::e_status_code code = plan.status;
+	if (code == 400 || code == 408 || code == 411 || code == 413 || code ==  414
+		|| code == 431 || code == 500  || code == 504 || code == 505) {
 		plan.headers["Connection"] = "close";
 		return plan;
 	}
