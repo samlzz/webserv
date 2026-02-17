@@ -22,6 +22,7 @@
 #include "http/HttpTypes.hpp"
 #include "http/response/BuffStream.hpp"
 #include "utils/convertUtils.hpp"
+#include "utils/urlUtils.hpp"
 
 #define CURRENT_STATE() _state
 #define UPDATE_STATE(S) _state = S
@@ -152,15 +153,17 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case LINE_URI_PATH: {
 			if (ch == ' ') {
-				if (!decode(_buffer, _request.uri.path))
+				if (!url::isValidEncoded(_buffer))
 					return setError(http::SC_BAD_REQUEST);
+				_request.uri.path = url::decode(_buffer);
 				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '?' || ch == '#') {
-				if (!decode(_buffer, _request.uri.path))
+				if (!url::isValidEncoded(_buffer))
 					return setError(http::SC_BAD_REQUEST);
+				_request.uri.path = url::decode(_buffer);
 				UPDATE_STATE(ch == '?' ? LINE_URI_QUERY : LINE_URI_FRAGMENT);
 				_buffer.clear();
 				break;
@@ -175,7 +178,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case LINE_URI_QUERY: {
 			if (ch == ' ') {
-				if (!decode(_buffer))
+				if (!url::isValidEncoded(_buffer))
 					return setError(http::SC_BAD_REQUEST);
 				_request.uri.query = _buffer;
 				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
@@ -183,7 +186,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '#') {
-				if (!decode(_buffer))
+				if (!url::isValidEncoded(_buffer))
 					return setError(http::SC_BAD_REQUEST);
 				_request.uri.query = _buffer;
 				UPDATE_STATE(LINE_URI_FRAGMENT);

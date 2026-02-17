@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:30:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/11 13:48:12 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/17 15:29:02 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include "http/response/ResponsePlan.hpp"
 #include "http/response/interfaces/IMetaSource.hpp"
 #include "http/routing/Router.hpp"
+#include "utils/urlUtils.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -130,11 +131,6 @@ void	HttpResponse::applyPlan(const ResponsePlan &plan)
 
 // ---- Meta helpers ----
 
-static inline bool	_isInternalRedirect(const std::string &redirectPath)
-{
-	return redirectPath[0] == '/';
-}
-
 /**
  * CGI internal redirection is handled as a response-level semantic.
 
@@ -144,7 +140,7 @@ static inline bool	_isInternalRedirect(const std::string &redirectPath)
 */
 bool	HttpResponse::handleCgiRedirect(const std::string &redirectPath)
 {
-	if (_isInternalRedirect(redirectPath))
+	if (url::isInternal(redirectPath))
 	{
 		HttpRequest fakeReq(_ctx.request);
 		fakeReq.setMethod(http::MTH_GET);
