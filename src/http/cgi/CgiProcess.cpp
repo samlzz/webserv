@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 13:33:06 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 17:33:59 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@
 #include "http/response/BuffStream.hpp"
 #include "server/connections/IConnection.hpp"
 #include "server/connections/IWritableNotifier.hpp"
+#include "utils/stringUtils.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -235,7 +236,9 @@ IConnection	*CgiProcess::start(const std::vector<std::string> &argv,
 		ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
 			<< "CGI spawn pid=" << pid
 			<< " exec=\"" << argv[0]
-			<< "\" script=\"" << argv[1] << '"' << std::endl;
+			<< "\" script=\"" << argv[1]
+			<< "\" read=" << readConn->id()
+			<< (writeConn ? " write=" + str::toString(writeConn->id()) : "") << std::endl;
 		_startTs = std::time(0);
 		_pid = pid;
 		_read = readConn;
@@ -279,7 +282,6 @@ void	CgiProcess::cleanup(bool killChild)
 
 	if (r == _pid)
 	{
-		_pid = -1;
 		if (WIFEXITED(status))
 			_exitCode = WEXITSTATUS(status);
 		else if (WIFSIGNALED(status))
@@ -289,9 +291,10 @@ void	CgiProcess::cleanup(bool killChild)
 
 		ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
 			<< "CGI exited " << static_cast<int32_t>(_exitCode) << " pid=" << _pid << std::endl;
+		_pid = -1;
 	}
 	else
-		ft_log::log(WS_LOG_CGI, ft_log::LOG_DEBUG)
+		ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
 			<< "CGI not terminated yet, let reactor reap it" << std::endl;
 }
 
@@ -337,7 +340,7 @@ void	CgiProcess::onEof(void)
 
 void	CgiProcess::onRead(const char *buffer, size_t bufSize)
 {
-	ft_log::log(WS_LOG_CGI, ft_log::LOG_INFO)
+	ft_log::log(WS_LOG_CGI, ft_log::LOG_DEBUG)
 		<< "CGI-Read output of " << bufSize << " bytes pid=" << _pid << std::endl;
 	ft_log::log(WS_LOG_CGI, ft_log::LOG_TRACE)
 		<< "Buffer:\n" << WS_LOG_SEP << std::string(buffer, bufSize)
