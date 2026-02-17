@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 12:00:19 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 18:49:50 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 17:39:21 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,11 @@
 #include <vector>
 
 #include "Router.hpp"
+#include "ft_log/LogOp.hpp"
+#include "ft_log/level.hpp"
 #include "http/request/Cookies.hpp"
 #include "http/request/HttpRequest.hpp"
+#include "log.h"
 #include "server/ServerCtx.hpp"
 #include "utils/fileSystemUtils.hpp"
 
@@ -103,6 +106,8 @@ Context	resolve(const HttpRequest &req,
 	if (ctx.location)
 	{
 		const std::string	&lp = ctx.location->path;
+		ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
+			<< "Matched location " << lp << std::endl;
 
 		// suffixe URI
 		std::string suffix;
@@ -113,7 +118,7 @@ Context	resolve(const HttpRequest &req,
 
 		ctx.normalizedPath = lp + suffix;
 
-		// ? Serve files dynamically from cookies 
+		// ? Serve files dynamically from cookies
 		const std::vector<std::string>	&cookiesVary = ctx.location->cookiesVary;
 		for (size_t i = 0; i < cookiesVary.size(); ++i)
 		{
@@ -129,6 +134,9 @@ Context	resolve(const HttpRequest &req,
 			}
 		}
 	}
+	else
+		ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_ERROR)
+			<< "No location found for: " << req.getPath() << std::endl;
 
 	// manage sessions
 	Cookies		&cookies = req.getCookies();

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 16:09:11 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 17:35:09 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,8 +102,6 @@ ResponsePlan	HttpDispatcher::findPlan(
 {
 	if (!route.location)
 	{
-		ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_ERROR)
-			<< "No location found for: " << req.getPath() << std::endl;
 		return ErrorBuilder::build(
 			http::SC_NOT_FOUND,
 			NULL
