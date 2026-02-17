@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 18:36:33 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 19:47:47 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,10 +124,6 @@ ConnEvent	ClientConnection::handleRead(void)
 
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
 		<< "Received " << n << " bytes from client " << _id << std::endl;
-	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_TRACE)
-		<< "Received buffer:\n"
-		<< WS_LOG_SEP << '\n' << std::string(buf, n)
-		<< WS_LOG_SEP << std::endl;
 
 	_tsLastActivity = std::time(0);
 	if (_state == CS_WAIT_FIRST_BYTE)
@@ -196,9 +192,10 @@ ConnEvent	ClientConnection::handleWrite(void)
 			if (_resp->isDone())
 			{
 				ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
-					<< _remote << " \"" << _req.getMethod() << ' ' << _req.getPath() << "\" "
+					<< '(' << _id << ") " << _remote
+					<< " \"" << _req.getMethod() << ' ' << _req.getPath() << "\" "
 					<< _resp->getStatus() << ' ' << _totalSent << "B "
-					<< (std::time(0) - _req.getStartTs()) * 1000 << "ms"
+					<< (std::time(0) - _req.getStartTs()) << "s"
 					<< (_resp->shouldCloseConnection() ? " close" : " KA")
 					<< std::endl;
 
