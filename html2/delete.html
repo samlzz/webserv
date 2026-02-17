@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DELETE - Webserv Test Suite</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Test Méthode DELETE</h1>
+            <p>Suppression de ressources sur le serveur</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html">GET / HEAD</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/upload.html">Upload / PUT</a></li>
+                <li><a href="/delete.html" class="active">DELETE</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/redirect.html">Redirections</a></li>
+                <li><a href="/headers.html">Headers</a></li>
+                <li><a href="/autoindex.html">Autoindex</a></li>
+                <li><a href="/chunked.html">Chunked</a></li>
+                <li><a href="/stress.html">Stress / Timeout</a></li>
+            </ul>
+        </nav>
+
+        <div class="grid">
+            <div class="card">
+                <h2><span class="method-badge method-delete">DELETE</span> Supprimer un fichier</h2>
+
+                <div class="alert alert-warning">
+                    La méthode DELETE supprime <strong>définitivement</strong> les fichiers du serveur.
+                </div>
+
+                <div class="form-group">
+                    <label for="delete-filename">Nom du fichier (dans /uploads/) :</label>
+                    <input type="text" id="delete-filename" placeholder="exemple.txt">
+                </div>
+
+                <button class="btn btn-danger" onclick="testDelete()">Supprimer</button>
+                <button class="btn btn-primary" onclick="refreshFileList()">Lister les fichiers</button>
+
+                <h3>Workflow de test :</h3>
+                <ol>
+                    <li>Uploadez un fichier via la page <a href="/upload.html">Upload</a></li>
+                    <li>Entrez son nom ci-dessus</li>
+                    <li>Cliquez « Supprimer »</li>
+                    <li>Vérifiez le statut (200/204 = OK, 404 = pas trouvé)</li>
+                </ol>
+            </div>
+
+            <div class="card">
+                <h2>Fichiers disponibles</h2>
+                <p>Fichiers dans <code>/uploads/</code> :</p>
+                <ul id="delete-file-list" class="file-list">
+                    <li>Cliquez sur « Actualiser » pour voir la liste</li>
+                </ul>
+                <button class="btn btn-primary" onclick="loadDeleteFileList()">Actualiser</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Réponse du serveur</h2>
+            <div id="delete-response" class="response-box">
+                <span class="status">En attente d'une requête...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Documentation DELETE</h2>
+            <pre>DELETE /uploads/fichier.txt HTTP/1.1
+Host: localhost</pre>
+            <table>
+                <tr><th>Code</th><th>Signification</th><th>Description</th></tr>
+                <tr><td><span class="badge badge-success">200</span></td><td>OK</td><td>Fichier supprimé (avec body)</td></tr>
+                <tr><td><span class="badge badge-success">204</span></td><td>No Content</td><td>Fichier supprimé (sans body)</td></tr>
+                <tr><td><span class="badge badge-danger">403</span></td><td>Forbidden</td><td>Suppression non autorisée</td></tr>
+                <tr><td><span class="badge badge-danger">404</span></td><td>Not Found</td><td>Fichier non trouvé</td></tr>
+                <tr><td><span class="badge badge-danger">405</span></td><td>Method Not Allowed</td><td>DELETE non autorisé sur ce location</td></tr>
+            </table>
+        </div>
+
+        <footer><p>Webserv Test Suite — 42 Project</p></footer>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        async function loadDeleteFileList() {
+            const list = document.getElementById('delete-file-list');
+            const response = await API.get('/uploads/');
+            if (response.ok && response.body) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(response.body, 'text/html');
+                const links = doc.querySelectorAll('a');
+                let html = '';
+                links.forEach(link => {
+                    const filename = link.textContent;
+                    if (filename && filename !== '../' && filename !== './' && !filename.endsWith('/')) {
+                        html += `<li>
+                            <span class="file-name">${filename}</span>
+                            <button class="btn btn-danger" onclick="deleteAndRefresh('${filename}')">X</button>
+                        </li>`;
+                    }
+                });
+                list.innerHTML = html || '<li>Aucun fichier trouvé</li>';
+            } else {
+                list.innerHTML = '<li>Erreur lors du chargement</li>';
+            }
+        }
+
+        async function deleteAndRefresh(filename) {
+            if (!confirm('Supprimer ' + filename + ' ?')) return;
+            document.getElementById('delete-filename').value = filename;
+            const response = await API.delete('/uploads/' + filename);
+            displayResponse('delete-response', response);
+            loadDeleteFileList();
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDeleteFileList);
+    </script>
+</body>
+</html>

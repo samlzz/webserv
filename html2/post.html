@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POST - Webserv Test Suite</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Test Méthode POST</h1>
+            <p>Envoi de données au serveur (form, JSON, text/plain, large payload)</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html">GET / HEAD</a></li>
+                <li><a href="/post.html" class="active">POST</a></li>
+                <li><a href="/upload.html">Upload / PUT</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/redirect.html">Redirections</a></li>
+                <li><a href="/headers.html">Headers</a></li>
+                <li><a href="/autoindex.html">Autoindex</a></li>
+                <li><a href="/chunked.html">Chunked</a></li>
+                <li><a href="/stress.html">Stress / Timeout</a></li>
+            </ul>
+        </nav>
+
+        <div class="card">
+            <h2><span class="method-badge method-post">POST</span> Tests</h2>
+
+            <div class="tabs">
+                <button class="tab active" data-tab="tab-form">Formulaire</button>
+                <button class="tab" data-tab="tab-json">JSON</button>
+                <button class="tab" data-tab="tab-text">Text/Plain</button>
+                <button class="tab" data-tab="tab-large">Large Payload</button>
+            </div>
+
+            <!-- Formulaire standard -->
+            <div id="tab-form" class="tab-content active">
+                <h3>Formulaire (application/x-www-form-urlencoded)</h3>
+                <form onsubmit="event.preventDefault(); testPostForm();">
+                    <div class="form-group">
+                        <label for="post-name">Nom :</label>
+                        <input type="text" id="post-name" value="John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-email">Email :</label>
+                        <input type="email" id="post-email" value="john@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-message">Message :</label>
+                        <textarea id="post-message" required>Ceci est un message de test.</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success">Envoyer POST</button>
+                </form>
+                <h4>Format envoyé :</h4>
+                <pre>POST /cgi-bin/test.py HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+name=John+Doe&amp;email=john%40example.com&amp;message=...</pre>
+            </div>
+
+            <!-- JSON -->
+            <div id="tab-json" class="tab-content">
+                <h3>JSON (application/json)</h3>
+                <div class="form-group">
+                    <label for="post-json">Données JSON :</label>
+                    <textarea id="post-json" rows="8">{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "age": 25,
+    "interests": ["programming", "web", "42"]
+}</textarea>
+                </div>
+                <button class="btn btn-success" onclick="testPostJSON()">Envoyer JSON</button>
+            </div>
+
+            <!-- Text/Plain -->
+            <div id="tab-text" class="tab-content">
+                <h3>Texte brut (text/plain)</h3>
+                <div class="form-group">
+                    <label for="post-text-url">URL de destination :</label>
+                    <input type="text" id="post-text-url" value="/uploads/text_test.txt">
+                </div>
+                <div class="form-group">
+                    <label for="post-text">Contenu :</label>
+                    <textarea id="post-text" rows="5">Ceci est du texte brut envoyé en POST text/plain.</textarea>
+                </div>
+                <button class="btn btn-success" onclick="testPostText()">Envoyer text/plain</button>
+            </div>
+
+            <!-- Large Payload -->
+            <div id="tab-large" class="tab-content">
+                <h3>Test de charge (Large Payload)</h3>
+                <div class="alert alert-warning">
+                    Vérifie la gestion de <code>client_max_body_size</code>.
+                </div>
+                <div class="form-group">
+                    <label for="payload-size">Taille du payload :</label>
+                    <select id="payload-size">
+                        <option value="100">100 octets</option>
+                        <option value="1000" selected>1 Ko</option>
+                        <option value="10000">10 Ko</option>
+                        <option value="100000">100 Ko</option>
+                        <option value="1000000">1 Mo</option>
+                        <option value="1050000">1 Mo + 50000 octets (test 413)</option>
+                    </select>
+                </div>
+                <button class="btn btn-warning" onclick="testPostLarge()">Envoyer gros payload</button>
+                <ul>
+                    <li><span class="badge badge-success">200</span> — Payload accepté</li>
+                    <li><span class="badge badge-danger">413</span> — Payload Too Large</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Réponse du serveur</h2>
+            <div id="post-response" class="response-box">
+                <span class="status">En attente d'une requête...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Documentation POST</h2>
+            <table>
+                <tr><th>Content-Type</th><th>Description</th><th>Utilisation</th></tr>
+                <tr><td><code>application/x-www-form-urlencoded</code></td><td>Formulaires HTML</td><td>Données clé=valeur</td></tr>
+                <tr><td><code>multipart/form-data</code></td><td>Upload de fichiers</td><td>Fichiers + données mixtes</td></tr>
+                <tr><td><code>application/json</code></td><td>Données JSON</td><td>API REST</td></tr>
+                <tr><td><code>text/plain</code></td><td>Texte brut</td><td>Données textuelles simples</td></tr>
+                <tr><td><code>application/octet-stream</code></td><td>Binaire brut</td><td>Fichiers binaires</td></tr>
+            </table>
+        </div>
+
+        <footer><p>Webserv Test Suite — 42 Project</p></footer>
+    </div>
+    <script src="/js/app.js"></script>
+</body>
+</html>

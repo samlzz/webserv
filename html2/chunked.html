@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chunked - Webserv Test Suite</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Test Chunked Transfer</h1>
+            <p>Transfert en morceaux (Transfer-Encoding: chunked)</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html">GET / HEAD</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/upload.html">Upload / PUT</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/redirect.html">Redirections</a></li>
+                <li><a href="/headers.html">Headers</a></li>
+                <li><a href="/autoindex.html">Autoindex</a></li>
+                <li><a href="/chunked.html" class="active">Chunked</a></li>
+                <li><a href="/stress.html">Stress / Timeout</a></li>
+            </ul>
+        </nav>
+
+        <div class="card">
+            <h2>Chunked Transfer Encoding</h2>
+            <p>Le chunked transfer encoding permet d'envoyer des données sans connaître la taille totale à l'avance. C'est souvent utilisé par les scripts CGI.</p>
+
+            <h3>Format :</h3>
+            <pre>HTTP/1.1 200 OK
+Transfer-Encoding: chunked
+
+7\r\n
+Mozilla\r\n
+9\r\n
+Developer\r\n
+0\r\n
+\r\n</pre>
+
+            <h3>Tests</h3>
+            <button class="btn btn-primary" onclick="testChunked('/cgi-bin/test.py?chunked=1')">CGI Chunked (test.py)</button>
+            <button class="btn btn-primary" onclick="testChunked('/cgi-bin/injection.py')">CGI injection.py</button>
+            <button class="btn btn-success" onclick="testChunked('/index.html')">Fichier statique (comparaison)</button>
+
+            <div class="alert alert-warning" style="margin-top:15px;">
+                Les réponses CGI sont typiquement envoyées en chunked car le serveur ne connaît pas la taille à l'avance. Vérifiez le header <code>Transfer-Encoding: chunked</code> dans la réponse.
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Réponse</h2>
+            <div id="chunked-response" class="response-box">
+                <span class="status">En attente...</span>
+            </div>
+        </div>
+
+        <footer><p>Webserv Test Suite — 42 Project</p></footer>
+    </div>
+    <script src="/js/app.js"></script>
+</body>
+</html>
