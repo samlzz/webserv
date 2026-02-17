@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:49:52 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 16:59:08 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 19:27:42 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ AConnection::AConnection(): _fd(-1), _events(0)
 AConnection::AConnection(int fd, short events)
 	: _fd(fd), _events(events)
 {
+	++_id;
 	if (_fd < 0)
 		throw SysError("invalid socket fd");
 }
@@ -45,6 +46,7 @@ AConnection::AConnection(int fd, short events)
 
 AConnection::~AConnection()
 {
+	--_id;
 	if (_fd >= 0)
 		close(_fd);
 }
