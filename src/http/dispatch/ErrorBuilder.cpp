@@ -56,7 +56,7 @@ ResponsePlan	ErrorBuilder::buildDefault(http::e_status_code status)
 	ResponsePlan		plan;
 
 	plan.status = status;
-	plan.headers["Content-Type"] = "text/html";
+	plan.headers["Content-Type"] = http::Data::getMimeType("html");
 	plan.headers["Content-Length"] = str::toString(body.length());
 	plan.body = new MemoryBodySource(body);
 
@@ -76,7 +76,7 @@ ResponsePlan	ErrorBuilder::buildFromErrorPage(
 
 	ResponsePlan plan;
 	plan.status = status;
-	plan.headers["Content-Type"] = "text/html";
+	plan.headers["Content-Type"] = http::Data::getMimeType("html");
 	plan.headers["Content-Length"] = str::toString(size);
 	plan.body = new FileBodySource(fd);
 
