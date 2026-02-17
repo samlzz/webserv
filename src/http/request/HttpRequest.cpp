@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/17 15:24:57 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 16:24:19 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -544,13 +544,5 @@ std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 	const std::vector<char>& body = pRequest.getBody();
 	if (!body.empty())
 		pOut << "Parsed " << body.size() << " bytes of body";
-
-
-	if (pRequest.isError())
-		pOut << "Error occurs (code=" << pRequest.getStatusCode() << ").\n";
-	else if (pRequest.isDone())
-		pOut << "Parsing done.\n";
-	pOut << std::endl;
-	
 	return (pOut);
 }
