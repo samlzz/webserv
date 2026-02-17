@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/07 17:08:15 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/07 17:42:04 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 16:34:55 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,4 +52,10 @@ AddrInfo::AddrInfo(const struct sockaddr_storage &address): addr(), port(0)
 		addr = std::string(ip);
 	else
 		addr.clear();
+}
+
+std::ostream	&operator<<(std::ostream &os, const AddrInfo &addr)
+{
+	os << addr.addr << ':' << addr.port;
+	return os;
 }
