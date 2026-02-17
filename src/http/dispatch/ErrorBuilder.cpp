@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:49:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:54:25 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 17:25:18 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,13 @@
 
 #include "config/Config.hpp"
 #include "ErrorBuilder.hpp"
+#include "ft_log/LogOp.hpp"
+#include "ft_log/level.hpp"
 #include "http/HttpData.hpp"
 #include "http/handlers/bodySrcs/FileBodySource.hpp"
 #include "http/handlers/bodySrcs/MemoryBodySource.hpp"
 #include "http/response/ResponsePlan.hpp"
+#include "log.h"
 #include "utils/fileSystemUtils.hpp"
 #include "utils/stringUtils.hpp"
 
@@ -27,15 +30,31 @@ ResponsePlan	ErrorBuilder::build(
 	const Config::Server::Location *location
 )
 {
+	ft_log::e_log_level	lvl = status >= http::SC_INTERNAL_SERVER_ERROR
+								? ft_log::LOG_ERROR : ft_log::LOG_WARN;
+	ft_log::log(WS_LOG_CLI, lvl) << "HTTP " << status
+		<< " error response built" << std::endl;
+
 	if (location)
 	{
+		std::string	errPage;
+
 		Config::t_errPages::const_iterator it = location->errorPages.find(status);
 		if (it != location->errorPages.end())
-			return buildFromErrorPage(status, it->second);
+			errPage = it->second;
 
 		if (!location->defaultErrPage.empty())
-			return buildFromErrorPage(status, location->defaultErrPage);
+			errPage = location->defaultErrPage;
+
+		if (!errPage.empty())
+		{
+			ft_log::log(WS_LOG_CLI, ft_log::LOG_DEBUG)
+				<< "Error page source: " << errPage << std::endl;
+			return buildFromErrorPage(status, errPage);
+		}
 	}
+	ft_log::log(WS_LOG_CLI, ft_log::LOG_DEBUG)
+		<< "Using default error page" << std::endl;
 	return buildDefault(status);
 }
 
