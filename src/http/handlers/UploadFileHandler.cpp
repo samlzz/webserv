@@ -13,7 +13,6 @@
 #include "bodySrcs/MemoryBodySource.hpp"
 
 #include <cerrno>
-#include <cmath>
 #include <cstddef>
 #include <ctime>
 #include <string>
@@ -295,7 +294,7 @@ ResponsePlan	UploadFileHandler::handleMultipart(
 			break;
 		//Extract end of boundary part
 
-		std::vector<char> part(vec_it, partEnd);
+		t_bytes part(vec_it, partEnd);
 
 		//Extract filename
 		std::string filename;
