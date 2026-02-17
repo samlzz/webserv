@@ -54,13 +54,13 @@ void Data::initData(void)
 	statusData[507] = "Insufficient Storage";
 
 	// ====== Mime Init ======
-	mimeData["html"]	= "text/html";
-	mimeData["txt"]		= "text/plain";
-	mimeData["css"]		= "text/css";
-	mimeData["js"]		= "application/javascript";
+	mimeData["html"]	= "text/html; charset=UTF-8";
+	mimeData["txt"]		= "text/plain; charset=UTF-8";
+	mimeData["css"]		= "text/css; charset=UTF-8";
+	mimeData["js"]		= "application/javascript; charset=UTF-8";
 
-	mimeData["json"]	= "application/json";
-	mimeData["xml"]		= "application/xml";
+	mimeData["json"]	= "application/json; charset=UTF-8";
+	mimeData["xml"]		= "application/xml; charset=UTF-8";
 
 	mimeData["pdf"]		= "application/pdf";
 	mimeData["png"]		= "image/png";
