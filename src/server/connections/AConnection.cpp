@@ -6,10 +6,11 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:49:52 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/01 20:41:11 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 16:59:08 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <cstddef>
 #include <fcntl.h>
 #include <stdint.h>
 #include <sys/poll.h>
@@ -24,7 +25,12 @@
 // Construction
 // ============================================================================
 
-AConnection::AConnection(): _fd(-1), _events(0) {}
+size_t	AConnection::_id = 0;
+
+AConnection::AConnection(): _fd(-1), _events(0)
+{
+	++_id;
+}
 
 AConnection::AConnection(int fd, short events)
 	: _fd(fd), _events(events)
@@ -56,6 +62,8 @@ pollfd	AConnection::pollFd(void) const
 short	AConnection::events(void) const			{ return _events; }
 void	AConnection::setEvents(short events)	{ _events = events; }
 void	AConnection::addEvent(short event)		{ _events |= event; }
+
+size_t	AConnection::id(void) const				{ return _id; }
 
 // ============================================================================
 // Methods

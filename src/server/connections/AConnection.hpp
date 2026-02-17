@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:44:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/01 16:51:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 16:59:26 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,16 +14,18 @@
 # define __ACONNECTION_HPP__
 
 # include <cerrno>
+# include <cstddef>
 # include <sys/poll.h>
 
 # include "IConnection.hpp"
-#include "server/connections/ConnEvent.hpp"
+# include "ConnEvent.hpp"
 
 class AConnection : public IConnection {
 
 protected:
-	int		_fd;
-	short	_events;
+	int				_fd;
+	short			_events;
+	static size_t	_id;
 
 public:
 // ============================================================================
@@ -44,6 +46,7 @@ public:
 	virtual void		setEvents(short events);
 	virtual void		addEvent(short event);
 
+	virtual size_t		id(void) const;
 // ============================================================================
 // Methods
 // ============================================================================

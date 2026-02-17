@@ -6,13 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:13:50 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 12:16:07 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 16:58:20 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __ICONNECTION_HPP__
 # define __ICONNECTION_HPP__
 
+# include <cstddef>
 # include <sys/poll.h>
 
 # include "ConnEvent.hpp"
@@ -42,6 +43,8 @@ public:
 	virtual short			events(void) const = 0;
 	virtual void			setEvents(short events) = 0;
 	virtual void			addEvent(short event) = 0;
+
+	virtual size_t			id(void) const = 0;
 
 	virtual ConnEvent		checkTimeout(time_t now) = 0;
 	/**
