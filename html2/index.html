@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webserv Test Suite</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Webserv Test Suite</h1>
+            <p>Suite complète de tests pour votre serveur HTTP/1.1</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html" class="active">Accueil</a></li>
+                <li><a href="/get.html">GET / HEAD</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/upload.html">Upload / PUT</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/redirect.html">Redirections</a></li>
+                <li><a href="/headers.html">Headers</a></li>
+                <li><a href="/autoindex.html">Autoindex</a></li>
+                <li><a href="/chunked.html">Chunked</a></li>
+                <li><a href="/stress.html">Stress / Timeout</a></li>
+            </ul>
+        </nav>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Vue d'ensemble</h2>
+                <p>Cette suite teste le bon fonctionnement de votre serveur HTTP/1.1 (webserv).</p>
+                
+                <h3>Méthodes HTTP testées :</h3>
+                <table>
+                    <tr><th>Méthode</th><th>Description</th><th>Page</th></tr>
+                    <tr>
+                        <td><span class="method-badge method-get">GET</span></td>
+                        <td>Récupération de ressources statiques et CGI</td>
+                        <td><a href="/get.html">Tester →</a></td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-get">HEAD</span></td>
+                        <td>Headers seulement, pas de body</td>
+                        <td><a href="/get.html">Tester →</a></td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-post">POST</span></td>
+                        <td>Envoi de données (form, JSON, texte)</td>
+                        <td><a href="/post.html">Tester →</a></td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-put">PUT</span></td>
+                        <td>Création / remplacement de fichier</td>
+                        <td><a href="/upload.html">Tester →</a></td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-delete">DELETE</span></td>
+                        <td>Suppression de fichiers</td>
+                        <td><a href="/delete.html">Tester →</a></td>
+                    </tr>
+                </table>
+
+                <h3 style="margin-top: 20px;">Fonctionnalités testées :</h3>
+                <table>
+                    <tr><th>Feature</th><th>Description</th><th>Page</th></tr>
+                    <tr>
+                        <td>CGI</td>
+                        <td>Exécution de scripts Python via CGI</td>
+                        <td><a href="/cgi.html">Tester →</a></td>
+                    </tr>
+                    <tr>
+                        <td>Erreurs</td>
+                        <td>400, 403, 404, 405, 413, 500, 501</td>
+                        <td><a href="/errors.html">Tester →</a></td>
+                    </tr>
+                    <tr>
+                        <td>Redirections</td>
+                        <td>301 / 302 redirects</td>
+                        <td><a href="/redirect.html">Tester →</a></td>
+                    </tr>
+                    <tr>
+                        <td>Headers</td>
+                        <td>Content-Type, Content-Length, Connection…</td>
+                        <td><a href="/headers.html">Tester →</a></td>
+                    </tr>
+                    <tr>
+                        <td>Autoindex</td>
+                        <td>Directory listing</td>
+                        <td><a href="/autoindex.html">Tester →</a></td>
+                    </tr>
+                    <tr>
+                        <td>Chunked</td>
+                        <td>Transfer-Encoding: chunked</td>
+                        <td><a href="/chunked.html">Tester →</a></td>
+                    </tr>
+                    <tr>
+                        <td>Stress / Timeout</td>
+                        <td>Charge, connexions lentes, keep-alive</td>
+                        <td><a href="/stress.html">Tester →</a></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>Tests rapides automatisés</h2>
+                <p>Lance un test rapide sur chaque fonctionnalité du serveur :</p>
+                <button class="btn btn-primary" onclick="runAllTests()">
+                    Lancer tous les tests
+                </button>
+                <div id="all-tests-results" class="response-box" style="margin-top: 15px; min-height: 50px;"></div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Informations serveur</h2>
+                <table>
+                    <tr><td><strong>URL :</strong></td><td><code id="server-url"></code></td></tr>
+                    <tr><td><strong>Date :</strong></td><td><code id="current-date"></code></td></tr>
+                    <tr><td><strong>User-Agent :</strong></td><td><code id="user-agent"></code></td></tr>
+                    <tr><td><strong>Cookies :</strong></td><td><code id="cookie-count"></code></td></tr>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>Config serveur recommandée</h2>
+                <pre>
+server {
+    listen localhost:8080;
+    root html2;
+    index index.html;
+    client_max_body_size 10000000;
+
+    location / {
+        methods GET HEAD POST DELETE;
+    }
+
+    location /uploads {
+        methods GET POST PUT DELETE;
+        upload_path ./uploads;
+        autoindex on;
+    }
+
+    location /docs {
+        methods GET;
+        autoindex on;
+    }
+
+    location /cgi-bin {
+        methods GET POST;
+        cgi_ext .py;
+    }
+
+    location /redir {
+        return 301 /index.html;
+    }
+}
+                </pre>
+            </div>
+        </div>
+
+        <footer>
+            <p>Webserv Test Suite - 42 Project</p>
+        </footer>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        document.getElementById('server-url').textContent = window.location.origin;
+        document.getElementById('current-date').textContent = new Date().toLocaleString('fr-FR');
+        document.getElementById('user-agent').textContent = navigator.userAgent.substring(0, 60) + '...';
+        document.getElementById('cookie-count').textContent = document.cookie ? document.cookie.split(';').length + ' cookie(s)' : 'Aucun';
+    </script>
+</body>
+</html>

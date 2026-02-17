@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:28:48 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/30 15:54:11 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 15:26:57 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include "http/HttpTypes.hpp"
 #include "config/Config.hpp"
 #include "utils/stringUtils.hpp"
+#include "utils/urlUtils.hpp"
 #include "configValidate.hpp"
 
 namespace config_validate
@@ -93,12 +94,6 @@ static inline void	validateCgi(const Config::Server::Location &loc)
 	}
 }
 
-static inline bool	_isUrl(const std::string &p)
-{
-	return (p.compare(0, 7, "http://") == 0 ||
-			p.compare(0, 8, "https://") == 0);
-}
-
 // forbid other code that 301 or 302
 // path should be an internal path or an url
 static inline void	validateRedirect(const Config::Server::Location &loc)
@@ -114,7 +109,7 @@ static inline void	validateRedirect(const Config::Server::Location &loc)
 		throw LocationError(loc.path,
 			"invalid redirect status code (only 301/302 supported)");
 
-	if (_isUrl(r.path))
+	if (url::isExternal(r.path))
 	{
 		size_t	hostStart = r.path.find("://") + 3;
 		if (hostStart == std::string::npos || hostStart >= r.path.size())

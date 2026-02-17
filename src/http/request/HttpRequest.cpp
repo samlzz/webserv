@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/17 18:11:50 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 19:20:08 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,16 @@
 #include <ctime>
 #include <iostream>
 #include <algorithm>
+#include <ostream>
+#include <sstream>
 #include <string>
 
 #include "HttpRequest.hpp"
 #include "Cookies.hpp"
 #include "http/HttpTypes.hpp"
 #include "http/response/BuffStream.hpp"
+#include "utils/convertUtils.hpp"
+#include "utils/urlUtils.hpp"
 
 #define CURRENT_STATE() _state
 #define UPDATE_STATE(S) _state = S
@@ -65,9 +69,22 @@ const std::string		&HttpRequest::getQuery() const		{ return (_request.uri.query)
 const std::string		&HttpRequest::getFragment() const	{ return (_request.uri.fragment); };
 int						HttpRequest::getVerMaj() const		{ return (_request.verMaj);       };
 int						HttpRequest::getVerMin() const		{ return (_request.verMin);       };
+std::string				HttpRequest::getRawMeta() const
+{
+	std::ostringstream	iss;
+
+	iss << _request.method << ' ' << _request.uri.path;
+	if (!_request.uri.query.empty())
+		iss << '?' << _request.uri.query;
+	if (!_request.uri.fragment.empty())
+		iss << '#' << _request.uri.fragment;
+	iss << " HTTP/" << _request.verMaj << '.' << _request.verMin;
+	return iss.str();
+}
+
+http::e_status_code		HttpRequest::getStatusCode() const	{ return (_code);                 };
 const http::t_headers	&HttpRequest::getHeaders() const 	{ return (_request.headers);      };
 const t_bytes			&HttpRequest::getBody() const		{ return (_request.body);         };
-http::e_status_code		HttpRequest::getStatusCode() const	{ return (_code);                 };
 Cookies					&HttpRequest::getCookies() const	{ return (_cookies);              };
 time_t					HttpRequest::getStartTs() const		{ return (_tsStart);              };
 
@@ -98,86 +115,6 @@ std::string		HttpRequest::getField(const std::string& pKey) const
 };
 
 #pragma endregion
-
-//#****************************************************************************#
-//#                             STATIC FUNCTION                                #
-//#****************************************************************************#
-#pragma region Static Function
-
-static bool		isDec(const std::string& pStr)
-{
-	if (pStr.empty())
-		return (false);
-
-	return (pStr.find_first_not_of("0123456789") == std::string::npos);
-}
-
-static bool		isHex(const std::string& pStr)
-{
-	if (pStr.empty())
-		return (false);
-
-	return (pStr.find_first_not_of("0123456789ABCDEFabcdef") == std::string::npos);
-}
-
-// (string) Hexadecimal to (int) Decimal 
-static int		htod(const std::string& pHex)
-{
-	if (pHex.empty())
-		return -1;
-
-	int result = 0;
-
-	for (size_t i = 0; i < pHex.size(); ++i)
-	{
-		char c = pHex[i];
-		result = result * 16;
-
-		if (c >= '0' && c <= '9') result += c - '0';
-		else if (c >= 'A' && c <= 'F') result += c - 'A' + 10;
-		else if (c >= 'a' && c <= 'f') result += c - 'a' + 10;
-		else return (-1);
-	}
-	return (result);
-}
-
-static bool	decode(const std::string& pUri, std::string& pPath)
-{
-	std::string path;
-	int dec;
-
-	for (size_t i = 0; i < pUri.length(); i++)
-	{
-		if (pUri[i] == '%' && i + 2 < pUri.length()) {
-			dec = htod(pUri.substr(i + 1, 2));
-			if (dec < 0)
-				return false;
-			path.push_back(dec);
-			i+=2;
-			continue;
-		}
-		path.push_back(pUri[i]);
-	}
-	pPath = path;
-	return true;
-}
-
-static bool	decode(const std::string& pUri)
-{
-	int dec;
-
-	for (size_t i = 0; i < pUri.length(); i++)
-	{
-		if (pUri[i] == '%' && i + 2 < pUri.length()) {
-			dec = htod(pUri.substr(i + 1, 2));
-			if (dec < 0)
-				return false;
-			i+=2;
-			continue;
-		}
-	}
-	return true;
-}
 
 // ========================================================================== //
 //                             MEMBER FUNCTION                                //
@@ -232,15 +169,17 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case LINE_URI_PATH: {
 			if (ch == ' ') {
-				if (!decode(_buffer, _request.uri.path))
+				if (!url::isValidEncoded(_buffer))
 					return setError(http::SC_BAD_REQUEST);
+				_request.uri.path = url::decode(_buffer);
 				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '?' || ch == '#') {
-				if (!decode(_buffer, _request.uri.path))
+				if (!url::isValidEncoded(_buffer))
 					return setError(http::SC_BAD_REQUEST);
+				_request.uri.path = url::decode(_buffer);
 				UPDATE_STATE(ch == '?' ? LINE_URI_QUERY : LINE_URI_FRAGMENT);
 				_buffer.clear();
 				break;
@@ -255,7 +194,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case LINE_URI_QUERY: {
 			if (ch == ' ') {
-				if (!decode(_buffer))
+				if (!url::isValidEncoded(_buffer))
 					return setError(http::SC_BAD_REQUEST);
 				_request.uri.query = _buffer;
 				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
@@ -263,7 +202,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '#') {
-				if (!decode(_buffer))
+				if (!url::isValidEncoded(_buffer))
 					return setError(http::SC_BAD_REQUEST);
 				_request.uri.query = _buffer;
 				UPDATE_STATE(LINE_URI_FRAGMENT);
@@ -443,7 +382,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 			if (hasField("Content-Length") && !hasField("Transfer-Encoding")) {
 				_buffer = getField("Content-Length");
-				if (!isDec(_buffer))
+				if (!convert::isDec(_buffer))
 					return setError(http::SC_BAD_REQUEST);
 				_contentLength = std::atoi(_buffer.c_str());
 				if (_contentLength > _maxBodySize)
@@ -464,10 +403,10 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				break;
 			}
 
-			if (!isHex(_buffer))
+			if (!convert::isHex(_buffer))
 				return setError(http::SC_BAD_REQUEST);
 
-			_transferLength = htod(_buffer);
+			_transferLength = convert::htod(_buffer);
 			UPDATE_STATE(BODY_TRANSFER_HEXA_ALMOST_DONE);
 			__attribute__ ((fallthrough));
 		}
@@ -512,7 +451,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			__attribute__ ((fallthrough));
 			
 		case BODY_TRANSFER_END:
-			if (htod(_buffer) != 0) {
+			if (convert::htod(_buffer) != 0) {
 				UPDATE_STATE(BODY_TRANSFER_HEXA);
 				_buffer.clear();
 				break;
@@ -598,33 +537,23 @@ void HttpRequest::setError(const http::e_status_code pCode)
 
 #pragma endregion
 
-
-
 //#****************************************************************************#
 //#                            OPERATOR OVERLOAD                               #
 //#****************************************************************************#
 
 std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 {
-	pOut << pRequest.getMethod() << " ";
-	pOut << pRequest.getPath() << pRequest.getQuery() << pRequest.getFragment() << " ";
-	pOut << "HTTP/" << pRequest.getVerMaj() << "." << pRequest.getVerMin();
-	pOut << "\r\n";
+	pOut << pRequest.getRawMeta() << "\r\n";
 
 	http::t_headers headers = pRequest.getHeaders();
-	for (http::t_headers::const_iterator it = headers.begin();  it != headers.end(); ++it) {
+	for (http::t_headers::const_iterator it = headers.begin(); it != headers.end(); ++it)
+	{
 		pOut << it->first << ": " << it->second << "\r\n";
 	}
 	pOut << "\r\n";
 
-	const std::vector<char>& body = pRequest.getBody();
-	if (!body.empty()) {
+	const t_bytes& body = pRequest.getBody();
+	if (!body.empty())
 		pOut.write(body.data(), body.size());
-	}
-	pOut << "\r\n";
-
-	pOut << (pRequest.isDone() ? "is done" : "is not done");
-	pOut << (pRequest.isError() ? "is error" : "is not error");
-	
 	return (pOut);
 }

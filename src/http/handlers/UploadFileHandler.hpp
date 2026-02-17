@@ -4,6 +4,8 @@
 #include "http/handlers/IHttpHandler.hpp"
 #include "http/response/ResponsePlan.hpp"
 
+#include <vector>
+
 class UploadFileHandler : public IHttpHandler
 {
 private:
@@ -13,7 +15,8 @@ private:
 
 	ResponsePlan	handleMultipart(
 						const HttpRequest &req,
-						const routing::Context &route) const;
+						const routing::Context &route,
+						std::vector<std::string> &uploaded_files) const;
 
 	ResponsePlan	handleTextPlain(
 						const HttpRequest &req,

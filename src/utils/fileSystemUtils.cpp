@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 14:41:48 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 18:54:00 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 15:04:55 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdint.h>
-#include <sstream>
 
 #include "fileSystemUtils.hpp"
 
@@ -86,35 +85,6 @@ ssize_t size(const std::string &path)
 		return -1;
 
 	return static_cast<ssize_t>(st.st_size);
-}
-
-/// -----------------------------------------------------------------------------
-// decode hexa
-/// -----------------------------------------------------------------------------
-//Decode URL encoded string (%XX -> character)
-std::string url_decode(const std::string &str)
-{
-	std::string result;
-	for (size_t i = 0; i < str.length(); i++)
-	{
-		if (str[i] == '%' && i + 2 < str.length())
-		{
-			int hex_val;
-			std::istringstream hex_stream(str.substr(i + 1, 2));
-			if (hex_stream >> std::hex >> hex_val)
-			{
-				result += static_cast<char>(hex_val);
-				i += 2;
-			}
-			else
-				result += str[i];
-		}
-		else if (str[i] == '+')
-			result += ' ';
-		else
-			result += str[i];
-	}
-	return result;
 }
 
 } // namespace fs

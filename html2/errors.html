@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erreurs HTTP - Webserv Test Suite</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Test Erreurs HTTP</h1>
+            <p>Provoquer et vérifier les codes d'erreur du serveur</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html">GET / HEAD</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/upload.html">Upload / PUT</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/errors.html" class="active">Erreurs</a></li>
+                <li><a href="/redirect.html">Redirections</a></li>
+                <li><a href="/headers.html">Headers</a></li>
+                <li><a href="/autoindex.html">Autoindex</a></li>
+                <li><a href="/chunked.html">Chunked</a></li>
+                <li><a href="/stress.html">Stress / Timeout</a></li>
+            </ul>
+        </nav>
+
+        <!-- 4xx -->
+        <div class="card">
+            <h2>Erreurs Client (4xx)</h2>
+            <div class="grid">
+                <div>
+                    <h3>400 — Bad Request</h3>
+                    <p>URL malformée (<code>/%ZZ%invalid</code>)</p>
+                    <button class="btn btn-danger" onclick="testError(400)">Tester 400</button>
+                </div>
+                <div>
+                    <h3>403 — Forbidden</h3>
+                    <p>Accès refusé (<code>/forbidden/</code>)</p>
+                    <button class="btn btn-danger" onclick="testError(403)">Tester 403</button>
+                </div>
+                <div>
+                    <h3>404 — Not Found</h3>
+                    <p>Ressource inexistante</p>
+                    <button class="btn btn-danger" onclick="testError(404)">Tester 404</button>
+                </div>
+                <div>
+                    <h3>405 — Method Not Allowed</h3>
+                    <p>DELETE sur <code>/index.html</code></p>
+                    <button class="btn btn-danger" onclick="testError(405)">Tester 405</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5xx -->
+        <div class="card">
+            <h2>Erreurs Serveur (5xx)</h2>
+            <div class="grid">
+                <div>
+                    <h3>501 — Not Implemented</h3>
+                    <p>Méthode PATCH</p>
+                    <button class="btn btn-danger" onclick="testError(501)">Tester 501</button>
+                </div>
+				<div>
+                    <h3>502 — Bad Gateway</h3>
+                    <p>Script CGI en erreur</p>
+                    <button class="btn btn-danger" onclick="testError(502)">Tester 502</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Réponse du serveur</h2>
+            <div id="error-response" class="response-box">
+                <span class="status">En attente d'un test...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Comment déclencher chaque erreur</h2>
+            <table>
+                <tr><th>Code</th><th>Méthode</th><th>Description</th></tr>
+                <tr><td>400</td><td>GET /%ZZ%</td><td>URL avec caractères invalides</td></tr>
+                <tr><td>403</td><td>GET /forbidden/</td><td>Répertoire/fichier sans permission</td></tr>
+                <tr><td>404</td><td>GET /random</td><td>Ressource qui n'existe pas</td></tr>
+                <tr><td>405</td><td>DELETE /index.html</td><td>Méthode non autorisée sur ce location</td></tr>
+                <tr><td>413</td><td>POST (huge body)</td><td>Dépasse <code>client_max_body_size</code></td></tr>
+                <tr><td>501</td><td>PATCH /</td><td>Méthode non implémentée par le serveur</td></tr>
+				<tr><td>502</td><td>GET /cgi-bin/error500.py</td><td>Script CGI qui crash</td></tr>
+            </table>
+        </div>
+
+        <footer><p>Webserv Test Suite — 42 Project</p></footer>
+    </div>
+    <script src="/js/app.js"></script>
+</body>
+</html>

@@ -45,15 +45,15 @@
 
 	<h3>POST Fichier</h3>
     <form action="/uploads" method="POST" enctype="multipart/form-data">
-        <input type="file" name="file">
+        <input type="file" name="file" required>
         <input type="submit" value="Upload File">
     </form>
 
 	<h4>Upload Multiple</h4>
     <form action="/uploads" method="POST" enctype="multipart/form-data">
-        <input type="file" name="file1">
-        <input type="file" name="file2">
-        <input type="file" name="file3">
+        <input type="file" name="file1" required>
+        <input type="file" name="file2" required>
+        <input type="file" name="file3" required>
         <input type="submit" value="Upload 3 Files">
     </form>
 	<hr>
@@ -96,10 +96,10 @@
         <li><a href="/docs/fichier%20avec%20espaces.txt">Nom de fichier avec espaces</a></li>
     </ul>
 
-	<h3>Test Redirections</h3>
+	<h3>Test Redirections (configuré dans le serveur)</h3>
     <ul>
-        <li><a href="/nope">301 Redirect vers /index.html (configuré dans le serveur)</a></li>
-        <li><a href="/old-page">301 Redirect (si configuré)</a></li>
+        <li><a href="/nope">302 Redirect vers url interne </a></li>
+        <li><a href="/old-page">301 Redirect vers url externe </a></li>
     </ul>
 
 	 <h3>Test Content-Type</h3>

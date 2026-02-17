@@ -6,13 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:03:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 18:09:53 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 19:19:37 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_RESPONSE_HPP__
 # define __HTTP_RESPONSE_HPP__
 
+#include <ostream>
 # include <stdint.h>
 
 # include "http/HttpTypes.hpp"
@@ -62,23 +63,24 @@ public:
 	~HttpResponse();
 
 	// ========================================================================
+	// Accesors
+	// ========================================================================
+
+	http::e_status_code			getStatus(void) const;
+	bool						hasBody(void) const;
+	IFifoStreamView<t_bytes>&	stream(void);
+	bool						isDone() const;
+	std::string					rawMeta(void) const;
+
+	// ========================================================================
 	// Life Cycle
 	// ========================================================================
 
 	bool						fillStream(void);
-
-	// ========================================================================
-	// Output Production
-	// ========================================================================
-
-	IFifoStreamView<t_bytes>&	stream(void);
-	bool						isDone() const;
+	
 	bool						shouldCloseConnection(void) const;
 
-	http::e_status_code			getStatus(void) const;
-
 private:
-
 	// ========================================================================
 	// Helpers
 	// ========================================================================
@@ -87,16 +89,13 @@ private:
 	bool						fillMeta(IMetaSource *meta);
 	bool						handleCgiRedirect(const std::string &redirectPath);
 
-	void						commitMeta(void);
-
-	std::string					getField(const std::string& pKey) const;
-
-	
 	// forbidden
 	HttpResponse();
 	HttpResponse(const HttpResponse &other);
 	HttpResponse& operator=(const HttpResponse &other);
 
 };
+
+std::ostream	&operator<<(std::ostream &os, const HttpResponse &resp);
 
 #endif /* __HTTP_RESPONSE_HPP__ */

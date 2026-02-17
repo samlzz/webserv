@@ -24,6 +24,7 @@ FILES =	main.cpp \
 		config/validation/validatePath.cpp \
 		http/HttpData.cpp \
 		http/HttpTypes.cpp \
+		http/Sessions.cpp \
 		http/cgi/CgiOutputParser.cpp \
 		http/cgi/CgiProcess.cpp \
 		http/cgi/CgiReadConnection.cpp \
@@ -39,18 +40,19 @@ FILES =	main.cpp \
 		http/handlers/bodySrcs/CgiBodySource.cpp \
 		http/handlers/bodySrcs/FileBodySource.cpp \
 		http/handlers/bodySrcs/MemoryBodySource.cpp \
-		http/request/HttpRequest.cpp \
 		http/request/Cookies.cpp \
+		http/request/HttpRequest.cpp \
 		http/response/HttpResponse.cpp \
 		http/routing/Router.cpp \
-		http/Sessions.cpp \
 		server/AddrInfo.cpp \
 		server/Reactor.cpp \
 		server/connections/AConnection.cpp \
 		server/connections/ClientConnection.cpp \
 		server/connections/ServerConnection.cpp \
+		utils/convertUtils.cpp \
 		utils/fileSystemUtils.cpp \
-		utils/pathUtils.cpp
+		utils/pathUtils.cpp \
+		utils/urlUtils.cpp
 ### END ###
 ifeq ($(FILES),)
     $(error FILES is empty: please define source files)

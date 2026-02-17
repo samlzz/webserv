@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CGI - Webserv Test Suite</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Test CGI</h1>
+            <p>Exécution de scripts CGI (Python) via GET et POST</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html">GET / HEAD</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/upload.html">Upload / PUT</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/cgi.html" class="active">CGI</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/redirect.html">Redirections</a></li>
+                <li><a href="/headers.html">Headers</a></li>
+                <li><a href="/autoindex.html">Autoindex</a></li>
+                <li><a href="/chunked.html">Chunked</a></li>
+                <li><a href="/stress.html">Stress / Timeout</a></li>
+            </ul>
+        </nav>
+
+        <!-- CGI GET -->
+        <div class="card">
+            <h2>CGI — GET</h2>
+            <button class="btn btn-success" onclick="testCGI('/cgi-bin/test.py')">GET /cgi-bin/test.py</button>
+            <button class="btn btn-success" onclick="testCGI('/cgi-bin/injection.py')">GET /cgi-bin/injection.py</button>
+            <a href="/cgi-bin/test.py?name=Webserv&value=42" target="_blank" class="btn btn-primary">Ouvrir dans un nouvel onglet</a>
+        </div>
+
+        <!-- CGI POST -->
+        <div class="card">
+            <h2>CGI — POST</h2>
+            <button class="btn btn-warning" onclick="testCGIPost('/cgi-bin/test.py')">POST /cgi-bin/test.py</button>
+            <button class="btn btn-warning" onclick="testCGIPost('/cgi-bin/injection.py')">POST /cgi-bin/injection.py</button>
+        </div>
+
+        <!-- CGI Custom -->
+        <div class="card">
+            <h2>CGI personnalisé</h2>
+            <div class="form-group">
+                <label for="cgi-url">Script CGI :</label>
+                <input type="text" id="cgi-url" value="/cgi-bin/test.py" placeholder="/cgi-bin/script.py">
+            </div>
+            <div class="form-group">
+                <label for="cgi-qs">Query String (optionnel) :</label>
+                <input type="text" id="cgi-qs" placeholder="key1=val1&key2=val2">
+            </div>
+            <button class="btn btn-primary" onclick="testCGICustom()">Envoyer GET</button>
+        </div>
+
+        <div class="card">
+            <h2>Réponse CGI</h2>
+            <div id="cgi-response" class="response-box">
+                <span class="status">En attente d'un test...</span>
+            </div>
+        </div>
+
+        <!-- Documentation -->
+        <div class="card">
+            <h2>Variables d'environnement CGI</h2>
+            <table>
+                <tr><th>Variable</th><th>Description</th></tr>
+                <tr><td><code>REQUEST_METHOD</code></td><td>Méthode HTTP (GET, POST)</td></tr>
+                <tr><td><code>QUERY_STRING</code></td><td>Paramètres de l'URL (après ?)</td></tr>
+                <tr><td><code>CONTENT_TYPE</code></td><td>Type de contenu du body</td></tr>
+                <tr><td><code>CONTENT_LENGTH</code></td><td>Taille du body en octets</td></tr>
+                <tr><td><code>SCRIPT_NAME</code></td><td>Chemin du script CGI</td></tr>
+                <tr><td><code>PATH_INFO</code></td><td>Info de chemin supplémentaire</td></tr>
+                <tr><td><code>SERVER_NAME</code></td><td>Nom du serveur</td></tr>
+                <tr><td><code>SERVER_PORT</code></td><td>Port du serveur</td></tr>
+                <tr><td><code>HTTP_COOKIE</code></td><td>Cookies envoyés par le client</td></tr>
+            </table>
+
+            <h3>Exemple de script CGI Python :</h3>
+            <pre>#!/usr/bin/env python3
+import os, sys
+
+print("Content-Type: text/html")
+print()
+print("&lt;h1&gt;Hello from CGI&lt;/h1&gt;")
+print(f"Method: {os.environ.get('REQUEST_METHOD')}")
+print(f"Query: {os.environ.get('QUERY_STRING')}")</pre>
+        </div>
+
+        <footer><p>Webserv Test Suite — 42 Project</p></footer>
+    </div>
+    <script src="/js/app.js"></script>
+</body>
+</html>

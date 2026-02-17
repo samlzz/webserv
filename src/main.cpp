@@ -6,12 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/08 18:07:04 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 13:32:42 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 19:20:12 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <csignal>
 #include <cstddef>
+#include <cstdlib>
+#include <ctime>
 #include <exception>
 #include <iostream>
 #include <ostream>
@@ -39,6 +41,7 @@ int main(int ac, char **av)
 {
 	if (ac != 2)
 		return (std::cerr << ERR_USAGE << std::endl, 2);
+	srand(std::time(0));
 
 	ft_log::setOutputStream(std::cerr);
 	ft_log::enableCategory(WS_LOG);

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/02/17 18:11:18 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 19:20:04 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,15 +122,19 @@ public:
 	// ===== Getter / Setter =====
 	http::e_method			getMethod() const;
 	void					setMethod(http::e_method pMethod);
+
 	const std::string		&getPath() const;
 	void					setPath(const std::string &pPath);
+
 	const std::string		&getQuery() const;
 	const std::string		&getFragment() const;
 	int						getVerMaj() const;
 	int						getVerMin() const;
+	std::string				getRawMeta() const;
+
+	http::e_status_code		getStatusCode() const;
 	const http::t_headers	&getHeaders() const;
 	const t_bytes			&getBody() const;
-	http::e_status_code		getStatusCode() const;
 	Cookies					&getCookies() const;
 	time_t					getStartTs() const;
 

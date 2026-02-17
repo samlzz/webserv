@@ -5,7 +5,7 @@
 #include "http/routing/Router.hpp"
 #include "bodySrcs/MemoryBodySource.hpp"
 #include "utils/stringUtils.hpp"
-#include "utils/fileSystemUtils.hpp"
+#include "utils/urlUtils.hpp"
 
 #include <sstream>
 #include <string>
@@ -29,8 +29,8 @@ ResponsePlan	FormHandler::handle(
 		size_t pos = line.find('=');
 		if (pos != std::string::npos)
 		{
-			std::string key = fs::url_decode(line.substr(0, pos));
-			std::string value = fs::url_decode(line.substr(pos + 1));
+			std::string key = url::decode(line.substr(0, pos));
+			std::string value = url::decode(line.substr(pos + 1));
 			data[key] = value;
 		}
 	}

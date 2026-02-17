@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:30:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 18:16:28 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 19:19:58 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 #include "http/response/ResponsePlan.hpp"
 #include "http/response/interfaces/IMetaSource.hpp"
 #include "http/routing/Router.hpp"
+#include "utils/urlUtils.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -57,24 +58,29 @@ HttpResponse::~HttpResponse()
 // Accessors
 // ============================================================================
 
-IFifoStreamView<t_bytes>&	HttpResponse::stream(void)			{ return _out; }
-bool						HttpResponse::isDone(void) const	{ return _done; }
-
 http::e_status_code			HttpResponse::getStatus(void) const	{ return _status; }
+bool						HttpResponse::hasBody(void) const	{ return _body != 0; }
 
-bool						HttpResponse::shouldCloseConnection(void) const
+IFifoStreamView<t_bytes>&	HttpResponse::stream(void)			{ return _out; }
+bool						HttpResponse::isDone() const		{ return _done; }
+
+/**
+ * Create the first buffer from meta and return it
+ */
+std::string	HttpResponse::rawMeta(void) const
 {
-	std::string connection = getField("Connection");
-	if (connection.empty())
-		return false;
+	std::ostringstream	oss;
 
-	if (connection == "keep-alive")
-		return false;
+	oss << "HTTP/" << _ctx.request.getVerMaj() << '.' << _ctx.request.getVerMin()
+		<< _status << " " << http::Data::getStatusType(_status)
+		<< "\r\n";
 
-	if (connection == "close")
-		return  true;
+	for (http::t_headers::const_iterator it = _headers.begin();
+			it != _headers.end(); ++it)
+		oss << it->first << ": " << it->second << "\r\n";
 
-	return true;
+	oss << "\r\n";
+	return oss.str();
 }
 
 // ============================================================================
@@ -100,7 +106,7 @@ bool	HttpResponse::fillStream(void)
 	{
 		if (!fillMeta(dynamic_cast<IMetaSource *>(_body)))
 			return true;
-		commitMeta();
+		_out.push(rawMeta());
 		_commited = true;
 		if (!_body)
 			_done = true;
@@ -130,6 +136,16 @@ bool	HttpResponse::fillStream(void)
 	return true;
 }
 
+bool	HttpResponse::shouldCloseConnection(void) const
+{
+	http::t_headers::const_iterator	it = _headers.find("Connection");
+
+	if (it != _headers.end() && it->second == "close")
+		return true;
+
+	return false;
+}
+
 // ============================================================================
 // Private methods
 // ============================================================================
@@ -144,11 +160,6 @@ void	HttpResponse::applyPlan(const ResponsePlan &plan)
 
 // ---- Meta helpers ----
 
-static inline bool	_isInternalRedirect(const std::string &redirectPath)
-{
-	return redirectPath[0] == '/';
-}
-
 /**
  * CGI internal redirection is handled as a response-level semantic.
 
@@ -158,7 +169,7 @@ static inline bool	_isInternalRedirect(const std::string &redirectPath)
 */
 bool	HttpResponse::handleCgiRedirect(const std::string &redirectPath)
 {
-	if (_isInternalRedirect(redirectPath))
+	if (url::isInternal(redirectPath))
 	{
 		HttpRequest fakeReq(_ctx.request);
 		fakeReq.setMethod(http::MTH_GET);
@@ -213,31 +224,9 @@ bool	HttpResponse::fillMeta(IMetaSource *meta)
 	return true;
 }
 
-/**
- * Create the first buffer from meta and push it into output stream
- */
-void	HttpResponse::commitMeta(void)
+std::ostream	&operator<<(std::ostream &os, const HttpResponse &resp)
 {
-	std::ostringstream	oss;
-
-	oss << "HTTP/1.1 " << _status << " " << http::Data::getStatusType(_status)
-		<< "\r\n";
-
-	for (http::t_headers::const_iterator it = _headers.begin();
-			it != _headers.end(); ++it)
-		oss << it->first << ": " << it->second << "\r\n";
-
-	oss << "\r\n";
-	_out.push(oss.str());
+	os << resp.rawMeta();
+	os << (resp.hasBody() ? "With body" : "No body") << std::endl;
+	return os;
 }
-
-std::string		HttpResponse::getField(const std::string& pKey) const
-{
-	http::t_headers	headers = _headers;
-	http::t_headers::const_iterator	it = headers.find(pKey);
-
-	if (it == headers.end())
-		return ("");
-
-	return (it->second);
-};

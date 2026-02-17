@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 14:30:19 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 18:55:03 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 14:51:05 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,8 +32,6 @@ bool		isDir(struct stat st);
 int			openReadOnly(const std::string &path);
 
 ssize_t		size(const std::string &path);
-
-std::string	url_decode(const std::string &str);
 
 } // namespace fs
 
