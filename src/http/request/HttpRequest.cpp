@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/17 13:33:12 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 18:11:50 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,7 @@ const http::t_headers	&HttpRequest::getHeaders() const 	{ return (_request.heade
 const t_bytes			&HttpRequest::getBody() const		{ return (_request.body);         };
 http::e_status_code		HttpRequest::getStatusCode() const	{ return (_code);                 };
 Cookies					&HttpRequest::getCookies() const	{ return (_cookies);              };
+time_t					HttpRequest::getStartTs() const		{ return (_tsStart);              };
 
 void	HttpRequest::setField(const std::string& pKey, const std::string& pValue) {
 	_request.headers[pKey] = pValue;

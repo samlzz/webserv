@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/02/10 14:12:47 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 18:11:18 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,6 +132,7 @@ public:
 	const t_bytes			&getBody() const;
 	http::e_status_code		getStatusCode() const;
 	Cookies					&getCookies() const;
+	time_t					getStartTs() const;
 
 	// ======= Header Utils =======
 	void				setField(const std::string& pKey, const std::string& pValue);
