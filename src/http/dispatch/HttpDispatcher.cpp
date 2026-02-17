@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpDispatcher.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 17:47:15 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 19:56:03 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,16 +134,16 @@ ResponsePlan	HttpDispatcher::dispatch(
 
 	http::e_status_code code = plan.status;
 	if (code == 400 || code == 408 || code == 411 || code == 413 || code ==  414
-		|| code == 431 || code == 500  || code == 504 || code == 505) {
+		|| code == 431 || code >= 500)
+	{
 		plan.headers["Connection"] = "close";
 		return plan;
 	}
 
-	if (req.hasField("Connection")) {
-		if (req.getField("Connection") == "close") {
-			plan.headers["Connection"] = "close";
-			return plan;
-		}
+	if (req.hasField("Connection") && req.getField("Connection") == "close") 
+	{
+		plan.headers["Connection"] = "close";
+		return plan;
 	}
 
 	return plan;
