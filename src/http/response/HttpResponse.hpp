@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:03:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/11 13:45:33 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/17 18:09:53 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,8 @@ public:
 	IFifoStreamView<t_bytes>&	stream(void);
 	bool						isDone() const;
 	bool						shouldCloseConnection(void) const;
+
+	http::e_status_code			getStatus(void) const;
 
 private:
 

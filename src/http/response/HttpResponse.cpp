@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:30:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 13:33:19 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 18:16:28 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ HttpResponse::HttpResponse(const ResponsePlan &plan,
 		<< ", has_body=" << (plan.body != NULL) << std::endl;
 	std::ostream &os = ft_log::log(WS_LOG_CLI, ft_log::LOG_TRACE) << "Response plan Headers:\n";
 	for (http::t_headers::const_iterator it = plan.headers.begin(); it != plan.headers.end(); ++it)
-		os << it->first << ": " << it->second << std::endl;
+		os << "  " << it->first << ": " << it->second << std::endl;
 }
 
 HttpResponse::~HttpResponse()
@@ -57,8 +57,10 @@ HttpResponse::~HttpResponse()
 // Accessors
 // ============================================================================
 
-IFifoStreamView<t_bytes>&	HttpResponse::stream(void)		{ return _out; }
-bool						HttpResponse::isDone() const	{ return _done; }
+IFifoStreamView<t_bytes>&	HttpResponse::stream(void)			{ return _out; }
+bool						HttpResponse::isDone(void) const	{ return _done; }
+
+http::e_status_code			HttpResponse::getStatus(void) const	{ return _status; }
 
 bool						HttpResponse::shouldCloseConnection(void) const
 {
