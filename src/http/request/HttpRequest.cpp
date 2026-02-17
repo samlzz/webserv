@@ -21,6 +21,7 @@
 #include "Cookies.hpp"
 #include "http/HttpTypes.hpp"
 #include "http/response/BuffStream.hpp"
+#include "utils/convertUtils.hpp"
 
 #define CURRENT_STATE() _state
 #define UPDATE_STATE(S) _state = S
@@ -97,86 +98,6 @@ std::string		HttpRequest::getField(const std::string& pKey) const
 };
 
 #pragma endregion
-
-//#****************************************************************************#
-//#                             STATIC FUNCTION                                #
-//#****************************************************************************#
-#pragma region Static Function
-
-static bool		isDec(const std::string& pStr)
-{
-	if (pStr.empty())
-		return (false);
-
-	return (pStr.find_first_not_of("0123456789") == std::string::npos);
-}
-
-static bool		isHex(const std::string& pStr)
-{
-	if (pStr.empty())
-		return (false);
-
-	return (pStr.find_first_not_of("0123456789ABCDEFabcdef") == std::string::npos);
-}
-
-// (string) Hexadecimal to (int) Decimal 
-static int		htod(const std::string& pHex)
-{
-	if (pHex.empty())
-		return -1;
-
-	int result = 0;
-
-	for (size_t i = 0; i < pHex.size(); ++i)
-	{
-		char c = pHex[i];
-		result = result * 16;
-
-		if (c >= '0' && c <= '9') result += c - '0';
-		else if (c >= 'A' && c <= 'F') result += c - 'A' + 10;
-		else if (c >= 'a' && c <= 'f') result += c - 'a' + 10;
-		else return (-1);
-	}
-	return (result);
-}
-
-static bool	decode(const std::string& pUri, std::string& pPath)
-{
-	std::string path;
-	int dec;
-
-	for (size_t i = 0; i < pUri.length(); i++)
-	{
-		if (pUri[i] == '%' && i + 2 < pUri.length()) {
-			dec = htod(pUri.substr(i + 1, 2));
-			if (dec < 0)
-				return false;
-			path.push_back(dec);
-			i+=2;
-			continue;
-		}
-		path.push_back(pUri[i]);
-	}
-	pPath = path;
-	return true;
-}
-
-static bool	decode(const std::string& pUri)
-{
-	int dec;
-
-	for (size_t i = 0; i < pUri.length(); i++)
-	{
-		if (pUri[i] == '%' && i + 2 < pUri.length()) {
-			dec = htod(pUri.substr(i + 1, 2));
-			if (dec < 0)
-				return false;
-			i+=2;
-			continue;
-		}
-	}
-	return true;
-}
 
 // ========================================================================== //
 //                             MEMBER FUNCTION                                //
@@ -442,7 +363,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 			if (hasField("Content-Length") && !hasField("Transfer-Encoding")) {
 				_buffer = getField("Content-Length");
-				if (!isDec(_buffer))
+				if (!convert::isDec(_buffer))
 					return setError(http::SC_BAD_REQUEST);
 				_contentLength = std::atoi(_buffer.c_str());
 				if (_contentLength > _maxBodySize)
@@ -463,10 +384,10 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				break;
 			}
 
-			if (!isHex(_buffer))
+			if (!convert::isHex(_buffer))
 				return setError(http::SC_BAD_REQUEST);
 
-			_transferLength = htod(_buffer);
+			_transferLength = convert::htod(_buffer);
 			UPDATE_STATE(BODY_TRANSFER_HEXA_ALMOST_DONE);
 			__attribute__ ((fallthrough));
 		}
@@ -511,7 +432,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			__attribute__ ((fallthrough));
 			
 		case BODY_TRANSFER_END:
-			if (htod(_buffer) != 0) {
+			if (convert::htod(_buffer) != 0) {
 				UPDATE_STATE(BODY_TRANSFER_HEXA);
 				_buffer.clear();
 				break;

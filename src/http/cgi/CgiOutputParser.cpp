@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 15:25:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/11 14:05:49 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 15:01:44 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,17 +20,10 @@
 #include "CgiOutputParser.hpp"
 #include "http/HttpTypes.hpp"
 #include "http/response/BuffStream.hpp"
+#include "utils/convertUtils.hpp"
 #include "utils/stringUtils.hpp"
 
 #define EPSILON 4
-
-// (int)Decimal to (std::string)Hexadecimal
-static inline std::string	dtoh(int pDec)
-{
-	std::stringstream out;
-	out << std::hex << pDec;
-	return out.str();
-}
 
 // ============================================================================
 // Construction / Destruction
@@ -108,13 +101,13 @@ size_t CgiOutputParser::bodyChunk(char* dst, size_t max)
 		return 0;
 
 	t_bytes &front = _bodyStream.front();
-	size_t	headerMaxSize = dtoh(front.size()).length() + 4;
+	size_t	headerMaxSize = convert::dtoh(front.size()).length() + 4;
 
 	if (max < headerMaxSize)
 		return 0;
 	size_t len = std::min(front.size(), max - headerMaxSize);
 	size_t written = 0;
-	std::string header = dtoh(len) + "\r\n";
+	std::string header = convert::dtoh(len) + "\r\n";
 
 	std::memcpy(dst + written, header.data(), header.length());
 	written += header.length();
