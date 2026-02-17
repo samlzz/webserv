@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/08 18:07:04 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 14:22:58 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 13:32:42 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include "ft_log/level.hpp"
 #include "log.h"
 #include "server/Exceptions.hpp"
+#include "http/cgi/CgiProcess.hpp"
 #include "http/dispatch/HttpDispatcher.hpp"
 #include "server/Reactor.hpp"
 #include "server/connections/ServerConnection.hpp"
@@ -65,6 +66,10 @@ int main(int ac, char **av)
 
 		signal(SIGINT, signalHandler);
 		pollManager.run();
+	}
+	catch (const CgiChildExit &cgiExit)
+	{
+		return (cgiExit.exitCode());
 	}
 	catch (const FtppException &parseErr)
 	{

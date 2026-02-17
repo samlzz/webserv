@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/10 14:24:40 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 13:33:12 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,23 +140,42 @@ static int		htod(const std::string& pHex)
 	return (result);
 }
 
-static inline std::string	decode(const std::string& pUri)
+static bool	decode(const std::string& pUri, std::string& pPath)
 {
 	std::string path;
 	int dec;
 
-	for (size_t i = 0; i < pUri.length(); i++) {
+	for (size_t i = 0; i < pUri.length(); i++)
+	{
 		if (pUri[i] == '%' && i + 2 < pUri.length()) {
 			dec = htod(pUri.substr(i + 1, 2));
-			if (dec != -1) {
-				path.push_back(dec);
-				i+=2;
-				continue;	
-			}
+			if (dec < 0)
+				return false;
+			path.push_back(dec);
+			i+=2;
+			continue;
 		}
 		path.push_back(pUri[i]);
 	}
-	return path;
+	pPath = path;
+	return true;
+}
+
+static bool	decode(const std::string& pUri)
+{
+	int dec;
+
+	for (size_t i = 0; i < pUri.length(); i++)
+	{
+		if (pUri[i] == '%' && i + 2 < pUri.length()) {
+			dec = htod(pUri.substr(i + 1, 2));
+			if (dec < 0)
+				return false;
+			i+=2;
+			continue;
+		}
+	}
+	return true;
 }
 
 // ========================================================================== //
@@ -212,13 +231,15 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case LINE_URI_PATH: {
 			if (ch == ' ') {
-				_request.uri.path = decode(_buffer);
+				if (!decode(_buffer, _request.uri.path))
+					return setError(http::SC_BAD_REQUEST);
 				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '?' || ch == '#') {
-				_request.uri.path = decode(_buffer);
+				if (!decode(_buffer, _request.uri.path))
+					return setError(http::SC_BAD_REQUEST);
 				UPDATE_STATE(ch == '?' ? LINE_URI_QUERY : LINE_URI_FRAGMENT);
 				_buffer.clear();
 				break;
@@ -233,12 +254,16 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case LINE_URI_QUERY: {
 			if (ch == ' ') {
+				if (!decode(_buffer))
+					return setError(http::SC_BAD_REQUEST);
 				_request.uri.query = _buffer;
 				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
 				_buffer.clear();
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '#') {
+				if (!decode(_buffer))
+					return setError(http::SC_BAD_REQUEST);
 				_request.uri.query = _buffer;
 				UPDATE_STATE(LINE_URI_FRAGMENT);
 				_buffer.clear();
@@ -567,7 +592,6 @@ void	HttpRequest::checkTimeout(time_t now)
 void HttpRequest::setError(const http::e_status_code pCode)
 {
 	_code = pCode;
-	setField("Connection", "close");
 	UPDATE_STATE(PARSING_ERROR);
 }
 

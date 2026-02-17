@@ -8,7 +8,7 @@
 <body>
     <h1>Serveur de Test C++98</h1>
     <p>Statut : Connecté au serveur.</p>
-	<p>Bienvenue, {{USERNAME}}!</p>
+	<p>Bienvenue!</p>
     <hr>
     
     <h3>Test de POST (Upload de texte)</h3>
@@ -30,8 +30,8 @@
 	<h3>Test Theme</h3>
 	<p>Changer le theme du site :</p>
 	<ul>
-		<li><a href="/theme?mode=light">Thème Clair</a></li>
-		<li><a href="/theme?mode=dark">Thème Sombre</a></li>
+		<li><a href="/?theme=light">Thème Clair</a></li>
+		<li><a href="/?theme=dark">Thème Sombre</a></li>
 	</ul>
 
 	<hr>
@@ -40,5 +40,76 @@
 		<input type="text" name="username" placeholder="Entrez votre nom">
 		<input type="submit" value="Envoyer">
 	</form>
+	<li><a href="/cgi-bin/injection.py">Test CGI injection</a></li>
+	<hr>
+
+	<h3>POST Fichier</h3>
+    <form action="/uploads" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="Upload File">
+    </form>
+
+	<h4>Upload Multiple</h4>
+    <form action="/uploads" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file1">
+        <input type="file" name="file2">
+        <input type="file" name="file3">
+        <input type="submit" value="Upload 3 Files">
+    </form>
+	<hr>
+
+	<h5>Test CGI</h5>
+	<ul>
+		<li><a href="/cgi-bin/test.py?name=Webserv&test=42">Test CGI avec Query String</a></li>
+		<li><a href="/cgi-bin/test.py">Test CGI</a></li>
+		<li><a href="/cgi-bin/test_chunk.pl">Test CGI perl</a></li>
+		<li><a href="/cgi-bin/test_chunk.rb">Test CGI ruby</a></li>
+		<li><a href="/cgi-bin/test_chunk.php">Test CGI php</a></li>
+		<li><a href="/cgi-bin/test_chunk.py">Test CGI python</a></li>
+	</ul>
+
+	    <h2>CGI POST</h2>
+    <form action="/cgi-bin/test.py" method="POST">
+        <input type="text" name="username" placeholder="Username">
+        <input type="text" name="message" placeholder="Message">
+        <input type="submit" value="POST /cgi-bin/test.py">
+    </form>
+
+	<hr>
+	<h1>Tests Erreurs</h1>
+    <ul>
+        <li><a href="/forbidden">403 Forbidden</a></li>
+        <li><a href="/notfound">404 Not Found</a></li>
+    </ul>
+
+	 <h3>Test Autoindex</h3>
+    <ul>
+        <li><a href="/uploads/">Liste des fichiers uploadés (autoindex)</a></li>
+        <li><a href="/images/">Liste des images (autoindex)</a></li>
+        <li><a href="/cgi-bin/">Liste des scripts CGI (autoindex)</a></li>
+    </ul>
+
+	 <h3>Test Encodage</h3>
+    <ul>
+        <li><a href="/index.html?text=hello%20world">URL encoded (espaces)</a></li>
+        <li><a href="/index.html?emoji=%F0%9F%98%80">URL encoded (emoji)</a></li>
+        <li><a href="/docs/fichier%20avec%20espaces.txt">Nom de fichier avec espaces</a></li>
+    </ul>
+
+	<h3>Test Redirections</h3>
+    <ul>
+        <li><a href="/nope">301 Redirect vers /index.html (configuré dans le serveur)</a></li>
+        <li><a href="/old-page">301 Redirect (si configuré)</a></li>
+    </ul>
+
+	 <h3>Test Content-Type</h3>
+    <ul>
+        <li><a href="/index.html">HTML (text/html)</a></li>
+        <li><a href="/styles.css">CSS (text/css)</a></li>
+        <li><a href="/images/test.jpg">Image JPG (image/jpeg)</a></li>
+        <li><a href="/docs/lorem.pdf">PDF (application/pdf)</a></li>
+        <li><a href="/docs/texte.txt">TXT (text/plain)</a></li>
+    </ul>
+
 </body>
 </html>

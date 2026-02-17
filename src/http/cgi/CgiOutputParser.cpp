@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CgiOutputParser.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 15:25:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/09 15:59:20 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/11 14:05:49 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -191,7 +191,7 @@ bool CgiOutputParser::tryParseHeaders()
 			_headers["Content-Length"] = "0";
 		else
 		{
-			_headers["Transfert-Encoding"] = "chunked";
+			_headers["Transfer-Encoding"] = "chunked";
 			_chunked = true;
 		}
 	}

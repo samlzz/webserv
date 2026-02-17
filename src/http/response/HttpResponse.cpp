@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:30:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/02 12:42:16 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 13:33:19 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,8 +62,17 @@ bool						HttpResponse::isDone() const	{ return _done; }
 
 bool						HttpResponse::shouldCloseConnection(void) const
 {
-	// TODO: check internal state to determine keep-alive/close
-	return false;
+	std::string connection = getField("Connection");
+	if (connection.empty())
+		return false;
+
+	if (connection == "keep-alive")
+		return false;
+
+	if (connection == "close")
+		return  true;
+
+	return true;
 }
 
 // ============================================================================
@@ -219,3 +228,14 @@ void	HttpResponse::commitMeta(void)
 	oss << "\r\n";
 	_out.push(oss.str());
 }
+
+std::string		HttpResponse::getField(const std::string& pKey) const
+{
+	http::t_headers	headers = _headers;
+	http::t_headers::const_iterator	it = headers.find(pKey);
+
+	if (it == headers.end())
+		return ("");
+
+	return (it->second);
+};

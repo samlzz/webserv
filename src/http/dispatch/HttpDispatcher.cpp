@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpDispatcher.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/31 12:28:29 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/10 17:47:15 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include "http/HttpTypes.hpp"
 #include "http/dispatch/ErrorBuilder.hpp"
 #include "http/handlers/IHttpHandler.hpp"
+#include "http/request/Cookies.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/response/ResponsePlan.hpp"
 #include "http/routing/Router.hpp"
@@ -45,21 +46,6 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 								) const
 {
 	const Config::Server::Location	&loca = *route.location;
-
-	std::istringstream	queryIss(req.getQuery());
-	std::string			queryPart;
-	
-	// ? Set cookie
-	while (std::getline(queryIss, queryPart, '&'))
-	{
-		size_t		pos = queryPart.find('=');
-		std::string	key = queryPart.substr(0, pos);
-		std::string	val = pos != std::string::npos
-							? queryPart.substr(pos + 1)
-							: "";
-		if (loca.isCookiesSet(key))
-			req.getCookies().setCookie(key, val);
-	}
 
 	if (loca.redirect)
 	{
@@ -144,7 +130,7 @@ ResponsePlan	HttpDispatcher::findPlan(
 		);
 
 	const IHttpHandler	*handler = findHandler(req, route);
-	if (!handler) // ? sould never happend cause of previous if
+	if (!handler)
 		return ErrorBuilder::build(
 			http::SC_NOT_IMPLEMENTED,
 			route.location
@@ -157,7 +143,38 @@ ResponsePlan	HttpDispatcher::dispatch(
 	const HttpRequest &req, const routing::Context &route
 ) const
 {
-	ResponsePlan	plan(findPlan(req, route));
-	plan.headers["Set-Cookie"] = req.getCookies().buildSetCookieHeaders();
+	ResponsePlan		plan(findPlan(req, route));
+	Cookies				&cookies = req.getCookies();
+	std::istringstream	queryIss(req.getQuery());
+	std::string			queryPart;
+	
+	while (std::getline(queryIss, queryPart, '&'))
+	{
+		size_t		pos = queryPart.find('=');
+		std::string	key = queryPart.substr(0, pos);
+
+		if (pos != std::string::npos
+			&& route.location
+			&& route.location->isCookiesSet(key)
+		)
+			cookies.setCookie(key, queryPart.substr(pos + 1));
+	}
+	plan.headers["Set-Cookie"] = cookies.buildSetCookieHeaders();
+	plan.headers["Connection"] = "keep-alive";
+
+	http::e_status_code code = plan.status;
+	if (code == 400 || code == 408 || code == 411 || code == 413 || code ==  414
+		|| code == 431 || code == 500  || code == 504 || code == 505) {
+		plan.headers["Connection"] = "close";
+		return plan;
+	}
+
+	if (req.hasField("Connection")) {
+		if (req.getField("Connection") == "close") {
+			plan.headers["Connection"] = "close";
+			return plan;
+		}
+	}
+
 	return plan;
 }
