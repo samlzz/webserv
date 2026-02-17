@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 14:25:08 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 18:06:01 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,6 +54,7 @@ private:
 
 	HttpRequest				_req;
 	HttpResponse			*_resp;
+	size_t					_totalSent;
 	size_t					_offset;
 	IConnection				*_cgiRead;
 

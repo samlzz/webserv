@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 14:24:53 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 18:36:33 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,12 +63,15 @@ ClientConnection::ClientConnection(
 	, _remote(AddrInfo(remote))
 	, _local(_getLocalInfo(cliSockFd, serverCtx.config))
 	, _req(_serv.config.maxBodySize), _resp(0)
-	, _offset(0), _cgiRead(0)
+	, _totalSent(0), _offset(0)
+	, _cgiRead(0)
 	, _shouldRefresh(false)
 	, _state(CS_WAIT_FIRST_BYTE)
 	, _tsLastActivity(std::time(0))
 {
 	setFdFlags();
+	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
+		<< "Connection " << _id << " opened from " << _remote << std::endl;
 }
 
 ClientConnection::~ClientConnection(void)
@@ -95,10 +98,9 @@ ConnEvent	ClientConnection::buildResponse(void)
 		_cgiRead = plan.event.conn;
 
 	_resp = new HttpResponse(plan, _req, route);
-	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
-		<< "Built response for client " << _fd
-		<< " , wait for POLLOUT..." << std::endl;
 
+	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
+		<< "Wait for POLLOUT..." << std::endl;
 	return plan.event;
 }
 
@@ -114,14 +116,14 @@ ConnEvent	ClientConnection::handleRead(void)
 	// ? If EOF was received: client sent an incomplete request
 	if (n <= 0) // ? error or EOF
 	{
-		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_ERROR)
-			<< "Fail to read " << CLIENT_READ_BUF_SIZE
-			<< " bytes from fd " << _fd << (n == 0 ? " bc EOF" : "") << std::endl;
+		if (n < 0)
+			ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_ERROR)
+				<< "recv() error on connection " << _id << std::endl;
 		return ConnEvent::close();
 	}
 
-	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
-		<< "Received " << n << " bytes from client on fd " << _fd << std::endl;
+	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
+		<< "Received " << n << " bytes from client " << _id << std::endl;
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_TRACE)
 		<< "Received buffer:\n"
 		<< WS_LOG_SEP << '\n' << std::string(buf, n)
@@ -134,10 +136,13 @@ ConnEvent	ClientConnection::handleRead(void)
 	_req.feed(buf, static_cast<size_t>(n));
 	if (_req.isDone())
 	{
-		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
+		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_TRACE) 
 			<< "Parsed request:\n"
 			<< WS_LOG_SEP << '\n' << _req
 			<< WS_LOG_SEP << std::endl;
+		if (_req.isError())
+			ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_ERROR)
+				<< "Request error status=" << _req.getStatusCode();
 
 		_state = CS_WAIT_RESPONSE;
 		_events = POLLOUT;
@@ -165,14 +170,14 @@ ConnEvent	ClientConnection::handleWrite(void)
 					0);
 	if (n <= 0) // ? so n should never be 0
 	{
-		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_ERROR)
-			<< "Fail to send " << buf.size() - _offset
-			<< " bytes to fd " << _fd << std::endl;
+		if (n < 0)
+			ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_ERROR)
+				<< "send() error on connection " << _id << std::endl;
 		return ConnEvent::close();
 	}
 
-	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
-		<< "Send " << n << " bytes to client on fd " << _fd << std::endl;
+	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
+		<< "Send " << n << " bytes to client " << _id << std::endl;
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_TRACE) << "Buffer sent:\n"
 		<< WS_LOG_SEP << '\n' << std::string(buf.data() + _offset, buf.size() - _offset)
 		<< WS_LOG_SEP << std::endl;
@@ -182,9 +187,8 @@ ConnEvent	ClientConnection::handleWrite(void)
 
 	if (_offset == buf.size()) // ? all curent buffer was sent
 	{
-		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
-			<< "Current buffer was totally sent" << std::endl;
 		stream.pop();
+		_totalSent += _offset;
 		_offset = 0;
 
 		if (!stream.hasBuffer())
@@ -192,18 +196,23 @@ ConnEvent	ClientConnection::handleWrite(void)
 			if (_resp->isDone())
 			{
 				ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
-					<< "Response was sent to client " << _fd << std::endl;
+					<< _remote << " \"" << _req.getMethod() << ' ' << _req.getPath() << "\" "
+					<< _resp->getStatus() << ' ' << _totalSent << "B "
+					<< (std::time(0) - _req.getStartTs()) * 1000 << "ms"
+					<< (_resp->shouldCloseConnection() ? " close" : " KA")
+					<< std::endl;
 
 				detachBuddy();
 				if (_resp->shouldCloseConnection())
 					return ConnEvent::close();
 
+				_totalSent = 0;
 				_req.reset();
 				delete _resp;
 				_resp = 0;
 				_state = CS_WAIT_REQUEST;
 				_events = POLLIN;
-				ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
+				ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
 					<< "Wait for POLLIN..." << std::endl;
 			}
 			else
@@ -226,7 +235,7 @@ ConnEvent	ClientConnection::handleEvents(short revents)
 	if (isErrEvent(revents))
 	{
 		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_ERROR)
-			<< "Poll error occurs on fd " << _fd << std::endl;
+			<< "Poll error occurs on connection " << _id << " fd=" << _fd << std::endl;
 		return ConnEvent::close();
 	}
 
@@ -259,7 +268,7 @@ ConnEvent	ClientConnection::checkTimeout(time_t now)
 	if (difftime(now, _tsLastActivity) > timeout)
 	{
 		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_WARN)
-			<< "Client on fd " << _fd
+			<< "Client on connection " << _id
 			<< " timeout when waiting for " << _state << std::endl;
 		return ConnEvent::close();
 	}
@@ -293,7 +302,7 @@ void	ClientConnection::notifyWritable(void)
 {
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
 		<< "Some buffer was added to response stream" << std::endl;
-	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
+	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
 		<< "Wait for POLLOUT..." << std::endl;
 	addEvent(POLLOUT);
 	_shouldRefresh = true;
