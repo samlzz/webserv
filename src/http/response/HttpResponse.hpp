@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:03:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 15:55:59 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 19:11:25 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,10 +67,9 @@ public:
 	// ========================================================================
 
 	bool						hasBody(void) const;
-	// Get Status and Headers raw buffer
-	std::string					rawMeta(void) const;
 	IFifoStreamView<t_bytes>&	stream(void);
 	bool						isDone() const;
+	std::string					rawMeta(void) const;
 
 	// ========================================================================
 	// Life Cycle
@@ -81,7 +80,6 @@ public:
 	bool						shouldCloseConnection(void) const;
 
 private:
-
 	// ========================================================================
 	// Helpers
 	// ========================================================================
@@ -90,9 +88,6 @@ private:
 	bool						fillMeta(IMetaSource *meta);
 	bool						handleCgiRedirect(const std::string &redirectPath);
 
-	std::string					getField(const std::string& pKey) const;
-
-	
 	// forbidden
 	HttpResponse();
 	HttpResponse(const HttpResponse &other);
