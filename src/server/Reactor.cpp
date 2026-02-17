@@ -6,13 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 14:21:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 14:24:45 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 18:02:29 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <csignal>
 #include <cstddef>
 #include <ctime>
+#include <ostream>
 #include <set>
 #include <sys/wait.h>
 
@@ -23,7 +24,6 @@
 #include "server/Exceptions.hpp"
 #include "server/connections/ConnEvent.hpp"
 #include "server/connections/IConnection.hpp"
-#include "utils/stringUtils.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -47,7 +47,7 @@ Reactor::~Reactor()
 void	Reactor::removeConnection(size_t idx)
 {
 	ft_log::log(WS_LOG_SERVER, ft_log::LOG_INFO)
-		<< "Close connection on fd " << _connections[idx]->fd() << std::endl;
+		<< "Close connection " << _connections[idx]->id() << std::endl;
 
 	delete _connections[idx];
 
@@ -61,10 +61,11 @@ void	Reactor::removeConnection(size_t idx)
 
 void	Reactor::addConnection(IConnection* conn)
 {
-	ft_log::log(WS_LOG_SERVER, ft_log::LOG_INFO)
-		<< "New connection on fd " << conn->fd()
-		<< (conn->buddy() ? "(buddy: " + str::toString(conn->buddy()->fd()) + ")" : "")
-		<< std::endl;
+	std::ostream	&logOs = ft_log::log(WS_LOG_SERVER, ft_log::LOG_INFO);
+	logOs << "New connection " << conn->id();
+	if (conn->buddy())
+		logOs << "(buddy: " << conn->buddy()->id() << ')';
+	logOs << std::endl;
 
 	_connections.push_back(conn);
 	_pfds.push_back(conn->pollFd());
@@ -107,8 +108,8 @@ bool	Reactor::manageConnEvent(ConnEvent ev, size_t idx)
 			if (buddy->buddy() == victim)
 				buddy->detachBuddy();
 			_pendingClose.insert(buddy);
-			ft_log::log(WS_LOG_SERVER, ft_log::LOG_DEBUG) << "Defer close "
-				"of connection on fd " << buddy->fd() << std::endl;
+			ft_log::log(WS_LOG_SERVER, ft_log::LOG_DEBUG)
+				<< "Defer close of connection " << buddy->id() << std::endl;
 		}
 		removeConnection(idx);
 		return true;
