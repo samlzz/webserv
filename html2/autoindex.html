@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autoindex - Webserv Test Suite</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Test Autoindex</h1>
+            <p>Listing automatique de répertoires</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html">GET / HEAD</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/upload.html">Upload / PUT</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/redirect.html">Redirections</a></li>
+                <li><a href="/headers.html">Headers</a></li>
+                <li><a href="/autoindex.html" class="active">Autoindex</a></li>
+                <li><a href="/chunked.html">Chunked</a></li>
+                <li><a href="/stress.html">Stress / Timeout</a></li>
+            </ul>
+        </nav>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Tester Autoindex</h2>
+
+                <h3>Répertoires avec autoindex activé :</h3>
+                <button class="btn btn-primary" onclick="testAutoindex('/uploads/')">/uploads/</button>
+                <button class="btn btn-primary" onclick="testAutoindex('/cgi-bin/')">/cgi-bin/</button>
+
+                <h3 style="margin-top: 20px;">Test personnalisé :</h3>
+                <div class="form-group">
+                    <label for="autoindex-path">Chemin du répertoire :</label>
+                    <input type="text" id="autoindex-path" value="/uploads/" placeholder="/chemin/">
+                </div>
+                <button class="btn btn-success" onclick="testAutoindex(document.getElementById('autoindex-path').value)">Tester</button>
+
+                <h3 style="margin-top: 20px;">Liens directs :</h3>
+                <ul>
+                    <li><a href="/uploads/" target="_blank">Ouvrir /uploads/</a></li>
+                    <li><a href="/cgi-bin/" target="_blank">Ouvrir /cgi-bin/</a></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>Comportement attendu</h2>
+                <ul>
+                    <li>Liste tous les fichiers et sous-dossiers</li>
+                    <li>Noms cliquables (liens href)</li>
+                    <li>Lien vers le dossier parent (<code>../</code>)</li>
+                    <li>Retourne 200 OK avec Content-Type: text/html</li>
+                </ul>
+
+                <h3>Configuration :</h3>
+                <pre>location /uploads/ {
+    autoindex on;
+}</pre>
+
+                <h3>Priorité :</h3>
+                <p>Si un fichier <code>index.html</code> existe dans le répertoire, il est servi à la place de l'autoindex.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>� Réponse du serveur</h2>
+            <div id="autoindex-response" class="response-box">
+                <span class="status">En attente d'un test...</span>
+            </div>
+        </div>
+
+        <footer><p>Webserv Test Suite — 42 Project</p></footer>
+    </div>
+    <script src="/js/app.js"></script>
+</body>
+</html>
