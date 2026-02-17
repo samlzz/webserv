@@ -6,10 +6,11 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:30:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 15:29:02 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 15:55:13 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <ostream>
 #include <sstream>
 #include <stdint.h>
 
@@ -46,8 +47,10 @@ HttpResponse::~HttpResponse()
 // Accessors
 // ============================================================================
 
-IFifoStreamView<t_bytes>&	HttpResponse::stream(void)		{ return _out; }
-bool						HttpResponse::isDone() const	{ return _done; }
+bool						HttpResponse::hasBody(void) const	{ return _body != 0; }
+
+IFifoStreamView<t_bytes>&	HttpResponse::stream(void)			{ return _out; }
+bool						HttpResponse::isDone() const		{ return _done; }
 
 bool						HttpResponse::shouldCloseConnection(void) const
 {
@@ -87,7 +90,7 @@ bool	HttpResponse::fillStream(void)
 	{
 		if (!fillMeta(dynamic_cast<IMetaSource *>(_body)))
 			return true;
-		commitMeta();
+		_out.push(rawMeta());
 		_commited = true;
 		if (!_body)
 			_done = true;
@@ -198,11 +201,12 @@ bool	HttpResponse::fillMeta(IMetaSource *meta)
 /**
  * Create the first buffer from meta and push it into output stream
  */
-void	HttpResponse::commitMeta(void)
+std::string	HttpResponse::rawMeta(void) const
 {
 	std::ostringstream	oss;
 
-	oss << "HTTP/1.1 " << _status << " " << http::Data::getStatusType(_status)
+	oss << "HTTP/" << _ctx.request.getVerMaj() << '.' << _ctx.request.getVerMin()
+		<< _status << " " << http::Data::getStatusType(_status)
 		<< "\r\n";
 
 	for (http::t_headers::const_iterator it = _headers.begin();
@@ -210,7 +214,7 @@ void	HttpResponse::commitMeta(void)
 		oss << it->first << ": " << it->second << "\r\n";
 
 	oss << "\r\n";
-	_out.push(oss.str());
+	return oss.str();
 }
 
 std::string		HttpResponse::getField(const std::string& pKey) const
@@ -223,3 +227,10 @@ std::string		HttpResponse::getField(const std::string& pKey) const
 
 	return (it->second);
 };
+
+std::ostream	&operator<<(std::ostream &os, const HttpResponse &resp)
+{
+	os << resp.rawMeta();
+	os << (resp.hasBody() ? "With body" : "No body") << std::endl;
+	return os;
+}

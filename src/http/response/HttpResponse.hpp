@@ -3,16 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:03:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/11 13:45:33 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/17 15:55:59 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_RESPONSE_HPP__
 # define __HTTP_RESPONSE_HPP__
 
+#include <ostream>
 # include <stdint.h>
 
 # include "http/HttpTypes.hpp"
@@ -62,17 +63,21 @@ public:
 	~HttpResponse();
 
 	// ========================================================================
+	// Accesors
+	// ========================================================================
+
+	bool						hasBody(void) const;
+	// Get Status and Headers raw buffer
+	std::string					rawMeta(void) const;
+	IFifoStreamView<t_bytes>&	stream(void);
+	bool						isDone() const;
+
+	// ========================================================================
 	// Life Cycle
 	// ========================================================================
 
 	bool						fillStream(void);
-
-	// ========================================================================
-	// Output Production
-	// ========================================================================
-
-	IFifoStreamView<t_bytes>&	stream(void);
-	bool						isDone() const;
+	
 	bool						shouldCloseConnection(void) const;
 
 private:
@@ -85,8 +90,6 @@ private:
 	bool						fillMeta(IMetaSource *meta);
 	bool						handleCgiRedirect(const std::string &redirectPath);
 
-	void						commitMeta(void);
-
 	std::string					getField(const std::string& pKey) const;
 
 	
@@ -96,5 +99,7 @@ private:
 	HttpResponse& operator=(const HttpResponse &other);
 
 };
+
+std::ostream	&operator<<(std::ostream &os, const HttpResponse &resp);
 
 #endif /* __HTTP_RESPONSE_HPP__ */
