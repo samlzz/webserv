@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpDispatcher.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 17:47:15 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 16:09:11 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,15 +42,15 @@ HttpDispatcher::~HttpDispatcher()
 
 const IHttpHandler	*HttpDispatcher::findHandler(
 									const HttpRequest &req,
-									const routing::Context &route
+									const routing::Context &route,
+									std::string &handlerName
 								) const
 {
 	const Config::Server::Location	&loca = *route.location;
 
 	if (loca.redirect)
 	{
-		ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
-			<< "Handler selected: RedirectHandler" << std::endl;
+		handlerName = "RedirectHandler";
 		return &_redirectHandler;
 	}
 
@@ -60,23 +60,20 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 		std::string	cgiExt = path::subExt(path::subPath(route.normalizedPath));
 		if (loca.cgiExts.find(cgiExt) != loca.cgiExts.end())
 		{
-			ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
-				<< "Handler selected: CgiHandler (ext: " << cgiExt << ")" << std::endl;
+			handlerName = "CgiHandler (ext: " + cgiExt + ")";
 			return &_cgiHandler;
 		}
 	}
 	
 	if (method == http::MTH_GET || method == http::MTH_HEAD)
 	{
-		ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
-			<< "Handler selected: StaticHandler" << std::endl;
+		handlerName = "StaticHandler";
 		return &_staticHandler;
 	}
 
 	if (method == http::MTH_DELETE)
 	{
-		ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
-			<< "Handler selected: DeleteHandler" << std::endl;
+		handlerName = "DeleteHandler";
 		return &_deleteHandler;
 	}
 
@@ -87,12 +84,10 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 			) == http::CT_APPLICATION_X_WWW_FORM_URLENCODED
 		)
 		{
-			ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
-				<< "Handler selected: FormHandler" << std::endl;
+			handlerName = "FormHandler";
 			return &_formHandler;
 		}
-		ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
-			<< "Handler selected: UploadHandler" << std::endl;
+		handlerName = "UploadHandler";
 		return &_uploadHandler;
 	}
 
@@ -129,12 +124,15 @@ ResponsePlan	HttpDispatcher::findPlan(
 			route.location
 		);
 
-	const IHttpHandler	*handler = findHandler(req, route);
+	std::string			name;
+	const IHttpHandler	*handler = findHandler(req, route, name);
 	if (!handler)
 		return ErrorBuilder::build(
 			http::SC_NOT_IMPLEMENTED,
 			route.location
 		);
+	ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
+		<< "Handler selected: " << name << std::endl;
 
 	return handler->handle(req, route);
 }
