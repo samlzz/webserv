@@ -6,11 +6,12 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:49:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:54:25 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 20:01:13 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <fcntl.h>
+#include <string>
 #include <unistd.h>
 
 #include "config/Config.hpp"
@@ -31,10 +32,12 @@ ResponsePlan	ErrorBuilder::build(
 	{
 		Config::t_errPages::const_iterator it = location->errorPages.find(status);
 		if (it != location->errorPages.end())
-			return buildFromErrorPage(status, it->second);
+		{
+			return buildFromErrorPage(status, it->second, location->root);
+		}
 
 		if (!location->defaultErrPage.empty())
-			return buildFromErrorPage(status, location->defaultErrPage);
+			return buildFromErrorPage(status, location->defaultErrPage, location->root);
 	}
 	return buildDefault(status);
 }
@@ -65,11 +68,17 @@ ResponsePlan	ErrorBuilder::buildDefault(http::e_status_code status)
 
 ResponsePlan	ErrorBuilder::buildFromErrorPage(
 	http::e_status_code status,
-	const std::string& path
+	const std::string& path,
+	const std::string &optionalDir
 )
 {
-	int		fd = fs::openReadOnly(path);
-	ssize_t	size = fs::size(path);
+	std::string	target;
+	if (fs::isExist(path))
+		target = path;
+	else
+		target = optionalDir + path;
+	int		fd = fs::openReadOnly(target);
+	ssize_t	size = fs::size(target);
 
 	if (fd < 0 || size < 0)
 		return buildDefault(status);
