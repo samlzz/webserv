@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/10 20:05:51 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/17 15:24:57 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <ctime>
 #include <iostream>
 #include <algorithm>
+#include <ostream>
 #include <string>
 
 #include "HttpRequest.hpp"
@@ -521,8 +522,6 @@ void HttpRequest::setError(const http::e_status_code pCode)
 
 #pragma endregion
 
-
-
 //#****************************************************************************#
 //#                            OPERATOR OVERLOAD                               #
 //#****************************************************************************#
@@ -530,24 +529,28 @@ void HttpRequest::setError(const http::e_status_code pCode)
 std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 {
 	pOut << pRequest.getMethod() << " ";
-	pOut << pRequest.getPath() << pRequest.getQuery() << pRequest.getFragment() << " ";
+	pOut << pRequest.getPath()
+		<< '?' << pRequest.getQuery() << '#' << pRequest.getFragment() << " ";
 	pOut << "HTTP/" << pRequest.getVerMaj() << "." << pRequest.getVerMin();
 	pOut << "\r\n";
 
 	http::t_headers headers = pRequest.getHeaders();
-	for (http::t_headers::const_iterator it = headers.begin();  it != headers.end(); ++it) {
+	for (http::t_headers::const_iterator it = headers.begin(); it != headers.end(); ++it)
+	{
 		pOut << it->first << ": " << it->second << "\r\n";
 	}
 	pOut << "\r\n";
 
 	const std::vector<char>& body = pRequest.getBody();
-	if (!body.empty()) {
-		pOut.write(body.data(), body.size());
-	}
-	pOut << "\r\n";
+	if (!body.empty())
+		pOut << "Parsed " << body.size() << " bytes of body";
 
-	pOut << (pRequest.isDone() ? "is done" : "is not done");
-	pOut << (pRequest.isError() ? "is error" : "is not error");
+
+	if (pRequest.isError())
+		pOut << "Error occurs (code=" << pRequest.getStatusCode() << ").\n";
+	else if (pRequest.isDone())
+		pOut << "Parsing done.\n";
+	pOut << std::endl;
 	
 	return (pOut);
 }
