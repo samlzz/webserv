@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/17 16:24:19 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 18:46:53 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <iostream>
 #include <algorithm>
 #include <ostream>
+#include <sstream>
 #include <string>
 
 #include "HttpRequest.hpp"
@@ -68,9 +69,22 @@ const std::string		&HttpRequest::getQuery() const		{ return (_request.uri.query)
 const std::string		&HttpRequest::getFragment() const	{ return (_request.uri.fragment); };
 int						HttpRequest::getVerMaj() const		{ return (_request.verMaj);       };
 int						HttpRequest::getVerMin() const		{ return (_request.verMin);       };
+std::string				HttpRequest::getRawMeta() const
+{
+	std::ostringstream	iss;
+
+	iss << _request.method << ' ' << _request.uri.path;
+	if (!_request.uri.query.empty())
+		iss << '?' << _request.uri.query;
+	if (!_request.uri.fragment.empty())
+		iss << '#' << _request.uri.fragment;
+	iss << " HTTP/" << _request.verMaj << '.' << _request.verMin;
+	return iss.str();
+}
+
+http::e_status_code		HttpRequest::getStatusCode() const	{ return (_code);                 };
 const http::t_headers	&HttpRequest::getHeaders() const 	{ return (_request.headers);      };
 const t_bytes			&HttpRequest::getBody() const		{ return (_request.body);         };
-http::e_status_code		HttpRequest::getStatusCode() const	{ return (_code);                 };
 Cookies					&HttpRequest::getCookies() const	{ return (_cookies);              };
 
 void	HttpRequest::setField(const std::string& pKey, const std::string& pValue) {
@@ -528,11 +542,7 @@ void HttpRequest::setError(const http::e_status_code pCode)
 
 std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 {
-	pOut << pRequest.getMethod() << " ";
-	pOut << pRequest.getPath()
-		<< '?' << pRequest.getQuery() << '#' << pRequest.getFragment() << " ";
-	pOut << "HTTP/" << pRequest.getVerMaj() << "." << pRequest.getVerMin();
-	pOut << "\r\n";
+	pOut << pRequest.getRawMeta() << "\r\n";
 
 	http::t_headers headers = pRequest.getHeaders();
 	for (http::t_headers::const_iterator it = headers.begin(); it != headers.end(); ++it)
@@ -541,8 +551,8 @@ std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 	}
 	pOut << "\r\n";
 
-	const std::vector<char>& body = pRequest.getBody();
+	const t_bytes& body = pRequest.getBody();
 	if (!body.empty())
-		pOut << "Parsed " << body.size() << " bytes of body";
+		pOut.write(body.data(), body.size());
 	return (pOut);
 }
