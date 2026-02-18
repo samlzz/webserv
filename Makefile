@@ -62,13 +62,16 @@ endif
 #* >> USER CONFIGURATION (OPTIONAL)
 # =============================================================================
 
+# Valeurs: 0=TRACE 1=DEBUG, 2=INFO (default), 3=WARN, 4=ERROR
+LOG_LEVEL ?= 2
+
 AR        = ar rcs
 
 CC        = cc
 CFLAGS    = -Wall -Wextra -Werror
 
 CXX       = c++
-CXXFLAGS  = -Wall -Wextra -Werror -std=c++98 -DWS_CONFIG_DEBUG
+CXXFLAGS  = -Wall -Wextra -Werror -std=c++98 -DWS_CONFIG_DEBUG -DWS_LOG_LEVEL=$(LOG_LEVEL)
 
 FTPP_DIR = lib/ftpp
 

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/08 18:07:04 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/18 14:25:49 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/18 15:33:07 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,9 @@
 
 #include "config/Config.hpp"
 #include "config/validation/configValidate.hpp"
+#include "ft_log/LogOp.hpp"
 #include "ft_log/ft_log.hpp"
+#include "ft_log/level.hpp"
 #include "log.h"
 #include "server/Exceptions.hpp"
 #include "http/cgi/CgiProcess.hpp"
@@ -36,17 +38,26 @@ extern "C" void signalHandler(int)
 	Reactor::stop();
 }
 
+static inline void	_configLogging(void)
+{
+	ft_log::setOutputStream(std::cerr);
+	ft_log::enableCategory(WS_LOG);
+
+	ft_log::setShowLevel(true);
+	ft_log::setShowTimestamp(true);
+
+	ft_log::setLevel(static_cast<ft_log::e_log_level>(WS_LOG_LEVEL));
+}
+
 int main(int ac, char **av)
 {
 	if (ac != 2)
-		return (std::cerr << ERR_USAGE << std::endl, 2);
+	{
+		ft_log::log(WS_LOG, ft_log::LOG_ERROR) << ERR_USAGE << std::endl;
+		return 2;
+	}
 	srand(std::time(0));
-
-	ft_log::setOutputStream(std::cerr);
-	ft_log::enableCategory(WS_LOG);
-	ft_log::setLevel(ft_log::LOG_INFO);
-	ft_log::setShowLevel(true);
-	ft_log::setShowTimestamp(true);
+	_configLogging();
 
 	try {
 		Config	conf(av[1]);
@@ -71,8 +82,7 @@ int main(int ac, char **av)
 	catch (const FtppException &parseErr)
 	{
 		ft_log::log(WS_LOG_CONFIG, ft_log::LOG_ERROR)
-			<< "Failed to parse " << av[1]
-			<< ", check your configuration.\n"
+			<< "Failed to parse " << av[1] << ", check your configuration.\n"
 			<< parseErr.what() << std::endl;
 		return 2;
 	}

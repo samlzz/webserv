@@ -6,12 +6,32 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/21 18:58:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/18 13:12:44 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/18 15:04:56 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef LOG_H
 # define LOG_H
+
+// ============================================================================
+// Log Level
+// ============================================================================
+
+# ifndef WS_LOG_LEVEL
+#  define WS_LOG_LEVEL		2
+# else
+
+#  if WS_LOG_LEVEL < 0
+#   undef WS_LOG_LEVEL
+#   define WS_LOG_LEVEL		0
+#  endif
+
+#  if WS_LOG_LEVEL > 4
+#   undef WS_LOG_LEVEL
+#   define WS_LOG_LEVEL		4
+#  endif
+
+# endif
 
 // ============================================================================
 // Separator
