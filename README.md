@@ -6,14 +6,50 @@ This project has been created as part of the 42 curriculum by sliziard, achu and
 
 Webserv is a HTTP/1.1 web server implemented in C++98 as part of the 42 curriculum. It handles real HTTP traffic using a non-blocking, event-driven architecture based on the Reactor pattern (`poll()`). Its configuration syntax is inspired by NGINX and parsed through a custom PEG grammar.
 
+---
+
+##  Instructions
+
+### Prerequisites
+- C++ compiler supporting C++98
+- `make`
+- POSIX system (Linux)
+
+### Commands
+
+```bash
+make          # Build the webserv binary (+ dependencies)
+make clean    # Remove object files
+make fclean   # Remove objects + binary
+make re       # Full rebuild
+```
+
+The `ftpp` and `ft_log` libraries are built automatically.
+
+---
+
+##  Usage
+
+```bash
+# Build the project
+make
+
+# Run the server with a configuration file
+./webserv assets/webserv.conf
+
+# Example configurations
+./webserv assets/exemples/dos.conf
+./webserv assets/exemples/www_test.conf
+```
+
 ## Features
 
 ### HTTP Methods
-`GET`      Serve static files
-`HEAD`     Same as GET, without the response body
-`POST`     File uploads, form submissions, CGI
-`PUT`      File upload (binary/chunked)
-`DELETE`   Delete files on the server
+- `GET`      Serve static files
+- `HEAD`     Same as GET, without the response body
+- `POST`     File uploads, form submissions, CGI
+- `PUT`      File upload (binary/chunked)
+- `DELETE`   Delete files on the server
 
 ### Features
 - HTTP/1.1 compliant — Keep-alive, full status code support
@@ -121,39 +157,21 @@ server {
 }
 ```
 
-##  Instructions
-
-### Prerequisites
-- C++ compiler supporting C++98
-- `make`
-- POSIX system (Linux)
-
-### Commands
-
-```bash
-make          # Build the webserv binary (+ dependencies)
-make clean    # Remove object files
-make fclean   # Remove objects + binary
-make re       # Full rebuild
-```
-
-The `ftpp` and `ft_log` libraries are built automatically.
-
 ---
 
-##  Usage
+## Libraries
 
-```bash
-# Build the project
-make
+### ftpp — PEG Parsing Framework
+- Author: sliziard
+- Generic PEG parser producing structured ASTs
+- Used to parse configuration files via the `assets/webserv.peg` grammar
 
-# Run the server with a configuration file
-./webserv assets/webserv.conf
+### ft_log — Logging Library
+- Author: sliziard
+- Lightweight logging with configurable levels, ANSI colors, RAII scope tracing
+- Zero-overhead when disabled (null-stream)
 
-# Example configurations
-./webserv assets/exemples/dos.conf
-./webserv assets/exemples/www_test.conf
-```
+---
 
 ## Tests
 
@@ -175,18 +193,6 @@ Test scripts using `nc` (netcat) are available in `script/`:
 
 ---
 
-## Libraries
-
-### ftpp — PEG Parsing Framework
-- Author: sliziard
-- Generic PEG parser producing structured ASTs
-- Used to parse configuration files via the `assets/webserv.peg` grammar
-
-### ft_log — Logging Library
-- Author: sliziard
-- Lightweight logging with configurable levels, ANSI colors, RAII scope tracing
-- Zero-overhead when disabled (null-stream)
-
 ## Included Test Sites
 
 The project includes 3 test websites in `html/`:
@@ -198,3 +204,48 @@ The project includes 3 test websites in `html/`:
 | `html/dos` | Comprehensive test site: autoindex, CGI, chunked, DELETE, errors, GET, POST, redirects, stress, uploads |
 
 # Ressources
+
+RFC:
+- https://datatracker.ietf.org/doc/html/rfc2616
+- https://datatracker.ietf.org/doc/html/rfc7231
+- https://www.rfc-editor.org/
+
+HTTP GUIDE:
+- https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
+- https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides
+
+Socket:
+- https://www.codequoi.com/programmation-reseau-via-socket-en-c/
+- https://www.youtube.com/watch?v=D26sUZ6DHNQ
+- https://www.geeksforgeeks.org/c/socket-programming-cc/
+- https://www.geeksforgeeks.org/cpp/socket-programming-in-cpp/
+
+Poll:
+- https://www.greenend.org.uk/rjk/tech/poll.html
+- https://cboard.cprogramming.com/c-programming/158125-sockets-using-poll.html
+
+CGI:
+- https://www.garshol.priv.no/download/text/http-tut.html
+- https://web.developpez.com/cgic.htm
+- https://www.snv.jussieu.fr/manual/fr/howto/cgi.html
+- https://www.youtube.com/watch?v=RpR_jEoAlxw
+
+Multipart:
+- https://medium.com/@muhebollah.diu/understanding-multipart-form-data-the-ultimate-guide-for-beginners-fd039c04553d
+- https://stackoverflow.com/questions/16958448/what-is-http-multipart-request
+
+Peg:
+- https://bford.info/pub/lang/peg.pdf
+
+Other:
+- https://man7.org/
+- https://stackoverflow.com/questions
+- https://en.cppreference.com/w/cpp.html
+
+## AI Usage
+
+- Helping write `netcat`-based shell scripts (`script/`) for automated HTTP request testing
+- Building malformed inputs (chunked encoding, oversized headers, incomplete requests)
+- Clarifying RFC specifications, understanding HTTP/1.1 semantics (keep-alive, chunked transfer-encoding, status codes)
+- Asking questions about unexpected behaviors (e.g., `poll()` edge cases, CGI pipe handling, signal management, multipart handling)
+- Help refacto some functions
