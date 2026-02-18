@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:50:00 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/29 16:18:08 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/17 20:01:06 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,8 @@ private:
 	static ResponsePlan	buildDefault(http::e_status_code status);
 	static ResponsePlan	buildFromErrorPage(
 							http::e_status_code status,
-							const std::string& path
+							const std::string& path,
+							const std::string &optionalDir
 						);
 
 	// class not constructable
