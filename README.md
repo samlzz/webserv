@@ -247,5 +247,6 @@ Other:
 - Helping write `netcat`-based shell scripts (`script/`) for automated HTTP request testing
 - Building malformed inputs (chunked encoding, oversized headers, incomplete requests)
 - Clarifying RFC specifications, understanding HTTP/1.1 semantics (keep-alive, chunked transfer-encoding, status codes)
-- Asking questions about unexpected behaviors (e.g., `poll()` edge cases, CGI pipe handling, signal management, multipart handling)
+- Asking questions about unexpected behaviors (e.g., `poll()` edge cases, CGI pipe handling, multipart handling, cookies and sessions management)
 - Help refacto some functions
+- Building site for testing features of the server
