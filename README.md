@@ -250,3 +250,5 @@ Other:
 - Asking questions about unexpected behaviors (e.g., `poll()` edge cases, CGI pipe handling, multipart handling, cookies and sessions management)
 - Help refacto some functions
 - Building site for testing features of the server
+- Iterating on the Reactor architecture (event loop invariants, connection lifecycle, non-blocking constraints) to converge toward a robust poll-driven design.
+- Assisting in translating Bryan Ford’s PEG formalism into a concrete C++98 recursive-descent parser implementation.
