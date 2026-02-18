@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 19:47:47 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/18 14:23:31 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -298,9 +298,8 @@ void		ClientConnection::detachBuddy(void)	{ _cgiRead = 0; }
 void	ClientConnection::notifyWritable(void)
 {
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
-		<< "Some buffer was added to response stream" << std::endl;
-	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
-		<< "Wait for POLLOUT..." << std::endl;
+		<< "Some buffer was added to response stream. Wait for POLLOUT..."
+		<< std::endl;
 	addEvent(POLLOUT);
 	_shouldRefresh = true;
 }
