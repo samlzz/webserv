@@ -6,12 +6,15 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/27 22:49:51 by sliziard          #+#    #+#             */
-/*   Updated: 2025/12/03 12:22:04 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/18 13:45:18 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <cstring>
+#include <ctime>
 #include <iostream>
 #include <ostream>
+#include <string>
 
 #include "AnsiColor.hpp"
 #include "internal/Logger.hpp"
@@ -78,6 +81,9 @@ e_log_level		Logger::level(void) const			{ return _level; }
 void			Logger::setShowLvl(bool enabled)	{ _showLvl = enabled; }
 bool			Logger::showLvl(void) const			{ return _showLvl; }
 
+void			Logger::setShowTimestamp(bool enbl)	{ _showTs = enbl; }
+bool			Logger::showTimestamp(void) const	{ return _showTs; }
+
 void			Logger::setStream(std::ostream &os)	{ _out = &os; }
 std::ostream	&Logger::stream(void) const			{ return *_out; }
 
@@ -104,7 +110,21 @@ void	Logger::disableCategory(const std::string &category)
 
 bool	Logger::categoryEnabled(const std::string &category) const
 {
-	return (_categories.find(category) != _categories.end());
+	std::string	current = category;
+	size_t	pos;
+
+	while (true)
+	{
+		if (_categories.find(current) != _categories.end())
+			return true;
+
+		pos = current.rfind('.');
+		if (pos == std::string::npos)
+			break;
+
+		current.erase(pos);
+	}
+	return false;
 }
 
 // ============================================================================
@@ -120,16 +140,12 @@ std::ostream	&Logger::log(e_log_level level)
 {
 	std::ostream	&os = *_out;
 
+	if (_showTs)
+		os << '[' << getTimestamp() << "] ";
 	if (_showLvl)
-	{
-		const char	*label = e_levelLabel(level);
-		os << '[';
-		if (_useColor)
-			os << colorize(label, e_levelColor(level));
-		else
-			os << label;
-		os << "] ";
-	}
+		os << '['
+			<< colorize(e_levelLabel(level), e_levelColor(level))
+			<< "] ";
 	return os;
 }
 
@@ -139,6 +155,19 @@ std::string	Logger::colorize(const std::string &text, const char *ansiCode) cons
 		return (text);
 	
 	return (std::string(ansiCode) + text + FT_LOG_COLOR_RESET);
+}
+
+std::string	Logger::getTimestamp(void)
+{
+	time_t	now = std::time(NULL);
+	std::tm	*tm = std::localtime(&now);
+
+	char buf[20];
+
+	std::memset(buf, 0, sizeof(buf));
+	std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tm);
+
+	return std::string(buf);
 }
 
 } // namespace ft_log
