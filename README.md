@@ -76,7 +76,7 @@ The configuration file uses an NGINX-inspired syntax, parsed via a PEG grammar (
 
 | Directive              | Syntax                               | Default          | Description                         |
 |------------------------|--------------------------------------|------------------|-------------------------------------|
-| `listen`               | `listen host:port;`                  | `0.0.0.0:80`     | Bind address and port               |
+| `listen`               | `listen port;`                       | `8080`           | Bind port                           |
 | `root`                 | `root /path;`                        | —                | Document root directory             |
 | `index`                | `index file;`                        | —                | Default index file                  |
 | `autoindex`            | `autoindex on\|off;`                 | `off`            | Directory listing                   |
@@ -100,8 +100,6 @@ The configuration file uses an NGINX-inspired syntax, parsed via a PEG grammar (
 ```
 server {
 	listen 8001;                        # listening port, mandatory parameter
-	host 127.0.0.1;                     # host or 127.0.0.1 by default
-	server_name test;                   # specify server_name, need to be added into /etc/hosts to work
 	error_page 404 /error/404.html;     # default error page
 	client_max_body_size 1024;          # max request body size in bytes
 	root docs/fusion_web/;              # root folder of site directory, full or relative path, mandatory parameter
@@ -148,7 +146,6 @@ server {
 	location /dashboard {
 		methods GET POST;
 		session_login on;                         # Enable cookie-based session login (on/off)
-												# Sessions expire after 30 minutes of inactivity
 		set_cookie theme;                         # Set a cookie from a query parameter
 												# e.g. GET /dashboard?theme=dark sets cookie "theme=dark"
 		vary_cookie theme;                        # Vary the response based on a cookie value
