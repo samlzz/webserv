@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:30:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 19:19:58 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/18 13:11:09 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,11 +40,11 @@ HttpResponse::HttpResponse(const ResponsePlan &plan,
 	, _out()
 	, _commited(false), _done(false)
 {
-	ft_log::log(WS_LOG_CLI, ft_log::LOG_DEBUG)
+	ft_log::log(WS_LOG_HTTP, ft_log::LOG_DEBUG)
 		<< "Response plan: status=" << plan.status
 		<< ", headers_count=" << plan.headers.size()
 		<< ", has_body=" << (plan.body != NULL) << std::endl;
-	std::ostream &os = ft_log::log(WS_LOG_CLI, ft_log::LOG_TRACE) << "Response plan Headers:\n";
+	std::ostream &os = ft_log::log(WS_LOG_HTTP, ft_log::LOG_TRACE) << "Response plan Headers:\n";
 	for (http::t_headers::const_iterator it = plan.headers.begin(); it != plan.headers.end(); ++it)
 		os << "  " << it->first << ": " << it->second << std::endl;
 }

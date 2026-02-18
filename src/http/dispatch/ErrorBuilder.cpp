@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:49:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 17:25:18 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/18 13:11:07 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ ResponsePlan	ErrorBuilder::build(
 {
 	ft_log::e_log_level	lvl = status >= http::SC_INTERNAL_SERVER_ERROR
 								? ft_log::LOG_ERROR : ft_log::LOG_WARN;
-	ft_log::log(WS_LOG_CLI, lvl) << "HTTP " << status
+	ft_log::log(WS_LOG_HTTP, lvl) << "HTTP " << status
 		<< " error response built" << std::endl;
 
 	if (location)
@@ -48,12 +48,12 @@ ResponsePlan	ErrorBuilder::build(
 
 		if (!errPage.empty())
 		{
-			ft_log::log(WS_LOG_CLI, ft_log::LOG_DEBUG)
+			ft_log::log(WS_LOG_HTTP, ft_log::LOG_DEBUG)
 				<< "Error page source: " << errPage << std::endl;
 			return buildFromErrorPage(status, errPage);
 		}
 	}
-	ft_log::log(WS_LOG_CLI, ft_log::LOG_DEBUG)
+	ft_log::log(WS_LOG_HTTP, ft_log::LOG_DEBUG)
 		<< "Using default error page" << std::endl;
 	return buildDefault(status);
 }

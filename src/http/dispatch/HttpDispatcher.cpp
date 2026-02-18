@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 17:35:09 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/18 13:12:16 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,7 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 		return &_uploadHandler;
 	}
 
-	ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_WARN)
+	ft_log::log(WS_LOG_ROUTING, ft_log::LOG_WARN)
 		<< "No handler found for request" << std::endl;
 	return NULL;
 }
@@ -129,7 +129,7 @@ ResponsePlan	HttpDispatcher::findPlan(
 			http::SC_NOT_IMPLEMENTED,
 			route.location
 		);
-	ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
+	ft_log::log(WS_LOG_ROUTING, ft_log::LOG_DEBUG)
 		<< "Handler selected: " << name << std::endl;
 
 	return handler->handle(req, route);

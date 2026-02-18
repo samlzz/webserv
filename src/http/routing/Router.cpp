@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 12:00:19 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 17:39:21 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/18 13:12:19 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,7 +106,7 @@ Context	resolve(const HttpRequest &req,
 	if (ctx.location)
 	{
 		const std::string	&lp = ctx.location->path;
-		ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_DEBUG)
+		ft_log::log(WS_LOG_ROUTING, ft_log::LOG_DEBUG)
 			<< "Matched location " << lp << std::endl;
 
 		// suffixe URI
@@ -135,7 +135,7 @@ Context	resolve(const HttpRequest &req,
 		}
 	}
 	else
-		ft_log::log(WS_LOG_CLI_ROUTING, ft_log::LOG_ERROR)
+		ft_log::log(WS_LOG_ROUTING, ft_log::LOG_ERROR)
 			<< "No location found for: " << req.getPath() << std::endl;
 
 	// manage sessions

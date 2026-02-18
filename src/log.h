@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/21 18:58:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 14:24:50 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/18 13:12:44 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,12 +31,12 @@
 // Categories
 // ============================================================================
 
-# define WS_LOG					"webserv"
-# define WS_LOG_CONFIG			"webserv.config"
-# define WS_LOG_SERVER			"webserv.server"
-# define WS_LOG_SERVER_CLI		"webserv.server.client"
-# define WS_LOG_CLI				"webserv.client"
-# define WS_LOG_CLI_ROUTING		"webserv.client.routing"
-# define WS_LOG_CGI				"webserv.http.cgi"
+# define WS_LOG				"webserv"
+# define WS_LOG_CONFIG		"webserv.config"
+# define WS_LOG_SERVER		"webserv.server"
+# define WS_LOG_SERVER_CLI	"webserv.server.client"
+# define WS_LOG_HTTP		"webserv.http"
+# define WS_LOG_ROUTING		"webserv.http.routing"
+# define WS_LOG_CGI			"webserv.http.cgi"
 
 #endif

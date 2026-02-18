@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/08 18:07:04 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 19:20:12 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/18 13:12:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,8 +48,8 @@ int main(int ac, char **av)
 	ft_log::enableCategory(WS_LOG_CONFIG);
 	ft_log::enableCategory(WS_LOG_SERVER);
 	ft_log::enableCategory(WS_LOG_SERVER_CLI);
-	ft_log::enableCategory(WS_LOG_CLI);
-	ft_log::enableCategory(WS_LOG_CLI_ROUTING);
+	ft_log::enableCategory(WS_LOG_HTTP);
+	ft_log::enableCategory(WS_LOG_ROUTING);
 	ft_log::enableCategory(WS_LOG_CGI);
 	ft_log::setLevel(ft_log::LOG_DEBUG);
 	ft_log::setShowLevel(true);
