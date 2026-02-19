@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 16:05:13 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 23:08:36 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 12:48:27 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,12 +137,15 @@ ResponsePlan CgiHandler::handle(
 			route.location
 		);
 
-	CgiOutputParser	*parser = new CgiOutputParser();
-	CgiProcess		*process = new CgiProcess(*parser);
-	process->retain();
+	CgiOutputParser	*parser = NULL;
+	CgiProcess		*process = NULL;
 
 	try {
-		IConnection* readConn = process->start(
+		parser = new CgiOutputParser();
+		process = new CgiProcess(*parser);
+		process->retain();
+
+		IConnection	*readConn = process->start(
 			genArgv(scriptName, route),
 			genEnvp(scriptName, req, route),
 			req.getBody()
@@ -166,7 +169,8 @@ ResponsePlan CgiHandler::handle(
 
 		return plan;
 	} catch (...) {
-		delete process;
+		if (process)
+			process->release();
 		delete parser;
 		throw ;
 	}
