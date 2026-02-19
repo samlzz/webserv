@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:49:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/18 14:29:55 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 16:22:15 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,8 @@ ResponsePlan	ErrorBuilder::build(
 {
 	ft_log::e_log_level	lvl = status >= http::SC_INTERNAL_SERVER_ERROR
 								? ft_log::LOG_ERROR : ft_log::LOG_WARN;
-	ft_log::log(WS_LOG_HTTP, lvl) << "HTTP " << status
-		<< " error response built" << std::endl;
+	ft_log::log(WS_LOG_HTTP, lvl) << "Building HTTP error response: "
+		<< status << ' ' << http::Data::getStatusType(status) << std::endl;
 
 	if (location)
 	{
