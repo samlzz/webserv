@@ -10,8 +10,6 @@
 #include <sstream>
 #include <string>
 
-
-
 ResponsePlan	FormHandler::handle(
 								const HttpRequest &req,
 								const routing::Context &route) const

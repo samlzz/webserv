@@ -1,7 +1,5 @@
-
 #ifndef __COOKIES_HPP__
 #define __COOKIES_HPP__
-
 
 #include "http/HttpTypes.hpp"
 #include <string>
@@ -21,11 +19,7 @@ public:
 	std::string 	getCookie(const std::string &key) const;
 	void 			setCookie(const std::string &key, const std::string &value);
 
-	// std::string 	buildCookieHeader(void);
-	// std::string 	buildMultipleCookieHeader(void);
 	std::string		buildSetCookieHeaders(void) const;
-
-	void 			print_cookies() const;
 };
 
 #endif /* __COOKIES_HPP__ */
