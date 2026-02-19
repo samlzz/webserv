@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/19 20:25:57 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 23:00:07 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -422,9 +422,6 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 		case BODY_TRANSFER_HEXA_DONE:
 			if (ch != '\n') return setError(http::SC_BAD_REQUEST);
 			UPDATE_STATE(BODY_TRANSFER_DATA);
-			if (_transferLength) // ? if we have data, pass on first data char for next step
-				break;
-			// ? else stay on curr char to be on \r in 2 step
 			__attribute__ ((fallthrough));
 
 		case BODY_TRANSFER_DATA: {
