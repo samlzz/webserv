@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 12:00:19 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 18:49:50 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 22:29:22 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,7 +80,8 @@ static inline std::string	_normalizeUri(const std::string &path)
 	return result;
 }
 
-static inline std::string	_prefixExtension(const std::string &path, const std::string &prefix)
+static inline std::string	_prefixExtension(const std::string &path,
+											const std::string &prefix)
 {
 	size_t		extPos = path.find_last_of('.');
 	std::string	result = path.substr(0, extPos) + prefix;
@@ -89,6 +90,19 @@ static inline std::string	_prefixExtension(const std::string &path, const std::s
 		result += path.substr(extPos);
 
 	return result;
+}
+
+static inline std::string	_uriToPath(const std::string &uri,
+									const std::string &locationPath)
+{
+	std::string	relative = uri.substr(locationPath.size());
+
+	if (relative.empty())
+		return "/";
+
+	if (relative[0] != '/')
+		relative = "/" + relative;
+	return relative;
 }
 
 Context	resolve(const HttpRequest &req,
@@ -104,14 +118,7 @@ Context	resolve(const HttpRequest &req,
 	{
 		const std::string	&lp = ctx.location->path;
 
-		// suffixe URI
-		std::string suffix;
-		if (lp != "/")
-			suffix = uri.substr(lp.size());
-		else
-			suffix = uri;
-
-		ctx.normalizedPath = lp + suffix;
+		ctx.normalizedPath = _uriToPath(uri, lp);
 
 		// ? Serve files dynamically from cookies 
 		const std::vector<std::string>	&cookiesVary = ctx.location->cookiesVary;
