@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/18 14:23:31 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 13:18:45 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,10 +97,20 @@ ConnEvent	ClientConnection::buildResponse(void)
 	if (plan.event.conn && plan.event.type == ConnEvent::CE_SPAWN)
 		_cgiRead = plan.event.conn;
 
-	_resp = new HttpResponse(plan, _req, route);
-
-	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
-		<< "Wait for POLLOUT..." << std::endl;
+	try {
+		_resp = new HttpResponse(plan, _req, route);
+		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
+			<< "Wait for POLLOUT..." << std::endl;
+	}
+	catch (...) {
+		if (_cgiRead)
+		{
+			delete _cgiRead->buddy();
+			_cgiRead->detachBuddy();
+			delete _cgiRead;
+		}
+		throw;
+	}
 	return plan.event;
 }
 

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:25:07 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/22 14:07:38 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 13:17:15 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,11 +33,6 @@ public:
 	SysError(const std::string &msg)
 		: WsServerError(msg + ": " + strerror(errno))
 		, _errno(errno)
-	{}
-
-	SysError(const std::string &msg, int32_t savedErrno)
-		: WsServerError(msg + ": " + strerror(savedErrno))
-		, _errno(savedErrno)
 	{}
 
 	int	code(void) const	{ return _errno; }

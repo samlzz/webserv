@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:49:52 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 19:27:42 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 13:18:00 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,7 +73,7 @@ size_t	AConnection::id(void) const				{ return _id; }
 
 void	AConnection::setFdFlags(void)
 {
-	int32_t flags;
+	int32_t	flags;
 	
 	flags = fcntl(_fd, F_GETFL);
 	if (flags == -1

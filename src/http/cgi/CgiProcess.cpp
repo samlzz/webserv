@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/15 16:12:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 17:33:59 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 13:16:39 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <new>
 #include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -97,15 +98,6 @@ static inline void	_closeFds(int fds[2])
 }
 
 
-static inline void	freeCharArray(char **array)
-{
-	if (!array)
-		return;
-	for (size_t i = 0; array[i]; ++i)
-		::free(array[i]);
-	delete []array;
-}
-
 static inline t_never	_childEnd(uint8_t exitCode)
 {
 	throw CgiChildExit(exitCode);
@@ -132,15 +124,22 @@ static t_never	_execChild(
 	}
 
 	execve(argv[0], argv, envp);
-	freeCharArray(argv);
-	freeCharArray(envp);
 	_childEnd(127);
 }
 
-// Takes a vector of string and convert it to an allocated array of char ptr
-static inline char**	toCharArray(const std::vector<std::string>& pVec)
+static void	_freeCharArray(char **array)
 {
-	char** arr = new char*[pVec.size() + 1];
+	if (!array)
+		return;
+	for (size_t i = 0; array[i]; ++i)
+		::free(array[i]);
+	delete []array;
+}
+
+// Takes a vector of string and convert it to an allocated array of char ptr
+static char**	_toCharArray(const std::vector<std::string>& pVec)
+{
+	char	**arr = new char*[pVec.size() + 1];
 
 	for (size_t i = 0; i < pVec.size(); i++)
 	{
@@ -208,7 +207,25 @@ IConnection	*CgiProcess::start(const std::vector<std::string> &argv,
 	if (pid == 0) /* child process */
 	{
 		_closeFds(outFds[0], inFds[1]);
-		_execChild(toCharArray(argv), toCharArray(envp), outFds[1], inFds[0]);
+		char	**av = NULL;
+		char	**ev = NULL;
+		try {
+			av = _toCharArray(argv);
+			ev = _toCharArray(envp);
+			if (!av || !ev)
+				throw std::bad_alloc();
+			_execChild(av, ev, outFds[1], inFds[0]);
+		}
+		catch (const CgiChildExit &cgiErr) {
+			_freeCharArray(av);
+			_freeCharArray(ev);
+			throw ;
+		}
+		catch (...) {
+			_freeCharArray(av);
+			_freeCharArray(ev);
+			throw CgiChildExit(1);
+		}
 	}
 	else /* parent process */
 	{
@@ -229,6 +246,7 @@ IConnection	*CgiProcess::start(const std::vector<std::string> &argv,
 			delete readConn;
 			delete writeConn;
 			_closeFds(outFds[0], inFds[1]);
+			_pid = pid;
 			onError();
 			return 0;
 		}
