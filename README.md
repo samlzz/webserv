@@ -31,16 +31,33 @@ The `ftpp` and `ft_log` libraries are built automatically.
 ##  Usage
 
 ```bash
-# Build the project
-make
+make                          # Build the project
+./webserv assets/webserv.conf # Run with a configuration file
+```
 
-# Run the server with a configuration file
-./webserv assets/webserv.conf
+### Example Configurations
 
-# Example configurations
+```bash
 ./webserv assets/exemples/dos.conf
 ./webserv assets/exemples/www_test.conf
 ```
+
+### Log Level
+
+Set the log level via the `LOG_LEVEL` variable:
+
+```bash
+make re LOG_LEVEL=2
+```
+
+| Level | Value |
+|-------|-------|
+| TRACE | 0     |
+| DEBUG | 1     |
+| INFO  | 2     |
+| WARN  | 3     |
+| ERROR | 4     |
+
 
 ## Features
 
