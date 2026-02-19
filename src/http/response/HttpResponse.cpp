@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:30:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 19:11:16 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/18 15:37:22 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ std::string	HttpResponse::rawMeta(void) const
 	std::ostringstream	oss;
 
 	oss << "HTTP/" << _ctx.request.getVerMaj() << '.' << _ctx.request.getVerMin()
-		<< _status << " " << http::Data::getStatusType(_status)
+		<< ' ' << _status << ' ' << http::Data::getStatusType(_status)
 		<< "\r\n";
 
 	for (http::t_headers::const_iterator it = _headers.begin();
