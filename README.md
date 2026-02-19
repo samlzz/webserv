@@ -93,13 +93,13 @@ The configuration file uses an NGINX-inspired syntax, parsed via a PEG grammar (
 
 | Directive              | Syntax                               | Default          | Description                         |
 |------------------------|--------------------------------------|------------------|-------------------------------------|
-| `listen`               | `listen port;`                       | `8080`           | Bind port                           |
-| `root`                 | `root /path;`                        | —                | Document root directory             |
-| `index`                | `index file;`                        | —                | Default index file                  |
+| `listen`               | `listen host:port;`                  | `0.0.0.0:80`     | Bind address and port               |
+| `root`                 | `root /path;`                        | `html`           | Document root directory             |
+| `index`                | `index file;`                        | `index.html`     | Default index file                  |
 | `autoindex`            | `autoindex on\|off;`                 | `off`            | Directory listing                   |
 | `methods`              | `methods GET POST ...;`              | `GET POST DELETE` | Allowed HTTP methods               |
 | `error_page`           | `error_page code /page.html;`        | `/errors/default.html` | Custom error pages            |
-| `client_max_body_size` | `client_max_body_size 10M;`          | `1M`             | Max body size (K/M/G suffixes)      |
+| `client_max_body_size` | `client_max_body_size 10M;`          | `1Mb             | Max body size (K/M/G suffixes)      |
 | `cgi`                  | `cgi .ext /path/to/interpreter;`     | —                | CGI extension → interpreter mapping |
 | `return`               | `return [code] url;`                 | —                | HTTP redirection                    |
 
@@ -107,7 +107,7 @@ The configuration file uses an NGINX-inspired syntax, parsed via a PEG grammar (
 
 | Directive        | Syntax                      | Description                          |
 |------------------|-----------------------------|--------------------------------------|
-| `upload`         | `upload /path;`             | Upload directory for POST/PUT        |
+| `upload`         | `upload /path;`             | Upload directory for POST            |
 | `session_login`  | `session_login on\|off;`    | Enable session-based login           |
 | `set_cookie`     | `set_cookie name;`          | Set a cookie from query parameter    |
 | `vary_cookie`    | `vary_cookie name;`         | Vary response based on a cookie      |
@@ -152,7 +152,7 @@ server {
 	#redirection
 	location /old-page {
 		return 301 /new-page;                     # Redirect with status code + target URL
-												# Status code is optional (defaults to 302)
+												# Status code is optional (defaults to 301)
 												# Supports internal paths and external URLs
 												# Examples: return 301 /index.html;
 												#           return 302 https://example.com/;
@@ -202,7 +202,7 @@ Test scripts using `nc` (netcat) are available in `script/`:
 | `post_chunked_timeout.sh`  | Chunked POST triggering a request timeout           |
 | `put.sh`                   | Binary PUT                                          |
 | `put_chunked.sh`           | PUT with chunked transfer-encoding                  |
-| `delete.sh`                | DELETE with Content-Length: 0                        |
+| `delete.sh`                | DELETE with Content-Length: 0                       |
 | `delete_chunked.sh`        | DELETE with chunked transfer-encoding               |
 
 ---
