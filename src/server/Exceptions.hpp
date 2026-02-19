@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:25:07 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/09 12:07:16 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 11:24:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,13 +30,6 @@ public:
 			"webserv: " + msg + ": " + strerror(errno)
 		)
 		, _errno(errno)
-	{}
-
-	SysError(const std::string &msg, int32_t savedErrno)
-		: std::runtime_error(
-			"webserv: " + msg + ": " + strerror(savedErrno)
-		)
-		, _errno(savedErrno)
 	{}
 
 	int	code(void) const	{ return _errno; }
