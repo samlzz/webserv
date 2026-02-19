@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:06 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 14:18:33 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 16:42:43 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,12 @@ namespace config_parse
 
 RawServer::RawLocation::RawLocation(const std::string &pPath): path(pPath) {}
 
+static void	_rmTrailingSlash(std::string &str)
+{
+	if (str.size() > 1 && str[str.size() - 1] == '/')
+		str.erase(str.size() - 1);
+}
+
 Config::Server::Location	RawServer::RawLocation::normalize(
 	const RawServer &parent,
 	const Config::ServerDefaults &def
@@ -32,6 +38,7 @@ Config::Server::Location	RawServer::RawLocation::normalize(
 {
 	Config::Server::Location out;
 	out.path = path;
+	_rmTrailingSlash(out.path);
 
 	std::vector<http::e_method>	parentMethods;
 	if (parent.d_methods.empty())
@@ -46,6 +53,7 @@ Config::Server::Location	RawServer::RawLocation::normalize(
 
 	out.methods = methods.empty() ? parentMethods : methods;
 	out.root = root.getOr(parentRoot);
+	_rmTrailingSlash(out.root);
 	out.index = index.getOr(parentIndex);
 	out.autoindex = autoindex.getOr(parentAutoindex);
 	out.sessionLogin = sessionLogin.getOr(false);
@@ -53,7 +61,10 @@ Config::Server::Location	RawServer::RawLocation::normalize(
 	out.errorPages = concatMap(parent.d_errorPages, errorPages);
 	out.defaultErrPage = defaultErrPage.getOr(parentDefaultErr);
 	if (uploadPath)
+	{
 		out.cgiExts = cgiExts;
+		_rmTrailingSlash(*uploadPath);
+	}
 	else
 		out.cgiExts = concatMap(parent.d_cgiExts, cgiExts);
 
