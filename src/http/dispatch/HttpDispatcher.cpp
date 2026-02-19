@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 19:56:03 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 22:37:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,11 +109,24 @@ ResponsePlan	HttpDispatcher::findPlan(
 	return handler->handle(req, route);
 }
 
+static inline bool	_needToCloseConnection(http::e_status_code err)
+{
+	return (err == 400 || err == 408 || err == 411 || err == 413 || err == 414
+			|| err == 431 || err >= 500);
+}
+
 ResponsePlan	HttpDispatcher::dispatch(
 	const HttpRequest &req, const routing::Context &route
 ) const
 {
 	ResponsePlan		plan(findPlan(req, route));
+	if (req.getMethod() == http::MTH_HEAD && plan.body)
+	{
+		delete plan.body;
+		plan.body = 0;
+	}
+
+	// ? Set Cookies from query
 	Cookies				&cookies = req.getCookies();
 	std::istringstream	queryIss(req.getQuery());
 	std::string			queryPart;
@@ -130,21 +143,14 @@ ResponsePlan	HttpDispatcher::dispatch(
 			cookies.setCookie(key, queryPart.substr(pos + 1));
 	}
 	plan.headers["Set-Cookie"] = cookies.buildSetCookieHeaders();
-	plan.headers["Connection"] = "keep-alive";
 
-	http::e_status_code code = plan.status;
-	if (code == 400 || code == 408 || code == 411 || code == 413 || code ==  414
-		|| code == 431 || code >= 500)
-	{
+	// ? Decide connection lifetime
+	if (_needToCloseConnection(plan.status)
+		|| req.getField("Connection") == "close"
+	)
 		plan.headers["Connection"] = "close";
-		return plan;
-	}
-
-	if (req.hasField("Connection") && req.getField("Connection") == "close") 
-	{
-		plan.headers["Connection"] = "close";
-		return plan;
-	}
+	else
+		plan.headers["Connection"] = "keep-alive";
 
 	return plan;
 }
