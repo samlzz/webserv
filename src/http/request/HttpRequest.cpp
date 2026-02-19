@@ -381,8 +381,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 					return setError(http::SC_NOT_IMPLEMENTED);
 				UPDATE_STATE(BODY_TRANSFER_HEXA);
 			}
-
-			if (hasField("Content-Length") && !hasField("Transfer-Encoding")) {
+			else if (hasField("Content-Length")) {
 				_buffer = getField("Content-Length");
 				if (!convert::isDec(_buffer))
 					return setError(http::SC_BAD_REQUEST);
@@ -391,8 +390,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 					return setError(http::SC_CONTENT_TOO_LARGE);
 				UPDATE_STATE(BODY_CONTENT);
 			}
-
-			if (!hasField("Content-Length") && !hasField("Transfer-Encoding"))
+			else
 				return setError(http::SC_LENGTH_REQUIRED);
 
 			_buffer.clear();
@@ -409,6 +407,9 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				return setError(http::SC_BAD_REQUEST);
 
 			_transferLength = convert::htod(_buffer);
+			_totalChunkLength += _transferLength;
+			if (_totalChunkLength > _maxBodySize)
+				return setError(http::SC_CONTENT_TOO_LARGE);
 			UPDATE_STATE(BODY_TRANSFER_HEXA_ALMOST_DONE);
 			__attribute__ ((fallthrough));
 		}
@@ -420,11 +421,11 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case BODY_TRANSFER_HEXA_DONE:
 			if (ch != '\n') return setError(http::SC_BAD_REQUEST);
-			if (_transferLength == 0)
-				UPDATE_STATE(BODY_TRANSFER_END);
-			else
 				UPDATE_STATE(BODY_TRANSFER_DATA);
+			if (_transferLength) // ? if we have data, pass on first data char for next step
 			break;
+			// ? else stay on curr char to be on \r in 2 step
+			__attribute__ ((fallthrough));
 
 		case BODY_TRANSFER_DATA: {
 			size_t		available = pSize - i;
@@ -505,11 +506,12 @@ void	HttpRequest::reset(void)
 	_request.uri.path.clear();
 	_request.uri.query.clear();
 	_request.uri.fragment.clear();
-	_request.verMaj = -1;
-	_request.verMin = -1;
+	_request.verMaj = 1;
+	_request.verMin = 1;
 	_request.headers.clear();
 	_request.body.clear();
 
+	_totalChunkLength = 0;
 	_transferLength = 0;
 	_contentLength = 0;
 

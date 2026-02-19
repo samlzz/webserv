@@ -102,6 +102,7 @@ private:
 	std::string			_temp;
 
 	// ====== Body Consume ======
+	size_t				_totalChunkLength;
 	size_t				_transferLength;
 	size_t				_contentLength;
 
