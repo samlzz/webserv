@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/19 13:18:45 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 13:19:06 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,13 +142,14 @@ ConnEvent	ClientConnection::handleRead(void)
 	_req.feed(buf, static_cast<size_t>(n));
 	if (_req.isDone())
 	{
-		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_TRACE) 
+		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_TRACE)
 			<< "Parsed request:\n"
 			<< WS_LOG_SEP << '\n' << _req
 			<< WS_LOG_SEP << std::endl;
 		if (_req.isError())
 			ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_ERROR)
-				<< "Request error status=" << _req.getStatusCode();
+				<< "Request parsing error: status=" << _req.getStatusCode()
+				<< " client=" << _id << std::endl;
 
 		_state = CS_WAIT_RESPONSE;
 		_events = POLLOUT;
