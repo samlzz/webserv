@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 13:05:16 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 12:39:55 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 11:25:19 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,9 @@
 # include "http/dispatch/HttpDispatcher.hpp"
 # include "server/ServerCtx.hpp"
 
-# define LISTEN_QUEUE	5
+# ifndef SERV_LISTEN_QUEUE
+#  define LISTEN_QUEUE	100
+# endif
 
 class ServerConnection: public AConnection {
 

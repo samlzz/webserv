@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 12:49:52 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/01 20:41:11 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 11:28:24 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ void	AConnection::addEvent(short event)		{ _events |= event; }
 
 void	AConnection::setFdFlags(void)
 {
-	int32_t flags;
+	int32_t	flags;
 	
 	flags = fcntl(_fd, F_GETFL);
 	if (flags == -1
