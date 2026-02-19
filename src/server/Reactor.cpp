@@ -6,13 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 14:21:31 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 18:02:29 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 14:10:19 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <csignal>
 #include <cstddef>
 #include <ctime>
+#include <iostream>
 #include <ostream>
 #include <set>
 #include <sys/wait.h>
@@ -140,7 +141,10 @@ void	Reactor::run(void)
 	{
 		int ret = poll(_pfds.data(), _pfds.size(), POLL_TIMEOUT);
 		if (!_running)
+		{
+			std::cout << "Shutdown signal received, stopping server..." << std::endl;
 			return;
+		}
 		if (ret < 0)
 			throw SysError("poll");
 
