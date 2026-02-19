@@ -114,60 +114,60 @@ The configuration file uses an NGINX-inspired syntax, parsed via a PEG grammar (
 
 ### Configuration Example
 
-```
+```conf
 server {
-	listen 8001;                        # listening port, mandatory parameter
-	error_page 404 /error/404.html;     # default error page
-	client_max_body_size 1024;          # max request body size in bytes
-	root docs/fusion_web/;              # root folder of site directory, full or relative path, mandatory parameter
-	index index.html;                   # default page when requesting a directory, index.html by default
+    listen 8001;                        # listening port, mandatory parameter
+    error_page 404 /error/404.html;     # default error page
+    client_max_body_size 1024;          # max request body size in bytes
+    root docs/fusion_web/;              # default root folder, full or relative path
+    index index.html;                   # default page when requesting a directory
 
-	location /tours {                   
-		root docs/fusion_web;           # root folder of the location, if not specified, taken from the server. 
-										# EX: - URI /tours           --> docs/fusion_web/tours
-										#     - URI /tours/page.html --> docs/fusion_web/tours/page.html 
-		autoindex on;                   # turn on/off directory listing
-		methods GET HEAD POST DELETE;             # Allowed HTTP methods
-													# Supported: GET, HEAD, POST, PUT, DELETE
-													# allowed methods in location, GET only by default
-		index index.html;               # default page when requesting a directory, copies root index by default
-		return abc/index1.html;         # redirection
-	}
+    location /tours {                   
+        root docs/fusion_web;           # root folder of the location
+                                        # EX: - URI /tours           --> docs/fusion_web/tours
+                                        #     - URI /tours/page.html --> docs/fusion_web/tours/page.html 
+        autoindex on;                   # turn on/off directory listing
+        methods GET HEAD POST DELETE;             # Allowed HTTP methods
+                                                    # Supported: GET, HEAD, POST, PUT, DELETE
+                                                    # allowed methods in location, GET only by default
+        index index.html;               # default page when requesting a directory
+        return abc/index1.html;         # redirection
+    }
 
-	location /cgi-bin {
-			methods GET POST;
-			cgi .py /usr/bin/python3;                 # Map file extension to interpreter path
-			cgi .pl /usr/bin/perl;                    # Multiple cgi directives allowed
-			cgi .rb /usr/bin/ruby;                    # Extension format: .ext (e.g. .py, .pl, .sh)
-			cgi .php /usr/bin/php;
-			autoindex on;
-		}
+    location /cgi-bin {
+            methods GET POST;
+            cgi .py /usr/bin/python3;   # Map file extension to interpreter path
+            cgi .pl /usr/bin/perl;      # Multiple cgi directives allowed
+            cgi .rb /usr/bin/ruby;      # Extension format: .ext (e.g. .py, .pl, .sh)
+            cgi .php /usr/bin/php;
+            autoindex on;
+        }
 
-	location /uploads {
-			methods GET POST PUT DELETE;
-			upload html/www/uploads;                  # Directory where uploaded files are stored
-			autoindex on;        
-		}
+    location /uploads {
+            methods GET POST PUT DELETE;
+            upload html/www/uploads;    # Directory where uploaded files are stored
+            autoindex on;
+    }
 
-	#redirection
-	location /old-page {
-		return 301 /new-page;                     # Redirect with status code + target URL
-												# Status code is optional (defaults to 301)
-												# Supports internal paths and external URLs
-												# Examples: return 301 /index.html;
-												#           return 302 https://example.com/;
-												#           return /other-page;
-	}  
+    #redirection
+    location /old-page {
+        return 301 /new-page;           # Redirect with status code + target URL
+                                        # Status code is optional (defaults to 301)
+                                        # Supports internal paths and external URLs
+                                        # Examples: return 301 /index.html;
+                                        #           return 302 https://example.com/;
+                                        #           return /other-page;
+    }  
 
-	# Session & Cookie management
-	location /dashboard {
-		methods GET POST;
-		session_login on;                         # Enable cookie-based session login (on/off)
-		set_cookie theme;                         # Set a cookie from a query parameter
-												# e.g. GET /dashboard?theme=dark sets cookie "theme=dark"
-		vary_cookie theme;                        # Vary the response based on a cookie value
-												# Useful for serving different content per user preference
-	}
+    # Session & Cookie management
+    location /dashboard {
+        methods GET POST;
+        session_login on;               # Enable cookie-based session login (on/off)
+        set_cookie theme;               # Set a cookie from a query parameter
+                                            # e.g. GET /dashboard?theme=dark sets cookie "theme=dark"
+        vary_cookie theme;              # Vary the response based on a cookie value
+                                            # useful for serving different content per user preference
+    }
 }
 ```
 
