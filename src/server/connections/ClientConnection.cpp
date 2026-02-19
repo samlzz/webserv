@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/19 12:14:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 20:26:47 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,8 +114,7 @@ ConnEvent	ClientConnection::handleRead(void)
 	char	buf[CLIENT_READ_BUF_SIZE];
 	ssize_t	n = recv(_fd, buf, CLIENT_READ_BUF_SIZE, 0);
 
-	// ? If EOF was received: client sent an incomplete request
-	if (n <= 0) // ? error or EOF
+	if (n < 0)
 		return ConnEvent::close();
 
 	_tsLastActivity = std::time(0);

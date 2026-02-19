@@ -128,6 +128,9 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 {
 	char	ch;
 
+	if (pSize == 0)
+		return setError(http::SC_BAD_REQUEST);
+
 	for (size_t i = 0; i < pSize; ++i)
 	{
 		ch = pBuffer[i];
