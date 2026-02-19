@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/02/17 18:40:18 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 20:26:03 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include "Cookies.hpp"
 #include "IHttpRequest.hpp"
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -131,7 +132,7 @@ public:
 	const std::string		&getFragment() const;
 	int						getVerMaj() const;
 	int						getVerMin() const;
-	std::string				getRawMeta() const;
+	std::string				getHTTPLine() const;
 
 	http::e_status_code		getStatusCode() const;
 	const http::t_headers	&getHeaders() const;

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/17 18:46:53 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/19 20:25:57 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,7 +69,7 @@ const std::string		&HttpRequest::getQuery() const		{ return (_request.uri.query)
 const std::string		&HttpRequest::getFragment() const	{ return (_request.uri.fragment); };
 int						HttpRequest::getVerMaj() const		{ return (_request.verMaj);       };
 int						HttpRequest::getVerMin() const		{ return (_request.verMin);       };
-std::string				HttpRequest::getRawMeta() const
+std::string				HttpRequest::getHTTPLine() const
 {
 	std::ostringstream	iss;
 
@@ -421,9 +421,9 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case BODY_TRANSFER_HEXA_DONE:
 			if (ch != '\n') return setError(http::SC_BAD_REQUEST);
-				UPDATE_STATE(BODY_TRANSFER_DATA);
+			UPDATE_STATE(BODY_TRANSFER_DATA);
 			if (_transferLength) // ? if we have data, pass on first data char for next step
-			break;
+				break;
 			// ? else stay on curr char to be on \r in 2 step
 			__attribute__ ((fallthrough));
 
@@ -547,7 +547,7 @@ void HttpRequest::setError(const http::e_status_code pCode)
 
 std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 {
-	pOut << pRequest.getRawMeta() << "\r\n";
+	pOut << pRequest.getHTTPLine() << "\r\n";
 
 	http::t_headers headers = pRequest.getHeaders();
 	for (http::t_headers::const_iterator it = headers.begin(); it != headers.end(); ++it)
@@ -556,8 +556,6 @@ std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 	}
 	pOut << "\r\n";
 
-	const t_bytes& body = pRequest.getBody();
-	if (!body.empty())
-		pOut.write(body.data(), body.size());
+	pOut << (!pRequest.getBody().empty() ? "With body" : "No body") << std::endl;
 	return (pOut);
 }
