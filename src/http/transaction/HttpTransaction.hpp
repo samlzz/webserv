@@ -6,13 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 11:24:59 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 13:00:20 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 17:15:10 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_TRANSACTION_HPP__
 # define __HTTP_TRANSACTION_HPP__
 
+#include "config/Config.hpp"
 # include "http/request/Cookies.hpp"
 # include "http/request/HttpRequest.hpp"
 # include "http/response/ResponsePlan.hpp"
@@ -46,10 +47,15 @@ public:
 
 	ResponsePlan			onParsingError(const HttpRequest &req);
 	Optionnal<ResponsePlan>	onHeadersComplete(const HttpRequest &req);
-	ResponsePlan			onBodyComplete(const HttpRequest &req);
+	ResponsePlan			onBodyComplete(const HttpRequest &req) const;
 
+	// ========================================================================
+	// Accessors
+	// ========================================================================
+
+	const Config::Server::Location	*
+							getLocation(void) const;
 	bool					isHeadersValidated(void) const;
-	bool					shouldCloseConnection(void) const;
 
 private:
 	void					handleSession(Cookies &store);

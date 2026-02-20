@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 11:48:06 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 16:33:15 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 17:14:21 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,10 +51,12 @@ bool	HttpTransaction::isHeadersValidated(void) const
 	return _route.isSome();
 }
 
-// TODO: Handle it ?
-bool	HttpTransaction::shouldCloseConnection(void) const
+const Config::Server::Location	*
+		HttpTransaction::getLocation(void) const
 {
-	return false;
+	if (_route.isSome())
+		return (*_route).location;
+	return NULL;
 }
 
 // ============================================================================
@@ -153,7 +155,7 @@ Optionnal<ResponsePlan>	HttpTransaction::onHeadersComplete(const HttpRequest &re
 	return _ctx.dispatcher.dispatch(req, r);
 }
 
-ResponsePlan	HttpTransaction::onBodyComplete(const HttpRequest &req)
+ResponsePlan	HttpTransaction::onBodyComplete(const HttpRequest &req) const
 {
 	// ? Should never be called before onHeadersComplete
 	if (_route.isNone())
