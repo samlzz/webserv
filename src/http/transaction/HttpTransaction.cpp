@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 11:48:06 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 21:31:42 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:35:42 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,11 @@ const Config::Server::Location	*
 	if (_route.isSome())
 		return (*_route).location;
 	return NULL;
+}
+
+const AddrInfo	&HttpTransaction::remoteAddr(void) const
+{
+	return _remote;
 }
 
 void	HttpTransaction::reset(void)
