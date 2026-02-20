@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 13:21:43 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 17:59:42 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,8 @@
 # include "IWritableNotifier.hpp"
 # include "http/response/BuffStream.hpp"
 # include "http/response/HttpResponse.hpp"
-#include "http/response/ResponsePlan.hpp"
-#include "http/transaction/HttpTransaction.hpp"
-# include "server/AddrInfo.hpp"
+# include "http/response/ResponsePlan.hpp"
+# include "http/transaction/HttpTransaction.hpp"
 # include "server/ServerCtx.hpp"
 # include "server/connections/ConnEvent.hpp"
 # include "server/connections/IConnection.hpp"

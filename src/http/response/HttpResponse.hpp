@@ -6,23 +6,24 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:03:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 19:11:25 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 17:15:01 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_RESPONSE_HPP__
 # define __HTTP_RESPONSE_HPP__
 
-#include <ostream>
+# include <ostream>
 # include <stdint.h>
 
+#include "config/Config.hpp"
 # include "http/HttpTypes.hpp"
 # include "http/request/HttpRequest.hpp"
 # include "http/response/BuffStream.hpp"
 # include "http/response/ResponsePlan.hpp"
 # include "http/response/interfaces/IBodySource.hpp"
 # include "http/response/interfaces/IMetaSource.hpp"
-# include "http/routing/Router.hpp"
+# include "http/transaction/HttpTransaction.hpp"
 
 # define RESP_MAX_BUF_COUNT		8
 
@@ -35,13 +36,18 @@
 class HttpResponse {
 
 private:
-	struct DecisionContext
+	class DecisionContext
 	{
-		const HttpRequest			&request;
-		routing::Context			route;
+		const HttpRequest			&_request;
+		const HttpTransaction		&_transaction;
 
-		DecisionContext(const HttpRequest &req, const routing::Context &routeCtx)
-			: request(req), route(routeCtx) {}
+	public:
+		DecisionContext(const HttpRequest &req, const HttpTransaction &transac);
+
+		const HttpRequest	&getReq(void) const;
+		const Config::Server::Location	*
+							getLocation(void) const;
+		const ResponsePlan	getPlan(void) const;
 	};
 
 	DecisionContext			_ctx;
@@ -59,7 +65,7 @@ public:
 	// ============================================================================
 	HttpResponse(const ResponsePlan &plan,
 					const HttpRequest &req,
-					const routing::Context &route);
+					const HttpTransaction &transac);
 	~HttpResponse();
 
 	// ========================================================================
