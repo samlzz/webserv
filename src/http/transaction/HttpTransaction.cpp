@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 11:48:06 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 18:31:14 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 18:39:23 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,7 +100,7 @@ ResponsePlan	HttpTransaction::onParsingError(const HttpRequest &req)
 	return ErrorBuilder::build(req.getStatusCode(), tmp);
 }
 
-Optionnal<ResponsePlan>	HttpTransaction::onHeadersComplete(const HttpRequest &req)
+Optionnal<ResponsePlan>	HttpTransaction::onHeadersComplete(HttpRequest &req)
 {
 	_route = routing::resolve(req.getPath(), _ctx.config, &req.getCookies());
 	routing::Context &r = *_route;
@@ -150,7 +150,10 @@ Optionnal<ResponsePlan>	HttpTransaction::onHeadersComplete(const HttpRequest &re
 
 	// ? Wait for body to produce ResponsePlan
 	if (needBody)
+	{
+		req.setBodySize(r.location->maxBodySize);
 		return Optionnal<ResponsePlan>();
+	}
 	// ? Respond now
 	return _ctx.dispatcher.dispatch(req, r);
 }
