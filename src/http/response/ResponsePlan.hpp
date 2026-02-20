@@ -31,6 +31,8 @@ struct ResponsePlan {
 	ResponsePlan()
 		: status(http::SC_OK), headers(), body(0), event(ConnEvent::none())
 	{}
+
+	void addStandardHeaders();
 };
 
 #endif /* __RESPONSE_PLAN_HPP__ */

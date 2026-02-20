@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 17:19:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 19:08:47 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,5 +109,6 @@ ResponsePlan	HttpDispatcher::dispatch(
 	else
 		plan.headers["Connection"] = "keep-alive";
 
+	plan.addStandardHeaders();
 	return plan;
 }

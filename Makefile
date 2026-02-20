@@ -43,6 +43,7 @@ FILES =	main.cpp \
 		http/request/Cookies.cpp \
 		http/request/HttpRequest.cpp \
 		http/response/HttpResponse.cpp \
+		http/response/ResponsePlan.cpp \
 		http/routing/Router.cpp \
 		http/transaction/HttpTransaction.cpp \
 		server/AddrInfo.cpp \

@@ -108,6 +108,7 @@ ResponsePlan	ErrorBuilder::buildFromErrorPage(
 
 	ResponsePlan plan;
 	plan.status = status;
+	plan.addStandardHeaders();
 	plan.headers["Content-Type"] = http::Data::getMimeType("html");
 	plan.headers["Content-Length"] = str::toString(size);
 	plan.body = new FileBodySource(fd);
