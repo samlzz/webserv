@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/21 19:24:52 by achu              #+#    #+#             */
-/*   Updated: 2026/01/29 16:51:55 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 11:00:52 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #define __I_HTTP_REQUEST_HPP__
 
 #include <cstddef>
+#include <ctime>
 
 class IHttpRequest {
 public:
@@ -25,21 +26,25 @@ public:
 
 	// Feed the HTTP Request from an incoming recv().
 	// - Can be called multiple time (Non-blocking)
-	virtual void		feed(char *pBuffer, size_t pSize) = 0;
+	virtual size_t		feed(char *pBuffer, size_t pSize) = 0;
 
 	// Reset the request to its initial empty state.
 	// Called after the response has been fully sent.
 	virtual void		reset() = 0;
 
+	// Check if the request has timed out based on current time.
+	virtual void		checkTimeout(time_t now) = 0;
 	// ========================================================================
 	// Request state
 	// ========================================================================
 
 	// Indicates whether the request has finished producing all output.
-	virtual bool		isDone() const = 0;
+	virtual bool		isHeadersComplete() const = 0;
+	virtual bool		isBodyComplete() const = 0;
 
 	// Indicates whether the request has occured an error inside the parser
-	virtual bool		isError() const = 0;
+	virtual bool		isParsingError() const = 0;
+
 };
 
 #endif
