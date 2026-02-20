@@ -75,16 +75,16 @@ make re LOG_LEVEL=2
 - Autoindex — Automatic directory listing
 - Redirections — `return` directive with status code + URL
 - Custom error pages — Per status code, with a default page
-- Client max body size — Configurable per server
+- Client max body size — Configurable per server and location
 - File uploads — Via multipart, `application/octet-stream`, `text/plain`
 - Sessions & Cookies — Cookie-based session management
-- MIME type detection — HTML, CSS, JS, JSON, XML, PDF, PNG, JPG, etc.
+- MIME type detection — HTML, CSS, JS, JSON, XML, PDF, PNG, JPG, etc...
 
 ### CGI
 - Extension-to-interpreter mapping (e.g., `.py → /usr/bin/python3`)
 - Tested languages: Python, Perl, Ruby, PHP
 - Non-blocking CGI I/O with timeout
-- Full CGI environment variables (`REQUEST_METHOD`, `QUERY_STRING`, `PATH_INFO`, etc.)
+- Full CGI environment variables (`REQUEST_METHOD`, `QUERY_STRING`, `PATH_INFO`, etc...)
 
 ## Configuration
 The configuration file uses an NGINX-inspired syntax, parsed via a PEG grammar (`assets/webserv.peg`).
@@ -93,13 +93,13 @@ The configuration file uses an NGINX-inspired syntax, parsed via a PEG grammar (
 
 | Directive              | Syntax                               | Default          | Description                         |
 |------------------------|--------------------------------------|------------------|-------------------------------------|
-| `listen`               | `listen host:port;`                  | `0.0.0.0:80`     | Bind address and port               |
+| `listen`               | `listen host:port;`                  | `0.0.0.0:8080`     | Bind address and port               |
 | `root`                 | `root /path;`                        | `html`           | Document root directory             |
 | `index`                | `index file;`                        | `index.html`     | Default index file                  |
 | `autoindex`            | `autoindex on\|off;`                 | `off`            | Directory listing                   |
 | `methods`              | `methods GET POST ...;`              | `GET POST DELETE` | Allowed HTTP methods               |
 | `error_page`           | `error_page code /page.html;`        | `/errors/default.html` | Custom error pages            |
-| `client_max_body_size` | `client_max_body_size 10M;`          | `1Mb             | Max body size (K/M/G suffixes)      |
+| `client_max_body_size` | `client_max_body_size 10M;`          | `1Mb`             | Max body size (K/M/G suffixes)      |
 | `cgi`                  | `cgi .ext /path/to/interpreter;`     | —                | CGI extension → interpreter mapping |
 | `return`               | `return [code] url;`                 | —                | HTTP redirection                    |
 
@@ -124,8 +124,8 @@ server {
 
     location /tours {                   
         root docs/fusion_web;           # root folder of the location
-                                        # EX: - URI /tours           --> docs/fusion_web/tours
-                                        #     - URI /tours/page.html --> docs/fusion_web/tours/page.html 
+                                        # EX: - URI /tours           --> docs/fusion_web/
+                                        #     - URI /tours/page.html --> docs/fusion_web/page.html 
         autoindex on;                   # turn on/off directory listing
         methods GET HEAD POST DELETE;             # Allowed HTTP methods
                                                     # Supported: GET, HEAD, POST, PUT, DELETE
