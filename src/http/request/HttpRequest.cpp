@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/20 18:42:07 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 20:58:56 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,8 @@ const http::t_headers	&HttpRequest::getHeaders() const 	{ return (_request.heade
 const t_bytes			&HttpRequest::getBody() const		{ return (_request.body);         };
 Cookies					&HttpRequest::getCookies() const	{ return (_cookies);              }
 
-void	HttpRequest::setBodySize(size_t pMaxSize) {_maxBodySize = pMaxSize;}
+void					HttpRequest::setBodySize(size_t pMaxSize)		{_maxBodySize = pMaxSize;}
+void					HttpRequest::setContentLength(size_t pValue)	{ _contentLength = pValue; }
 
 void	HttpRequest::setField(const std::string& pKey, const std::string& pValue) {
 	_request.headers[pKey] = pValue;
@@ -128,10 +129,8 @@ size_t	HttpRequest::feed(char *pBuffer, size_t pSize)
 {
 	unsigned char	ch;
 
-	if (pSize == 0)
-		return setError(http::SC_BAD_REQUEST, 0);
-
-	for (size_t i = 0; i < pSize; i++)
+	size_t	i = 0;
+	while (i < pSize)
 	{
 		ch = static_cast<unsigned char>(pBuffer[i]);
 		switch (CURRENT_STATE()) {
@@ -368,7 +367,7 @@ size_t	HttpRequest::feed(char *pBuffer, size_t pSize)
 				return setError(http::SC_BAD_REQUEST, i);
 			_cookies.parseCookies(_request.headers);
 			UPDATE_STATE(BODY_START);
-			return i;
+			return i + 1;
 		}
 
 		case BODY_START: {
@@ -380,7 +379,7 @@ size_t	HttpRequest::feed(char *pBuffer, size_t pSize)
 				return setError(http::SC_LENGTH_REQUIRED, i);
 
 			_buffer.clear();
-			break;
+			continue;
 		}
 
 		case BODY_TRANSFER_HEXA: {
@@ -453,7 +452,7 @@ size_t	HttpRequest::feed(char *pBuffer, size_t pSize)
 			if (readbytes > 0) {
 				_request.body.insert(_request.body.end(), pBuffer + i, pBuffer + i + readbytes);
 				_contentLength -= readbytes;
-				i += readbytes - 1;
+				i += readbytes;
 			}
 
 			if (_contentLength == 0)
@@ -466,8 +465,9 @@ size_t	HttpRequest::feed(char *pBuffer, size_t pSize)
 			break;
 
 		case PARSING_DONE:
-			break;
+			return i;
 		}
+		++i;
 	}
 	return pSize;
 }

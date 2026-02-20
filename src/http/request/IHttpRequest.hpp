@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/21 19:24:52 by achu              #+#    #+#             */
-/*   Updated: 2026/02/20 18:27:55 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:00:45 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ public:
 	virtual bool		isParsingError() const = 0;
 
 	virtual void		setBodySize(size_t pMaxSize) = 0;
+	virtual void		setContentLength(size_t pMaxSize) = 0;
 };
 
 #endif

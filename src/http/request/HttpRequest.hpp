@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/02/20 18:42:21 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:00:53 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,7 +143,8 @@ public:
 	const t_bytes			&getBody() const;
 	Cookies					&getCookies() const;
 
-	virtual void	setBodySize(size_t pMaxSize);
+	virtual void			setBodySize(size_t pMaxSize);
+	virtual void			setContentLength(size_t pValue);
 
 	// ======= Header Utils =======
 	void				setField(const std::string& pKey, const std::string& pValue);
