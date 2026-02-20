@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/06 11:14:54 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 11:29:33 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 # include <vector>
 
 # include "config/Config.hpp"
-# include "config/Optionnal.hpp"
+# include "utils/Optionnal.hpp"
 
 namespace config_parse
 {
