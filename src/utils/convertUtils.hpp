@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/17 14:55:23 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 13:49:04 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 16:32:20 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,9 +42,6 @@ static inline bool	isHex(const std::string& pStr)
 // ============================================================================
 // Convertion functions
 // ============================================================================
-
-// Ascii to size_t (-1 on error)
-ssize_t		atos(const std::string &nb);
 
 // Hexadecimal to Decimal
 int32_t		htod(const std::string& pHex);

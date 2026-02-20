@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 11:48:06 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 15:45:15 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 16:33:15 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,6 @@
 #include "server/AddrInfo.hpp"
 #include "server/ServerCtx.hpp"
 #include "utils/Optionnal.hpp"
-#include "utils/convertUtils.hpp"
 #include "utils/stringUtils.hpp"
 #include "utils/urlUtils.hpp"
 
@@ -56,6 +55,31 @@ bool	HttpTransaction::isHeadersValidated(void) const
 bool	HttpTransaction::shouldCloseConnection(void) const
 {
 	return false;
+}
+
+// ============================================================================
+// Helper
+// ============================================================================
+
+static inline bool	_parseContentLength(const std::string& s, size_t& out)
+{
+	if (s.empty())
+		return false;
+	size_t	value = 0;
+
+	for (size_t i = 0; i < s.size(); ++i)
+	{
+		if (s[i] < '0' || s[i] > '9')
+			return false;
+		size_t digit = s[i] - '0';
+		if (value > (SIZE_MAX - digit) / 10)
+			return false;
+
+		value = value * 10 + digit;
+	}
+
+	out = value;
+	return true;
 }
 
 // ============================================================================
@@ -107,10 +131,10 @@ Optionnal<ResponsePlan>	HttpTransaction::onHeadersComplete(const HttpRequest &re
 		}
 		else if (req.hasField("Content-Length"))
 		{
-			ssize_t		clNb = convert::atos(req.getField("Content-Length"));
-			if (clNb < 0)
+			size_t		clNb;
+			if (!_parseContentLength(req.getField("Content-Length"), clNb))
 				return ErrorBuilder::build(http::SC_BAD_REQUEST, r.location);
-			if (static_cast<size_t>(clNb) > _ctx.config.maxBodySize)
+			if (clNb > _ctx.config.maxBodySize)
 				return ErrorBuilder::build(http::SC_CONTENT_TOO_LARGE, r.location);
 			if (clNb == 0)
 				needBody = false;
