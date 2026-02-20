@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 12:00:19 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 11:58:31 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 17:23:40 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ Context::Context()
 /**
  * Remove /../ and /./ in path
  */ 
-static inline std::string	_normalizeUri(const std::string &path)
+static std::string	_normalizeUri(const std::string &path)
 {
 	std::vector<std::string>	stack;
 	std::string				token;
@@ -123,7 +123,7 @@ Context	resolve(const std::string &uri, const Config::Server &config, Cookies *s
 	for (size_t i = 0; i < cookiesVary.size(); ++i)
 	{
 		std::string cookieValue = store->getCookie(cookiesVary[i]);
-		if (cookieValue.empty())
+		if (cookieValue.empty() || cookieValue.find('/') != std::string::npos)
 			continue;
 		std::string	newPath = _prefixExtension(
 					ctx.normalizedUri, "_" + cookieValue);

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 13:02:24 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 17:19:27 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include "http/response/ResponsePlan.hpp"
 #include "http/routing/Router.hpp"
 #include "utils/pathUtils.hpp"
+#include "utils/stringUtils.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -99,8 +100,10 @@ ResponsePlan	HttpDispatcher::dispatch(
 	plan.headers["Set-Cookie"] = req.getCookies().buildSetCookieHeaders();
 
 	// ? Decide connection lifetime
+	std::string	con = req.getField("Connection");
+	str::lowerCase(con);
 	if (_needToCloseConnection(plan.status)
-		|| req.getField("Connection") == "close"
+		|| con.find("close") != std::string::npos
 	)
 		plan.headers["Connection"] = "close";
 	else

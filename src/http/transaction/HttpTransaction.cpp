@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 11:48:06 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 17:14:21 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 17:25:06 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -200,7 +200,7 @@ void	HttpTransaction::setCookies(Cookies &store, const std::string &query) const
 		{
 			std::string	val = url::decode(queryPart.substr(pos + 1));
 			size_t		end = val.find("\r\n");
-			store.setCookie(key, url::decode(val.substr(0, end)));
+			store.setCookie(key, val.substr(0, end));
 		}
 	}
 }
