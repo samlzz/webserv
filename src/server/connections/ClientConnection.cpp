@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 21:33:03 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:36:25 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ ClientConnection::ClientConnection(
 {
 	setFdFlags();
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
-		<< "Connection " << _id << " opened from " << AddrInfo(remote) << std::endl;
+		<< "Connection " << _id << " opened from " << _transac.remoteAddr() << std::endl;
 }
 
 ClientConnection::~ClientConnection(void)
@@ -220,7 +220,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 			if (_resp->isDone())
 			{
 				ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
-					<< '(' << _id << ") "
+					<< '(' << _id << ") " << _transac.remoteAddr()
 					<< " \"" << _req.getMethod() << ' ' << _req.getPath() << "\" "
 					<< _resp->getStatus() << ' ' << _totalSent << "B "
 					<< (std::time(0) - _req.getStartTs()) << "s"
