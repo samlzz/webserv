@@ -6,12 +6,13 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 18:29:16 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:08:46 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
 #include <ctime>
+#include <string>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -61,7 +62,7 @@ ClientConnection::ClientConnection(
 	, _tsLastActivity(std::time(0))
 	, _state(CS_WAIT_FIRST_BYTE)
 	, _req()
-	, _recvBuffer()
+	, _recvBuffer(), _recvOffset(0)
 	, _transac(serverCtx, remote, _getLocalInfo(cliSockFd, serverCtx.config))
 	, _cgiRead(0)
 	, _resp(0)
@@ -114,31 +115,42 @@ ConnEvent	ClientConnection::handleRead(void)
 	char	buf[CLIENT_READ_BUF_SIZE];
 	ssize_t	n = recv(_fd, buf, CLIENT_READ_BUF_SIZE, 0);
 
-	if (n < 0)
+	if (n <= 0)
 		return ConnEvent::close();
+
 	_recvBuffer.insert(_recvBuffer.end(), buf, buf + n);
 
 	_tsLastActivity = std::time(0);
 	if (_state == CS_WAIT_FIRST_BYTE)
 		_state = CS_WAIT_REQUEST;
 
-	size_t	parsed = _req.feed(_recvBuffer.data(), _recvBuffer.size());
-	if (parsed)
-		_recvBuffer.erase(_recvBuffer.begin(), _recvBuffer.begin() + parsed);
-
-	if (_req.isParsingError())
-		return buildResponse(_transac.onParsingError(_req));
-
-	if (_req.isHeadersComplete() && !_transac.isHeadersValidated())
+	while (_recvOffset < _recvBuffer.size())
 	{
-		Optionnal<ResponsePlan>	maybe = _transac.onHeadersComplete(_req);
-		if (maybe)
-			return buildResponse(*maybe);
+		size_t	parsed = _req.feed(_recvBuffer.data() + _recvOffset,
+									_recvBuffer.size() - _recvOffset);
+		if (parsed == 0)
+			break;
+
+		_recvOffset += parsed;
+		if (_recvOffset == _recvBuffer.size())
+		{
+			_recvOffset = 0;
+			_recvBuffer.clear();
+		}
+
+		if (_req.isParsingError())
+			return buildResponse(_transac.onParsingError(_req));
+
+		if (_req.isHeadersComplete() && !_transac.isHeadersValidated())
+		{
+			Optionnal<ResponsePlan>	maybe = _transac.onHeadersComplete(_req);
+			if (maybe)
+				return buildResponse(*maybe);
+		}
+
+		if (_req.isBodyComplete())
+			return buildResponse(_transac.onBodyComplete(_req));
 	}
-
-	if (_req.isBodyComplete())
-		return buildResponse(_transac.onBodyComplete(_req));
-
 	return ConnEvent::none();
 }
 

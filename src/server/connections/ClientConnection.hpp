@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 17:59:42 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:03:01 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,7 @@ private:
 
 	HttpRequest				_req;
 	t_bytes					_recvBuffer;
+	size_t					_recvOffset;
 
 	HttpTransaction			_transac;
 	IConnection				*_cgiRead;
