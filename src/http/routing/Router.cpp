@@ -28,9 +28,9 @@ namespace routing
 // Construction
 // ============================================================================
 
-Context::Context(const ServerCtx &serv)
-	: server(serv), location(0)
-	, normalizedPath()
+Context::Context()
+	: location(0)
+	, normalizedUri()
 	, currSession(0)
 	, local(0), remote(0)
 {}

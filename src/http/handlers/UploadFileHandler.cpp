@@ -166,7 +166,7 @@ ResponsePlan	UploadFileHandler::handleTextPlain(
 								const routing::Context &route) const
 {
 	ResponsePlan	plan;
-	std::string filename = route.normalizedPath;
+	std::string filename = route.normalizedUri;
 	std::string fullPath = _generateFilePath(filename,
 										http::CT_TEXT_PLAIN,
 										req.getMethod(),
@@ -190,7 +190,7 @@ ResponsePlan	UploadFileHandler::handleOctetStream(
 {
 	ResponsePlan	plan;
 
-	std::string filename = route.normalizedPath;
+	std::string filename = route.normalizedUri;
 	std::string fullPath = _generateFilePath(filename,
 										http::CT_BINARY,
 										req.getMethod(),

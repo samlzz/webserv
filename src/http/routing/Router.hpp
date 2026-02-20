@@ -19,7 +19,6 @@
 # include "http/Sessions.hpp"
 # include "server/AddrInfo.hpp"
 
-#define SESSION_TIMEOUT 1800 // 30 minutes
 // ============================================================================
 // Forward declarations
 // ============================================================================
@@ -34,9 +33,8 @@ namespace routing
 
 struct Context
 {
-	const ServerCtx						&server;
 	const Config::Server::Location		*location;
-	std::string							normalizedPath;
+	std::string							normalizedUri;
 	mutable SessionsManager::Session	*currSession;
 	const AddrInfo						*local;
 	const AddrInfo						*remote;
