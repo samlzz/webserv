@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 11:48:06 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 21:01:47 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 22:53:07 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,10 @@ ResponsePlan	HttpTransaction::onParsingError(const HttpRequest &req)
 	else if (!req.getPath().empty())
 		tmp = routing::resolve(req.getPath(), _ctx.config, 0).location;
 
-	return ErrorBuilder::build(req.getStatusCode(), tmp);
+	ResponsePlan	plan = ErrorBuilder::build(req.getStatusCode(), tmp);
+	if (req.hasBody() && !req.isBodyComplete())
+		plan.headers["Connection"] = "close";
+	return plan;
 }
 
 Optionnal<ResponsePlan>	HttpTransaction::onHeadersComplete(HttpRequest &req)
@@ -112,50 +115,20 @@ Optionnal<ResponsePlan>	HttpTransaction::onHeadersComplete(HttpRequest &req)
 	r.local = &_local;
 	r.remote = &_remote;
 
-	if (!req.hasField("Host"))
-		return ErrorBuilder::build(http::SC_BAD_REQUEST, r.location);
-	if (!r.location)
-		return ErrorBuilder::build(http::SC_NOT_FOUND, 0);
-
-	if (!r.location->isMethodAllowed(req.getMethod()))
-		return ErrorBuilder::build(
-			http::SC_METHOD_NOT_ALLOWED,
-			r.location
-		);
-	
-	http::e_method	m = req.getMethod();
-	bool			needBody = false;
-	if (m == http::MTH_POST || m == http::MTH_PUT)
+	bool					hasBody = req.hasBody();
+	Optionnal<ResponsePlan>	plan = checkHeaders(req, r.location);
+	if (plan.isSome())
 	{
-		needBody = true;
-		if (req.hasField("Transfer-Encoding"))
-		{
-			if (req.hasField("Content-Length"))
-				return ErrorBuilder::build(http::SC_BAD_REQUEST, r.location);
-			std::string te = str::trim(req.getField("Transfer-Encoding"));
-			if (str::lowerCase(te) != "chunked")
-				return ErrorBuilder::build(http::SC_NOT_IMPLEMENTED, r.location);
-		}
-		else if (req.hasField("Content-Length"))
-		{
-			size_t		clNb;
-			if (!_parseContentLength(req.getField("Content-Length"), clNb))
-				return ErrorBuilder::build(http::SC_BAD_REQUEST, r.location);
-			if (clNb > r.location->maxBodySize)
-				return ErrorBuilder::build(http::SC_CONTENT_TOO_LARGE, r.location);
-			req.setContentLength(clNb);
-			if (clNb == 0)
-				needBody = false;
-		}
-		else
-			return ErrorBuilder::build(http::SC_LENGTH_REQUIRED, r.location);
+		if (hasBody)
+			(*plan).headers["Connection"] = "close";
+		return *plan;
 	}
 
 	handleSession(req.getCookies());
 	setCookies(req.getCookies(), req.getQuery());
 
 	// ? Wait for body to produce ResponsePlan
-	if (needBody)
+	if (hasBody)
 	{
 		req.setBodySize(r.location->maxBodySize);
 		return Optionnal<ResponsePlan>();
@@ -175,6 +148,46 @@ ResponsePlan	HttpTransaction::onBodyComplete(const HttpRequest &req) const
 // ============================================================================
 // Private Methods
 // ============================================================================
+
+Optionnal<ResponsePlan>	HttpTransaction::checkHeaders(HttpRequest &req, const Config::Server::Location *loc)
+{
+	if (!req.hasField("Host"))
+		return ErrorBuilder::build(http::SC_BAD_REQUEST, loc);
+
+	if (!loc)
+		return ErrorBuilder::build(http::SC_NOT_FOUND, 0);
+
+	if (!loc->isMethodAllowed(req.getMethod()))
+		return ErrorBuilder::build(
+			http::SC_METHOD_NOT_ALLOWED,
+			loc
+		);
+	
+	http::e_method	m = req.getMethod();
+	if (m == http::MTH_POST || m == http::MTH_PUT)
+	{
+		if (req.hasField("Transfer-Encoding"))
+		{
+			if (req.hasField("Content-Length"))
+				return ErrorBuilder::build(http::SC_BAD_REQUEST, loc);
+			std::string te = str::trim(req.getField("Transfer-Encoding"));
+			if (str::lowerCase(te) != "chunked")
+				return ErrorBuilder::build(http::SC_NOT_IMPLEMENTED, loc);
+		}
+		else if (req.hasField("Content-Length"))
+		{
+			size_t		clNb;
+			if (!_parseContentLength(req.getField("Content-Length"), clNb))
+				return ErrorBuilder::build(http::SC_BAD_REQUEST, loc);
+			if (clNb > loc->maxBodySize)
+				return ErrorBuilder::build(http::SC_CONTENT_TOO_LARGE, loc);
+			req.setContentLength(clNb);
+		}
+		else
+			return ErrorBuilder::build(http::SC_LENGTH_REQUIRED, loc);
+	}
+	return Optionnal<ResponsePlan>();
+}
 
 void	HttpTransaction::handleSession(Cookies &store)
 {

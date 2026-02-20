@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 11:24:59 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 21:01:23 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 22:45:47 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,9 @@ public:
 	bool					isHeadersValidated(void) const;
 
 private:
+	Optionnal<ResponsePlan>	checkHeaders(HttpRequest &req,
+										const Config::Server::Location *loc);
+
 	void					handleSession(Cookies &store);
 	void					setCookies(Cookies &store,
 										const std::string &query) const;
