@@ -46,8 +46,8 @@ ResponsePlan	StaticFileHandler::loadAutoindex(
 	}
 
 	std::string body;
-	body = "<html><head><title>Index of " + route.normalizedPath + "</title></head><body>";
-	body += "<h1>Index of " + route.normalizedPath + "</h1><hr><pre>";
+	body = "<html><head><title>Index of " + route.normalizedUri + "</title></head><body>";
+	body += "<h1>Index of " + route.normalizedUri + "</h1><hr><pre>";
 
 	std::sort(folders.begin(), folders.end());
 	std::sort(files.begin(), files.end());
@@ -87,7 +87,9 @@ ResponsePlan	StaticFileHandler::loadFile(
 	plan.headers["Content-Length"] = str::toString(fileSize);
 	plan.headers["Content-Type"] = http::Data::getMimeType(path::subExt(path));
 
-	if (method != http::MTH_HEAD)
+	if (method == http::MTH_HEAD)
+		close(fd);
+	else
 		plan.body = new FileBodySource(fd);
 
 	return (plan);
@@ -98,7 +100,7 @@ ResponsePlan	StaticFileHandler::handle(
 								const routing::Context &route) const
 {
 	struct stat st;
-	std::string path = route.location->root + route.normalizedPath;
+	std::string path = route.location->root + route.normalizedUri;
 
 	if (!fs::isExist(path, &st))
 		return ErrorBuilder::build(http::SC_NOT_FOUND, route.location);
@@ -111,7 +113,7 @@ ResponsePlan	StaticFileHandler::handle(
 		if (path[path.length() - 1] != '/')
 		{
 			ResponsePlan	plan;
-			plan.headers["Location"] = route.normalizedPath + "/";
+			plan.headers["Location"] = req.getPath() + "/";
 			plan.headers["Content-Length"] = "0";
 			plan.status = http::SC_MOVED_PERMANENTLY;
 			return (plan);
@@ -123,8 +125,6 @@ ResponsePlan	StaticFileHandler::handle(
 
 		if (route.location->autoindex)
 			return loadAutoindex(path, req.getMethod(), route);
-		else
-			return ErrorBuilder::build(http::SC_FORBIDDEN, route.location);
 	}
 
 	return ErrorBuilder::build(http::SC_NOT_FOUND, route.location);

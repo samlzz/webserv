@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/17 19:20:08 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:23:29 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,7 @@
 //#****************************************************************************#
 #pragma region Construct & Destruct
 
-HttpRequest::HttpRequest(size_t clientMaxBodySize)
-	: _maxBodySize(clientMaxBodySize) {
+HttpRequest::HttpRequest(void) {
 	reset();
 }
 
@@ -69,7 +68,7 @@ const std::string		&HttpRequest::getQuery() const		{ return (_request.uri.query)
 const std::string		&HttpRequest::getFragment() const	{ return (_request.uri.fragment); };
 int						HttpRequest::getVerMaj() const		{ return (_request.verMaj);       };
 int						HttpRequest::getVerMin() const		{ return (_request.verMin);       };
-std::string				HttpRequest::getRawMeta() const
+std::string				HttpRequest::getHTTPLine() const
 {
 	std::ostringstream	iss;
 
@@ -81,12 +80,14 @@ std::string				HttpRequest::getRawMeta() const
 	iss << " HTTP/" << _request.verMaj << '.' << _request.verMin;
 	return iss.str();
 }
-
 http::e_status_code		HttpRequest::getStatusCode() const	{ return (_code);                 };
 const http::t_headers	&HttpRequest::getHeaders() const 	{ return (_request.headers);      };
 const t_bytes			&HttpRequest::getBody() const		{ return (_request.body);         };
 Cookies					&HttpRequest::getCookies() const	{ return (_cookies);              };
 time_t					HttpRequest::getStartTs() const		{ return (_tsStart);              };
+
+void					HttpRequest::setBodySize(size_t pMaxSize)		{_maxBodySize = pMaxSize;}
+void					HttpRequest::setContentLength(size_t pValue)	{ _contentLength = pValue; }
 
 void	HttpRequest::setField(const std::string& pKey, const std::string& pValue) {
 	_request.headers[pKey] = pValue;
@@ -125,19 +126,20 @@ std::string		HttpRequest::getField(const std::string& pKey) const
 /// @param pBuffer Insert the socket incoming buffer string
 /// @param pSize Insert the socket incoming buffer size
 /// @return Return the number of byte size_t treated in the function
-void	HttpRequest::feed(char *pBuffer, size_t pSize)
+size_t	HttpRequest::feed(char *pBuffer, size_t pSize)
 {
-	char	ch;
+	unsigned char	ch;
 
-	for (size_t i = 0; i < pSize; ++i)
+	size_t	i = 0;
+	while (i < pSize)
 	{
-		ch = pBuffer[i];
+		ch = static_cast<unsigned char>(pBuffer[i]);
 		switch (CURRENT_STATE()) {
 		case LINE_METHOD: {
 			_tsStart = std::time(0);
 			if (ch != ' ') {
 				if (_buffer.length() > MAX_METHOD_LENGTH)
-					return setError(http::SC_BAD_REQUEST);
+					return setError(http::SC_BAD_REQUEST, i);
 				_buffer += ch;
 				break;
 			}
@@ -147,7 +149,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			else if (_buffer == "POST")		_request.method = http::MTH_POST;
 			else if (_buffer == "PUT")		_request.method = http::MTH_PUT;
 			else if (_buffer == "DELETE")	_request.method = http::MTH_DELETE;
-			else return setError(http::SC_NOT_IMPLEMENTED);
+			else return setError(http::SC_NOT_IMPLEMENTED, i);
 
 			UPDATE_STATE(LINE_SPACE_BEFORE_URI);
 			_buffer.clear();
@@ -157,12 +159,12 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case LINE_SPACE_BEFORE_URI:
 			if (ch != ' ')
-				return setError(http::SC_BAD_REQUEST);
+				return setError(http::SC_BAD_REQUEST, i);
 			UPDATE_STATE(LINE_URI_SLASH);
 			break;
 
 		case LINE_URI_SLASH:
-			if (ch != '/') return setError(http::SC_BAD_REQUEST);
+			if (ch != '/') return setError(http::SC_BAD_REQUEST, i);
 			_buffer += ch;
 			UPDATE_STATE(LINE_URI_PATH);
 			break;
@@ -170,7 +172,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 		case LINE_URI_PATH: {
 			if (ch == ' ') {
 				if (!url::isValidEncoded(_buffer))
-					return setError(http::SC_BAD_REQUEST);
+					return setError(http::SC_BAD_REQUEST, i);
 				_request.uri.path = url::decode(_buffer);
 				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
 				_buffer.clear();
@@ -178,7 +180,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 			else if (ch == '?' || ch == '#') {
 				if (!url::isValidEncoded(_buffer))
-					return setError(http::SC_BAD_REQUEST);
+					return setError(http::SC_BAD_REQUEST, i);
 				_request.uri.path = url::decode(_buffer);
 				UPDATE_STATE(ch == '?' ? LINE_URI_QUERY : LINE_URI_FRAGMENT);
 				_buffer.clear();
@@ -186,7 +188,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 			else {
 				if (_buffer.length() > MAX_URI_LENGTH)
-					return setError(http::SC_URI_TOO_LONG);
+					return setError(http::SC_URI_TOO_LONG, i);
 				_buffer += ch;
 				break;
 			}
@@ -195,7 +197,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 		case LINE_URI_QUERY: {
 			if (ch == ' ') {
 				if (!url::isValidEncoded(_buffer))
-					return setError(http::SC_BAD_REQUEST);
+					return setError(http::SC_BAD_REQUEST, i);
 				_request.uri.query = _buffer;
 				UPDATE_STATE(LINE_SPACE_BEFORE_VER);
 				_buffer.clear();
@@ -203,7 +205,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 			else if (ch == '#') {
 				if (!url::isValidEncoded(_buffer))
-					return setError(http::SC_BAD_REQUEST);
+					return setError(http::SC_BAD_REQUEST, i);
 				_request.uri.query = _buffer;
 				UPDATE_STATE(LINE_URI_FRAGMENT);
 				_buffer.clear();
@@ -211,7 +213,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 			else {
 				if (_buffer.length() > MAX_URI_LENGTH)
-					return setError(http::SC_URI_TOO_LONG);
+					return setError(http::SC_URI_TOO_LONG, i);
 				_buffer += ch;
 				break;
 			}
@@ -225,77 +227,77 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 				__attribute__ ((fallthrough));
 			}
 			else if (ch == '?')
-				return setError(http::SC_BAD_REQUEST);
+				return setError(http::SC_BAD_REQUEST, i);
 			else {
 				if (_buffer.length() > MAX_URI_LENGTH)
-					return setError(http::SC_URI_TOO_LONG);
+					return setError(http::SC_URI_TOO_LONG, i);
 				_buffer += ch;
 				break;
 			}
 		}
 
 		case LINE_SPACE_BEFORE_VER:
-			if (ch != ' ') return setError(http::SC_BAD_REQUEST);
+			if (ch != ' ') return setError(http::SC_BAD_REQUEST, i);
 			UPDATE_STATE(LINE_HTTP_H);
 			break;
 
 		case LINE_HTTP_H:
-			if (ch != 'H') return setError(http::SC_BAD_REQUEST);
+			if (ch != 'H') return setError(http::SC_BAD_REQUEST, i);
 			_buffer += ch;
 			UPDATE_STATE(LINE_HTTP_HT);
 			break;
 
 		case LINE_HTTP_HT:
-			if (ch != 'T') return setError(http::SC_BAD_REQUEST);
+			if (ch != 'T') return setError(http::SC_BAD_REQUEST, i);
 			_buffer += ch;
 			UPDATE_STATE(LINE_HTTP_HTT);
 			break;
 
 		case LINE_HTTP_HTT:
-			if (ch != 'T') return setError(http::SC_BAD_REQUEST);
+			if (ch != 'T') return setError(http::SC_BAD_REQUEST, i);
 			_buffer += ch;
 			UPDATE_STATE(LINE_HTTP_HTTP);
 			break;
 
 		case LINE_HTTP_HTTP:
-			if (ch != 'P') return setError(http::SC_BAD_REQUEST);
+			if (ch != 'P') return setError(http::SC_BAD_REQUEST, i);
 			_buffer += ch;
 			UPDATE_STATE(LINE_HTTP_SLASH);
 			break;
 
 		case LINE_HTTP_SLASH:
-			if (ch != '/') return setError(http::SC_BAD_REQUEST);
+			if (ch != '/') return setError(http::SC_BAD_REQUEST, i);
 			_buffer += ch;
 			UPDATE_STATE(LINE_HTTP_MAJOR_VER);
 			break;
 
 		case LINE_HTTP_MAJOR_VER:
-			if (!std::isdigit(ch)) return setError(http::SC_BAD_REQUEST);
+			if (!std::isdigit(ch)) return setError(http::SC_BAD_REQUEST, i);
 			_request.verMaj = ch - '0';
 			UPDATE_STATE(LINE_HTTP_DOT);
 			break;
 
 		case LINE_HTTP_DOT:
-			if (ch != '.') return setError(http::SC_BAD_REQUEST);
+			if (ch != '.') return setError(http::SC_BAD_REQUEST, i);
 			UPDATE_STATE(LINE_HTTP_MINOR_VER);
 			break;
 
 		case LINE_HTTP_MINOR_VER:
-			if (!std::isdigit(ch)) return setError(http::SC_BAD_REQUEST);
+			if (!std::isdigit(ch)) return setError(http::SC_BAD_REQUEST, i);
 			_request.verMin = ch - '0';
 			UPDATE_STATE(LINE_ALMOST_DONE);
 			_buffer.clear();
 			break;
 
 		case LINE_ALMOST_DONE:
-			if (ch != '\r') return setError(http::SC_BAD_REQUEST);
+			if (ch != '\r') return setError(http::SC_BAD_REQUEST, i);
 			UPDATE_STATE(LINE_DONE);
 			break;
 
 		case LINE_DONE:
-			if (ch != '\n') return setError(http::SC_BAD_REQUEST);
+			if (ch != '\n') return setError(http::SC_BAD_REQUEST, i);
 			if (_request.verMaj != 1 || _request.verMin != 1)
-				return setError(http::SC_VERSION_NOT_SUPPORTED);
+				return setError(http::SC_VERSION_NOT_SUPPORTED, i);
 			UPDATE_STATE(HEADER_START);
 			break;
 
@@ -309,14 +311,14 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 		}
 
 		case HEADER_FIELD_START: {
-			if (!std::isalpha(ch)) return setError(http::SC_BAD_REQUEST);
+			if (!std::isalpha(ch)) return setError(http::SC_BAD_REQUEST, i);
 			UPDATE_STATE(HEADER_FIELD);
 			__attribute__ ((fallthrough));
 		}
 
 		case HEADER_FIELD: {
 			if (ch != ':') {
-				if (_buffer.length() > MAX_HEADER_LENGTH) return setError(http::SC_HEADER_FIELDS_TOO_LARGE);
+				if (_buffer.length() > MAX_HEADER_LENGTH) return setError(http::SC_HEADER_FIELDS_TOO_LARGE, i);
 				_buffer += ch;
 				break;
 			}
@@ -326,7 +328,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case HEADER_COLON:
 			if (ch != ':')
-				return setError(http::SC_BAD_REQUEST);
+				return setError(http::SC_BAD_REQUEST, i);
 			UPDATE_STATE(HEADER_VALUE_START);
 			break;
 
@@ -338,7 +340,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 		case HEADER_VALUE: {
 			if (ch != '\r') {
 				if (_temp.length() > MAX_HEADER_LENGTH)
-					return setError(http::SC_HEADER_FIELDS_TOO_LARGE);
+					return setError(http::SC_HEADER_FIELDS_TOO_LARGE, i);
 				_temp += ch;
 				break;
 			}
@@ -351,50 +353,34 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 
 		case HEADER_VALUE_ALMOST_DONE:
 			if (ch != '\r')
-				return setError(http::SC_BAD_REQUEST);
+				return setError(http::SC_BAD_REQUEST, i);
 			UPDATE_STATE(HEADER_VALUE_DONE);
 			break;
 
 		case HEADER_VALUE_DONE:
 			if (ch != '\n')
-				return setError(http::SC_BAD_REQUEST);
+				return setError(http::SC_BAD_REQUEST, i);
 			UPDATE_STATE(HEADER_START);
 			break;
 
 		case HEADER_END: {
 			if (ch != '\n')
-				return setError(http::SC_BAD_REQUEST);
-			if (getMethod() == http::MTH_GET || getMethod() == http::MTH_HEAD || getMethod() == http::MTH_DELETE) {
-				UPDATE_STATE(PARSING_DONE);
-				break;
-			}
+				return setError(http::SC_BAD_REQUEST, i);
 			_cookies.parseCookies(_request.headers);
 			UPDATE_STATE(BODY_START);
-			__attribute__ ((fallthrough));
+			return i + 1;
 		}
 
 		case BODY_START: {
-			if (hasField("Transfer-Encoding")) {
-				if (getField("Transfer-Encoding") != "chunked")
-					return setError(http::SC_NOT_IMPLEMENTED);
+			if (hasField("Transfer-Encoding"))
 				UPDATE_STATE(BODY_TRANSFER_HEXA);
-			}
-
-			if (hasField("Content-Length") && !hasField("Transfer-Encoding")) {
-				_buffer = getField("Content-Length");
-				if (!convert::isDec(_buffer))
-					return setError(http::SC_BAD_REQUEST);
-				_contentLength = std::atoi(_buffer.c_str());
-				if (_contentLength > _maxBodySize)
-					return setError(http::SC_CONTENT_TOO_LARGE);
+			else if (hasField("Content-Length"))
 				UPDATE_STATE(BODY_CONTENT);
-			}
-
-			if (!hasField("Content-Length") && !hasField("Transfer-Encoding"))
-				return setError(http::SC_LENGTH_REQUIRED);
+			else
+				return setError(http::SC_LENGTH_REQUIRED, i);
 
 			_buffer.clear();
-			break;
+			continue;
 		}
 
 		case BODY_TRANSFER_HEXA: {
@@ -404,25 +390,26 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			}
 
 			if (!convert::isHex(_buffer))
-				return setError(http::SC_BAD_REQUEST);
+				return setError(http::SC_BAD_REQUEST, i);
 
 			_transferLength = convert::htod(_buffer);
+			if (_maxBodySize && _transferLength > _maxBodySize)
+				return setError(http::SC_CONTENT_TOO_LARGE, i);
 			UPDATE_STATE(BODY_TRANSFER_HEXA_ALMOST_DONE);
 			__attribute__ ((fallthrough));
 		}
 
 		case BODY_TRANSFER_HEXA_ALMOST_DONE:
-			if (ch != '\r') return setError(http::SC_BAD_REQUEST);
+			if (ch != '\r') return setError(http::SC_BAD_REQUEST, i);
 			UPDATE_STATE(BODY_TRANSFER_HEXA_DONE);
 			break;
 
 		case BODY_TRANSFER_HEXA_DONE:
-			if (ch != '\n') return setError(http::SC_BAD_REQUEST);
-			if (_transferLength == 0)
-				UPDATE_STATE(BODY_TRANSFER_END);
-			else
-				UPDATE_STATE(BODY_TRANSFER_DATA);
-			break;
+			if (ch != '\n') return setError(http::SC_BAD_REQUEST, i);
+			UPDATE_STATE(BODY_TRANSFER_DATA);
+			if (_transferLength)
+				break;
+			__attribute__ ((fallthrough));
 
 		case BODY_TRANSFER_DATA: {
 			size_t		available = pSize - i;
@@ -441,12 +428,12 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 		}
 
 		case BODY_TRANSFER_DATA_ALMOST_DONE:
-			if (ch != '\r') return setError(http::SC_BAD_REQUEST);
+			if (ch != '\r') return setError(http::SC_BAD_REQUEST, i);
 			UPDATE_STATE(BODY_TRANSFER_DATA_DONE);
 			break;
 
 		case BODY_TRANSFER_DATA_DONE:
-			if (ch != '\n') return setError(http::SC_BAD_REQUEST);
+			if (ch != '\n') return setError(http::SC_BAD_REQUEST, i);
 			UPDATE_STATE(BODY_TRANSFER_END);
 			__attribute__ ((fallthrough));
 			
@@ -466,7 +453,7 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			if (readbytes > 0) {
 				_request.body.insert(_request.body.end(), pBuffer + i, pBuffer + i + readbytes);
 				_contentLength -= readbytes;
-				i += readbytes - 1;
+				i += readbytes;
 			}
 
 			if (_contentLength == 0)
@@ -479,17 +466,24 @@ void	HttpRequest::feed(char *pBuffer, size_t pSize)
 			break;
 
 		case PARSING_DONE:
-			break;
+			return i;
 		}
+		++i;
 	}
+	return pSize;
 }
 
-bool	HttpRequest::isDone(void) const
+bool	HttpRequest::isHeadersComplete(void) const
 {
-	return (CURRENT_STATE() == PARSING_DONE || CURRENT_STATE() == PARSING_ERROR);
+	return (CURRENT_STATE() == BODY_START);
 }
 
-bool	HttpRequest::isError() const
+bool	HttpRequest::isBodyComplete(void) const
+{
+	return (CURRENT_STATE() == PARSING_DONE);
+}
+
+bool	HttpRequest::isParsingError() const
 {
 	return (CURRENT_STATE() == PARSING_ERROR);
 }
@@ -503,13 +497,15 @@ void	HttpRequest::reset(void)
 	_request.uri.path.clear();
 	_request.uri.query.clear();
 	_request.uri.fragment.clear();
-	_request.verMaj = -1;
-	_request.verMin = -1;
+	_request.verMaj = 1;
+	_request.verMin = 1;
 	_request.headers.clear();
 	_request.body.clear();
 
 	_transferLength = 0;
 	_contentLength = 0;
+
+	_maxBodySize = 0;
 
 	_tsStart = 0;
 	_buffer.clear();
@@ -526,13 +522,14 @@ void	HttpRequest::checkTimeout(time_t now)
 		timeout = REQ_TIMEOUT_BODY;
 
 	if (_tsStart && difftime(now, _tsStart) > timeout)
-		setError(http::SC_REQUEST_TIMEOUT);
+		setError(http::SC_REQUEST_TIMEOUT, 0);
 }
 
-void HttpRequest::setError(const http::e_status_code pCode)
+size_t HttpRequest::setError(const http::e_status_code pCode, size_t idx)
 {
 	_code = pCode;
 	UPDATE_STATE(PARSING_ERROR);
+	return idx;
 }
 
 #pragma endregion
@@ -543,7 +540,7 @@ void HttpRequest::setError(const http::e_status_code pCode)
 
 std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 {
-	pOut << pRequest.getRawMeta() << "\r\n";
+	pOut << pRequest.getHTTPLine() << "\r\n";
 
 	http::t_headers headers = pRequest.getHeaders();
 	for (http::t_headers::const_iterator it = headers.begin(); it != headers.end(); ++it)
@@ -552,8 +549,6 @@ std::ostream &operator<<(std::ostream &pOut, const HttpRequest &pRequest)
 	}
 	pOut << "\r\n";
 
-	const t_bytes& body = pRequest.getBody();
-	if (!body.empty())
-		pOut.write(body.data(), body.size());
+	pOut << (!pRequest.getBody().empty() ? "With body" : "No body") << std::endl;
 	return (pOut);
 }

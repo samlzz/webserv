@@ -6,10 +6,11 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:49:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/19 16:22:15 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:22:43 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <cstddef>
 #include <fcntl.h>
 #include <string>
 #include <unistd.h>
@@ -19,6 +20,7 @@
 #include "ft_log/LogOp.hpp"
 #include "ft_log/level.hpp"
 #include "http/HttpData.hpp"
+#include "http/HttpTypes.hpp"
 #include "http/handlers/bodySrcs/FileBodySource.hpp"
 #include "http/handlers/bodySrcs/MemoryBodySource.hpp"
 #include "http/response/ResponsePlan.hpp"
@@ -26,7 +28,7 @@
 #include "utils/fileSystemUtils.hpp"
 #include "utils/stringUtils.hpp"
 
-ResponsePlan	ErrorBuilder::build(
+ResponsePlan	ErrorBuilder::getResponsePlan(
 	http::e_status_code status,
 	const Config::Server::Location *location
 )
@@ -56,6 +58,27 @@ ResponsePlan	ErrorBuilder::build(
 	ft_log::log(WS_LOG_HTTP, ft_log::LOG_DEBUG)
 		<< "Using default error page" << std::endl;
 	return buildDefault(status);
+}
+
+ResponsePlan	ErrorBuilder::build(
+	http::e_status_code status,
+	const Config::Server::Location *location
+)
+{
+	ResponsePlan	result(getResponsePlan(status, location));
+
+	if (status == http::SC_METHOD_NOT_ALLOWED)
+	{
+		std::string	allow;
+		for (size_t i = 0; i < location->methods.size(); ++i)
+		{
+			allow += str::toString(location->methods[i]);
+			if (i < location->methods.size() - 1)
+				allow += ", ";
+		}
+		result.headers["Allow"] = allow;
+	}
+	return result;
 }
 
 ResponsePlan	ErrorBuilder::buildDefault(http::e_status_code status)
@@ -101,6 +124,7 @@ ResponsePlan	ErrorBuilder::buildFromErrorPage(
 
 	ResponsePlan plan;
 	plan.status = status;
+	plan.addStandardHeaders();
 	plan.headers["Content-Type"] = http::Data::getMimeType("html");
 	plan.headers["Content-Length"] = str::toString(size);
 	plan.body = new FileBodySource(fd);

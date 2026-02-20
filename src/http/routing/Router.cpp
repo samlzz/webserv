@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 12:00:19 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/18 13:12:19 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:26:30 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,10 +18,9 @@
 #include "Router.hpp"
 #include "ft_log/LogOp.hpp"
 #include "ft_log/level.hpp"
+#include "config/Config.hpp"
 #include "http/request/Cookies.hpp"
-#include "http/request/HttpRequest.hpp"
 #include "log.h"
-#include "server/ServerCtx.hpp"
 #include "utils/fileSystemUtils.hpp"
 
 namespace routing
@@ -31,9 +30,9 @@ namespace routing
 // Construction
 // ============================================================================
 
-Context::Context(const ServerCtx &serv)
-	: server(serv), location(0)
-	, normalizedPath()
+Context::Context()
+	: location(0)
+	, normalizedUri()
 	, currSession(0)
 	, local(0), remote(0)
 {}
@@ -44,7 +43,7 @@ Context::Context(const ServerCtx &serv)
 /**
  * Remove /../ and /./ in path
  */ 
-static inline std::string	_normalizeUri(const std::string &path)
+static std::string	_normalizeUri(const std::string &path)
 {
 	std::vector<std::string>	stack;
 	std::string				token;
@@ -83,7 +82,8 @@ static inline std::string	_normalizeUri(const std::string &path)
 	return result;
 }
 
-static inline std::string	_prefixExtension(const std::string &path, const std::string &prefix)
+static inline std::string	_prefixExtension(const std::string &path,
+											const std::string &prefix)
 {
 	size_t		extPos = path.find_last_of('.');
 	std::string	result = path.substr(0, extPos) + prefix;
@@ -94,63 +94,56 @@ static inline std::string	_prefixExtension(const std::string &path, const std::s
 	return result;
 }
 
-Context	resolve(const HttpRequest &req,
-				const ServerCtx &serv)
+static inline std::string	_uriToPath(const std::string &uri,
+									const std::string &locationPath)
 {
-	Context ctx(serv);
+	std::string	relative = uri.substr(locationPath.size());
 
-	std::string uri = req.getPath(); // without query and fragment
-	uri = _normalizeUri(uri);
+	if (relative.empty())
+		return "/";
 
-	ctx.location = serv.config.findLocation(uri);
-	if (ctx.location)
+	if (relative[0] != '/')
+		relative = "/" + relative;
+	return relative;
+}
+
+Context	resolve(const std::string &uri, const Config::Server &config, Cookies *store)
+{
+	Context ctx;
+
+	ctx.location = config.findLocation(uri);
+	if (!ctx.location)
 	{
-		const std::string	&lp = ctx.location->path;
-		ft_log::log(WS_LOG_ROUTING, ft_log::LOG_DEBUG)
-			<< "Matched location " << lp << std::endl;
+		ft_log::log(WS_LOG_ROUTING, ft_log::LOG_ERROR)
+			<< "No location found for: " << uri << std::endl;
+		return ctx;
+	}
 
-		// suffixe URI
-		std::string suffix;
-		if (lp != "/")
-			suffix = uri.substr(lp.size());
-		else
-			suffix = uri;
+	const std::string	&lp = ctx.location->path;
+	ft_log::log(WS_LOG_ROUTING, ft_log::LOG_DEBUG)
+		<< "Matched location " << lp << std::endl;
+	ctx.normalizedUri = _uriToPath(_normalizeUri(uri), lp);
 
-		ctx.normalizedPath = lp + suffix;
+	if (!store)
+		return ctx;
 
-		// ? Serve files dynamically from cookies
-		const std::vector<std::string>	&cookiesVary = ctx.location->cookiesVary;
-		for (size_t i = 0; i < cookiesVary.size(); ++i)
+	// ? Serve files dynamically from cookies
+	const std::vector<std::string>	&cookiesVary = ctx.location->cookiesVary;
+	for (size_t i = 0; i < cookiesVary.size(); ++i)
+	{
+		std::string cookieValue = store->getCookie(cookiesVary[i]);
+
+		if (cookieValue.empty() || cookieValue.find('/') != std::string::npos)
+			continue;
+
+		std::string	newPath = _prefixExtension(
+					ctx.normalizedUri, "_" + cookieValue);
+		if (fs::isExist(ctx.location->root + newPath))
 		{
-			std::string cookieValue = req.getCookies().getCookie(cookiesVary[i]);
-			if (cookieValue.empty())
-				continue;
-			std::string	newPath = _prefixExtension(
-						ctx.normalizedPath, "_" + cookieValue);
-			if (fs::isExist(ctx.location->root + newPath))
-			{
-				ctx.normalizedPath = newPath;
-				break;
-			}
+			ctx.normalizedUri = newPath;
+			break;
 		}
 	}
-	else
-		ft_log::log(WS_LOG_ROUTING, ft_log::LOG_ERROR)
-			<< "No location found for: " << req.getPath() << std::endl;
-
-	// manage sessions
-	Cookies		&cookies = req.getCookies();
-	std::string	sessionId = cookies.getCookie("sessionId");
-
-	serv.sessions.clearExpiredSessions(SESSION_TIMEOUT);
-	if (sessionId.empty() || !serv.sessions.sessionExists(sessionId))
-	{
-		sessionId = serv.sessions.createSession("guest");
-		cookies.setCookie("sessionId", sessionId);
-	}
-	SessionsManager::Session *session = &serv.sessions.getSession(sessionId);
-	session->updateActivity();
-	ctx.currSession = session;
 
 	return ctx;
 }

@@ -78,11 +78,11 @@ bool SessionsManager::sessionExists(const std::string &sessionId) const
 	return _sessions.find(sessionId) != _sessions.end();
 }
 
-void SessionsManager::clearExpiredSessions(time_t timeout)
+void SessionsManager::clearExpiredSessions()
 {
 	for (std::map<std::string, Session>::iterator it = _sessions.begin(); it != _sessions.end();)
 	{
-		if (std::time(0) - it->second.last_activity > timeout)
+		if (std::time(0) - it->second.last_activity > SESSION_TIMEOUT)
 		{
 			std::map<std::string, Session>::iterator toErase = it;
 			++it;

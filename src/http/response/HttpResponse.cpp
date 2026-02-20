@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:30:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/19 13:18:56 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:24:09 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,16 +16,16 @@
 
 #include "ft_log/LogOp.hpp"
 #include "ft_log/level.hpp"
+#include "config/Config.hpp"
 #include "http/HttpData.hpp"
 #include "log.h"
-#include "server/ServerCtx.hpp"
+#include "http/transaction/HttpTransaction.hpp"
 #include "HttpResponse.hpp"
 #include "http/HttpTypes.hpp"
 #include "http/dispatch/ErrorBuilder.hpp"
 #include "http/request/HttpRequest.hpp"
 #include "http/response/ResponsePlan.hpp"
 #include "http/response/interfaces/IMetaSource.hpp"
-#include "http/routing/Router.hpp"
 #include "utils/urlUtils.hpp"
 
 // ============================================================================
@@ -34,8 +34,8 @@
 
 HttpResponse::HttpResponse(const ResponsePlan &plan,
 							const HttpRequest &req,
-							const routing::Context &route)
-	: _ctx(req, route)
+							const HttpTransaction &transac)
+	: _ctx(req, transac)
 	, _status(plan.status), _headers(plan.headers), _body(plan.body)
 	, _out()
 	, _commited(false), _done(false)
@@ -57,6 +57,31 @@ HttpResponse::~HttpResponse()
 }
 
 // ============================================================================
+// DecisionContext
+// ============================================================================
+
+HttpResponse::DecisionContext::DecisionContext(const HttpRequest &req,
+											const HttpTransaction &transac)
+	: _request(req), _transaction(transac)
+{}
+
+const HttpRequest	&HttpResponse::DecisionContext::getReq(void) const
+{
+	return _request;
+}
+
+const ResponsePlan	HttpResponse::DecisionContext::getPlan(void) const
+{
+	return _transaction.onBodyComplete(_request);
+}
+
+const Config::Server::Location	*
+	HttpResponse::DecisionContext::getLocation(void) const
+{
+	return _transaction.getLocation();
+}
+
+// ============================================================================
 // Accessors
 // ============================================================================
 
@@ -73,7 +98,7 @@ std::string	HttpResponse::rawMeta(void) const
 {
 	std::ostringstream	oss;
 
-	oss << "HTTP/" << _ctx.request.getVerMaj() << '.' << _ctx.request.getVerMin()
+	oss << "HTTP/" << _ctx.getReq().getVerMaj() << '.' << _ctx.getReq().getVerMin()
 		<< ' ' << _status << ' ' << http::Data::getStatusType(_status)
 		<< "\r\n";
 
@@ -173,12 +198,11 @@ bool	HttpResponse::handleCgiRedirect(const std::string &redirectPath)
 {
 	if (url::isInternal(redirectPath))
 	{
-		HttpRequest fakeReq(_ctx.request);
+		HttpRequest fakeReq(_ctx.getReq());
 		fakeReq.setMethod(http::MTH_GET);
 		fakeReq.setPath(redirectPath);
 
-		routing::Context	route = routing::resolve(fakeReq, _ctx.route.server);
-		applyPlan(_ctx.route.server.dispatcher.dispatch(fakeReq, route));
+		applyPlan(_ctx.getPlan());
 		return true;
 	}
 	else
@@ -205,7 +229,7 @@ bool	HttpResponse::fillMeta(IMetaSource *meta)
 	{
 		applyPlan(ErrorBuilder::build(
 								meta->status(),
-								_ctx.route.location
+								_ctx.getLocation()
 							));
 		return true;
 	}

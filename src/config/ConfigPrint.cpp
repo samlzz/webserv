@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/09 21:00:34 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/06 11:34:21 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 18:22:59 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@ void Config::print(std::ostream &os) const
 		os << "SERVER #" << i << "\n";
 		os << " host          : " << inet_ntoa(srv.host) << "(binary: " << srv.host.s_addr << ")\n";
 		os << " port          : " << srv.port << "\n";
-		os << " maxBodySize   : " << srv.maxBodySize << "\n";
 		os << " locations     : " << srv.locations.size() << "\n";
 
 		// ============================================================
@@ -56,6 +55,7 @@ void Config::print(std::ostream &os) const
 			os << "\n";
 
 			// OTHER SIMPLE FIELDS
+			os << "    maxBodySize : " << loc.maxBodySize << "\n";
 			os << "    root        : " << loc.root << "\n";
 			os << "    index       : " << loc.index << "\n";
 			os << "    autoindex   : " << (loc.autoindex ? "on" : "off") << "\n";

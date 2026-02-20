@@ -15,7 +15,7 @@ ResponsePlan	DeleteHandler::handle(
 								const routing::Context &route) const
 {
 	(void)req;
-	std::string		path = route.location->root + route.normalizedPath;
+	std::string		path = route.location->root + route.normalizedUri;
 	struct stat		st;
 
 	if (!(fs::isExist(path, &st)))

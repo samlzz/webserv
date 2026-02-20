@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 16:05:13 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/19 12:48:27 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 16:10:51 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include "http/dispatch/ErrorBuilder.hpp"
 #include "http/routing/Router.hpp"
 #include "server/connections/ConnEvent.hpp"
+#include "server/AddrInfo.hpp"
 #include "utils/fileSystemUtils.hpp"
 #include "utils/pathUtils.hpp"
 #include "utils/stringUtils.hpp"
@@ -62,7 +63,7 @@ static inline std::vector<std::string>	genEnvp(
 										)
 {
 	std::vector<std::string>	envp;
-	std::string					pathInfo = path::subInfo(route.normalizedPath);
+	std::string					pathInfo = path::subInfo(route.normalizedUri);
 
 	addEnv(envp, "GATEWAY_INTERFACE", "CGI/1.1");
 	addEnv(envp, "SERVER_PROTOCOL", "HTTP/1.1");
@@ -122,7 +123,7 @@ ResponsePlan CgiHandler::handle(
 	const routing::Context& route
 ) const
 {
-	std::string	scriptName = path::subPath(route.normalizedPath);
+	std::string	scriptName = path::subPath(route.normalizedUri);
 	std::string	scriptPath = route.location->root + scriptName;
 	struct stat	st;
 

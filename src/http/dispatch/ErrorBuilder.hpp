@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:50:00 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 20:01:06 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 13:55:30 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,10 @@ public:
 private:
 
 	// ---- Helpers ----
+	static ResponsePlan	getResponsePlan(
+							http::e_status_code status,
+							const Config::Server::Location *location 
+						);
 	static ResponsePlan	buildDefault(http::e_status_code status);
 	static ResponsePlan	buildFromErrorPage(
 							http::e_status_code status,

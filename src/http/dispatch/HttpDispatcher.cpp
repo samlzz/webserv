@@ -6,11 +6,10 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/18 14:30:41 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:29:23 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <sstream>
 #include <string>
 
 #include "HttpDispatcher.hpp"
@@ -25,6 +24,7 @@
 #include "http/routing/Router.hpp"
 #include "log.h"
 #include "utils/pathUtils.hpp"
+#include "utils/stringUtils.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -57,7 +57,7 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 	http::e_method	method = req.getMethod();
 	if (method == http::MTH_GET || method == http::MTH_HEAD || method == http::MTH_POST)
 	{
-		std::string	cgiExt = path::subExt(path::subPath(route.normalizedPath));
+		std::string	cgiExt = path::subExt(path::subPath(route.normalizedUri));
 		if (loca.cgiExts.find(cgiExt) != loca.cgiExts.end())
 		{
 			handlerName = "CgiHandler (ext: " + cgiExt + ")";
@@ -96,81 +96,43 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 	return NULL;
 }
 
-ResponsePlan	HttpDispatcher::findPlan(
-	const HttpRequest &req, const routing::Context &route
-) const
+static inline bool	_needToCloseConnection(http::e_status_code err)
 {
-	if (!route.location)
-	{
-		return ErrorBuilder::build(
-			http::SC_NOT_FOUND,
-			NULL
-		);
-	}
-
-	if (req.isError())
-		return ErrorBuilder::build(
-			req.getStatusCode(),
-			route.location
-		);
-
-	const Config::Server::Location& loca = *route.location;
-
-	if (!loca.isMethodAllowed(req.getMethod()))
-		return ErrorBuilder::build(
-			http::SC_METHOD_NOT_ALLOWED,
-			route.location
-		);
-
-	std::string			name;
-	const IHttpHandler	*handler = findHandler(req, route, name);
-	if (!handler)
-		return ErrorBuilder::build(
-			http::SC_NOT_IMPLEMENTED,
-			route.location
-		);
-	ft_log::log(WS_LOG_ROUTING, ft_log::LOG_DEBUG)
-		<< "Handler selected: " << name << std::endl;
-
-	return handler->handle(req, route);
+	return (err == 400 || err == 408 || err == 411 || err == 413 || err == 414
+			|| err == 431 || err >= 500);
 }
 
 ResponsePlan	HttpDispatcher::dispatch(
 	const HttpRequest &req, const routing::Context &route
 ) const
 {
-	ResponsePlan		plan(findPlan(req, route));
-	Cookies				&cookies = req.getCookies();
-	std::istringstream	queryIss(req.getQuery());
-	std::string			queryPart;
-	
-	while (std::getline(queryIss, queryPart, '&'))
-	{
-		size_t		pos = queryPart.find('=');
-		std::string	key = queryPart.substr(0, pos);
+	std::string			name;
+	const IHttpHandler	*handler = findHandler(req, route, name);
+	if (!handler)
+		return ErrorBuilder::build(http::SC_NOT_IMPLEMENTED, route.location);
+	ft_log::log(WS_LOG_ROUTING, ft_log::LOG_DEBUG)
+		<< "Handler selected: " << name << std::endl;
+	ResponsePlan		plan = handler->handle(req, route);
 
-		if (pos != std::string::npos
-			&& route.location
-			&& route.location->isCookiesSet(key)
-		)
-			cookies.setCookie(key, queryPart.substr(pos + 1));
+	if (req.getMethod() == http::MTH_HEAD && plan.body)
+	{
+		delete plan.body;
+		plan.body = 0;
 	}
-	plan.headers["Set-Cookie"] = cookies.buildSetCookieHeaders();
-	plan.headers["Connection"] = "keep-alive";
 
-	http::e_status_code code = plan.status;
-	if (code == 400 || code == 408 || code == 411 || code == 413 || code ==  414
-		|| code == 431 || code >= 500)
-	{
+	// ? Set Cookies
+	plan.headers["Set-Cookie"] = req.getCookies().buildSetCookieHeaders();
+
+	// ? Decide connection lifetime
+	std::string	con = req.getField("Connection");
+	str::lowerCase(con);
+	if (_needToCloseConnection(plan.status)
+		|| con.find("close") != std::string::npos
+	)
 		plan.headers["Connection"] = "close";
-		return plan;
-	}
+	else
+		plan.headers["Connection"] = "keep-alive";
 
-	if (req.hasField("Connection") && req.getField("Connection") == "close") 
-	{
-		plan.headers["Connection"] = "close";
-		return plan;
-	}
-
+	plan.addStandardHeaders();
 	return plan;
 }

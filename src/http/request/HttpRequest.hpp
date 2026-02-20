@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/02/17 19:20:04 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:23:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include "Cookies.hpp"
 #include "IHttpRequest.hpp"
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -105,19 +106,24 @@ private:
 	size_t				_transferLength;
 	size_t				_contentLength;
 
-	void	setError(const http::e_status_code pCode);
+	size_t				setError(
+							const http::e_status_code pCode,
+							size_t idx);
 
 public:
-	HttpRequest(size_t clientMaxBodySize);
+	HttpRequest(void);
 	~HttpRequest(void);
 
 	// ======== Lifecycle ========
-	virtual void		feed(char *pBuffer, size_t pSize);
+	virtual size_t		feed(char *pBuffer, size_t pSize);
 	virtual void		reset();
 
+	virtual void		checkTimeout(time_t now);
+
 	// ====== Request state ======
-	virtual bool		isDone() const;
-	virtual bool		isError() const;
+	virtual bool		isHeadersComplete() const;
+	virtual bool		isBodyComplete() const;
+	virtual bool		isParsingError() const;
 
 	// ===== Getter / Setter =====
 	http::e_method			getMethod() const;
@@ -130,7 +136,7 @@ public:
 	const std::string		&getFragment() const;
 	int						getVerMaj() const;
 	int						getVerMin() const;
-	std::string				getRawMeta() const;
+	std::string				getHTTPLine() const;
 
 	http::e_status_code		getStatusCode() const;
 	const http::t_headers	&getHeaders() const;
@@ -138,12 +144,14 @@ public:
 	Cookies					&getCookies() const;
 	time_t					getStartTs() const;
 
+	virtual void			setBodySize(size_t pMaxSize);
+	virtual void			setContentLength(size_t pValue);
+
 	// ======= Header Utils =======
 	void				setField(const std::string& pKey, const std::string& pValue);
 	bool				hasField(const std::string& pKey) const;
 	std::string			getField(const std::string& pKey) const;
 
-	void				checkTimeout(time_t now);
 };
 
 std::ostream&		operator<<(std::ostream& pOut, const HttpRequest& pRequest);

@@ -7,6 +7,8 @@
 #include <string>
 #include <map>
 
+#define SESSION_TIMEOUT 1800 // 30 minutes
+
 class SessionsManager
 {
 public:
@@ -47,7 +49,7 @@ public:
 	
 	bool			sessionExists(const std::string &sessionId) const;
 
-	void 			clearExpiredSessions(time_t timeout);
+	void 			clearExpiredSessions();
 };
 
 #endif /* __SESSIONS_HPP__ */

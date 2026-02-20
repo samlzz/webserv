@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/09 09:36:59 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 14:15:41 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 18:15:28 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,10 @@
 #include "http/HttpTypes.hpp"
 #include "ftpp/AstNode.hpp"
 #include "config/Config.hpp"
-#include "./configParse.hpp"
-#include "./parseUtils.hpp"
-#include "./RawConfig.hpp"
+#include "configParse.hpp"
+#include "parseUtils.hpp"
+#include "RawConfig.hpp"
+#include "utils/Optionnal.hpp"
 
 namespace config_parse
 {
@@ -113,6 +114,7 @@ RawServer::RawLocation	extractLocation(const AstNode *locationNode)
 	RawServer::RawLocation	loc("");
 
 	fillDest(loc.path, locationNode, "path");
+	fillDest(loc.maxBodySize, locationNode, "client_max_body_size", parseSize);
 	fillDest(loc.methods, locationNode, "methods", _extractMethods);
 	fillDest(loc.root, locationNode, "root");
 	fillDest(loc.index, locationNode, "index");
@@ -149,7 +151,7 @@ static inline void	_extractServDirectives(RawServer &serv, const AstNode *server
 {
 	fillDest(serv.host, serverNode, "host");
 	fillDest(serv.port, serverNode, "port", _extractPort);
-	fillDest(serv.maxBodySize, serverNode, "client_max_body_size", parseSize);
+	fillDest(serv.d_maxBodySize, serverNode, "client_max_body_size", parseSize);
 	fillDest(serv.d_methods, serverNode, "methods", _extractMethods);
 	fillDest(serv.d_root, serverNode, "root");
 	fillDest(serv.d_index, serverNode, "index");

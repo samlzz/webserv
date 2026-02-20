@@ -6,13 +6,14 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/19 14:07:54 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:33:03 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstddef>
 #include <ctime>
 #include <ostream>
+#include <string>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -31,6 +32,7 @@
 #include "http/routing/Router.hpp"
 #include "server/AddrInfo.hpp"
 #include "server/ServerCtx.hpp"
+#include "utils/Optionnal.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -56,22 +58,23 @@ static AddrInfo	_getLocalInfo(int sockfd, const Config::Server &conf)
 
 ClientConnection::ClientConnection(
 							int cliSockFd,
-							const ServerCtx &serverCtx,
+							ServerCtx &serverCtx,
 							const struct sockaddr_storage &remote
 						)
-	: AConnection(cliSockFd), _serv(serverCtx)
-	, _remote(AddrInfo(remote))
-	, _local(_getLocalInfo(cliSockFd, serverCtx.config))
-	, _req(_serv.config.maxBodySize), _resp(0)
-	, _totalSent(0), _offset(0)
-	, _cgiRead(0)
+	: AConnection(cliSockFd)
 	, _shouldRefresh(false)
-	, _state(CS_WAIT_FIRST_BYTE)
 	, _tsLastActivity(std::time(0))
+	, _state(CS_WAIT_FIRST_BYTE)
+	, _req()
+	, _recvBuffer(), _recvOffset(0)
+	, _transac(serverCtx, remote, _getLocalInfo(cliSockFd, serverCtx.config))
+	, _cgiRead(0)
+	, _resp(0)
+	, _sendOffset(0), _totalSent(0)
 {
 	setFdFlags();
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
-		<< "Connection " << _id << " opened from " << _remote << std::endl;
+		<< "Connection " << _id << " opened from " << AddrInfo(remote) << std::endl;
 }
 
 ClientConnection::~ClientConnection(void)
@@ -83,13 +86,8 @@ ClientConnection::~ClientConnection(void)
 // Private members methods
 // ============================================================================
 
-ConnEvent	ClientConnection::buildResponse(void)
+ConnEvent	ClientConnection::buildResponse(const ResponsePlan &plan)
 {
-	routing::Context	route = routing::resolve(_req, _serv);
-	route.local = &_local;
-	route.remote = &_remote;
-
-	ResponsePlan		plan = _serv.dispatcher.dispatch(_req, route);
 	INeedsNotifier		*needs = dynamic_cast<INeedsNotifier *>(plan.body);
 
 	if (needs)
@@ -98,9 +96,7 @@ ConnEvent	ClientConnection::buildResponse(void)
 		_cgiRead = plan.event.conn;
 
 	try {
-		_resp = new HttpResponse(plan, _req, route);
-		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
-			<< "Wait for POLLOUT..." << std::endl;
+		_resp = new HttpResponse(plan, _req, _transac);
 	}
 	catch (...) {
 		if (_cgiRead)
@@ -111,6 +107,10 @@ ConnEvent	ClientConnection::buildResponse(void)
 		}
 		throw;
 	}
+	_state = CS_WAIT_RESPONSE;
+	_events = POLLOUT;
+	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
+		<< "Wait for POLLOUT..." << std::endl;
 	return plan.event;
 }
 
@@ -138,25 +138,38 @@ ConnEvent	ClientConnection::handleRead(void)
 		<< WS_LOG_SEP << '\n' << std::string(buf, n)
 		<< WS_LOG_SEP << std::endl;
 
+	_recvBuffer.insert(_recvBuffer.end(), buf, buf + n);
+
 	_tsLastActivity = std::time(0);
 	if (_state == CS_WAIT_FIRST_BYTE)
 		_state = CS_WAIT_REQUEST;
 
-	_req.feed(buf, static_cast<size_t>(n));
-	if (_req.isDone())
+	while (_recvOffset < _recvBuffer.size())
 	{
-		ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_TRACE)
-			<< "Parsed request:\n"
-			<< WS_LOG_SEP << '\n' << _req
-			<< WS_LOG_SEP << std::endl;
-		if (_req.isError())
-			ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_ERROR)
-				<< "Request parsing error: status=" << _req.getStatusCode()
-				<< " client=" << _id << std::endl;
+		size_t	parsed = _req.feed(_recvBuffer.data() + _recvOffset,
+									_recvBuffer.size() - _recvOffset);
+		if (parsed == 0)
+			break;
 
-		_state = CS_WAIT_RESPONSE;
-		_events = POLLOUT;
-		return buildResponse();
+		_recvOffset += parsed;
+		if (_recvOffset == _recvBuffer.size())
+		{
+			_recvOffset = 0;
+			_recvBuffer.clear();
+		}
+
+		if (_req.isParsingError())
+			return buildResponse(_transac.onParsingError(_req));
+
+		if (_req.isHeadersComplete() && !_transac.isHeadersValidated())
+		{
+			Optionnal<ResponsePlan>	maybe = _transac.onHeadersComplete(_req);
+			if (maybe)
+				return buildResponse(*maybe);
+		}
+
+		if (_req.isBodyComplete())
+			return buildResponse(_transac.onBodyComplete(_req));
 	}
 	return ConnEvent::none();
 }
@@ -175,8 +188,8 @@ ConnEvent	ClientConnection::handleWrite(void)
 		return (stream.pop(), ConnEvent::none());
 	// ? _offset must always be strictly less than buf.size()
 	ssize_t n = send(_fd,
-					buf.data() + _offset,
-					buf.size() - _offset,
+					buf.data() + _sendOffset,
+					buf.size() - _sendOffset,
 					0);
 	if (n <= 0) // ? so n should never be 0
 	{
@@ -189,24 +202,25 @@ ConnEvent	ClientConnection::handleWrite(void)
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_DEBUG)
 		<< "Send " << n << " bytes to client " << _id << std::endl;
 	ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_TRACE) << "Buffer sent:\n"
-		<< WS_LOG_SEP << '\n' << std::string(buf.data() + _offset, buf.size() - _offset)
+		<< WS_LOG_SEP << '\n'
+		<< std::string(buf.data() + _sendOffset, buf.size() - _sendOffset)
 		<< WS_LOG_SEP << std::endl;
 
 	_tsLastActivity = std::time(0);
-	_offset += static_cast<size_t>(n);
+	_sendOffset += static_cast<size_t>(n);
 
-	if (_offset == buf.size()) // ? all curent buffer was sent
+	if (_sendOffset == buf.size()) // ? all curent buffer was sent
 	{
 		stream.pop();
-		_totalSent += _offset;
-		_offset = 0;
+		_totalSent += _sendOffset;
+		_sendOffset = 0;
 
 		if (!stream.hasBuffer())
 		{
 			if (_resp->isDone())
 			{
 				ft_log::log(WS_LOG_SERVER_CLI, ft_log::LOG_INFO)
-					<< '(' << _id << ") " << _remote
+					<< '(' << _id << ") "
 					<< " \"" << _req.getMethod() << ' ' << _req.getPath() << "\" "
 					<< _resp->getStatus() << ' ' << _totalSent << "B "
 					<< (std::time(0) - _req.getStartTs()) << "s"
@@ -219,6 +233,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 
 				_totalSent = 0;
 				_req.reset();
+				_transac.reset();
 				delete _resp;
 				_resp = 0;
 				_state = CS_WAIT_REQUEST;

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 11:19:30 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 16:06:20 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:23:05 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,6 @@ public:
 	ResponsePlan	handleStaticFile(const routing::Context &route) const;
 
 private:
-	ResponsePlan		findPlan(const HttpRequest &req, const routing::Context &route) const;
 	const IHttpHandler	*findHandler(
 						const HttpRequest &req,
 						const routing::Context &route,

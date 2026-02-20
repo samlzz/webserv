@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:34:00 by sliziard          #+#    #+#             */
-/*   Updated: 2026/01/28 12:47:48 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 11:51:45 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ struct ServerCtx {
 
 	const HttpDispatcher	&dispatcher;
 	const Config::Server	&config;
-	mutable SessionsManager	sessions;
+	SessionsManager			sessions;
 
 	ServerCtx(const HttpDispatcher &pDispatcher, const Config::Server &pConfig)
 		: dispatcher(pDispatcher), config(pConfig), sessions()

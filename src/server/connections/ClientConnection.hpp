@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:47:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 18:06:01 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:27:09 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,10 @@
 # include "AConnection.hpp"
 # include "http/request/HttpRequest.hpp"
 # include "IWritableNotifier.hpp"
+# include "http/response/BuffStream.hpp"
 # include "http/response/HttpResponse.hpp"
-# include "server/AddrInfo.hpp"
+# include "http/response/ResponsePlan.hpp"
+# include "http/transaction/HttpTransaction.hpp"
 # include "server/ServerCtx.hpp"
 # include "server/connections/ConnEvent.hpp"
 # include "server/connections/IConnection.hpp"
@@ -48,24 +50,25 @@ private:
 		CS_WAIT_RESPONSE		// write response
 	};
 
-	const ServerCtx			&_serv;
-	const AddrInfo			_remote;
-	const AddrInfo			_local;
+	bool					_shouldRefresh;
+	time_t					_tsLastActivity;
+	e_client_state			_state;
 
 	HttpRequest				_req;
-	HttpResponse			*_resp;
-	size_t					_totalSent;
-	size_t					_offset;
+	t_bytes					_recvBuffer;
+	size_t					_recvOffset;
+
+	HttpTransaction			_transac;
 	IConnection				*_cgiRead;
 
-	bool					_shouldRefresh;
-	e_client_state			_state;
-	time_t					_tsLastActivity;
+	HttpResponse			*_resp;
+	size_t					_sendOffset;
+	size_t					_totalSent;
 
 public:
 	ClientConnection(
 		int cliSockFd,
-		const ServerCtx &servCtx,
+		ServerCtx &servCtx,
 		const sockaddr_storage &remote
 	);
 	virtual ~ClientConnection(void);
@@ -88,7 +91,7 @@ private:
 	ConnEvent			handleRead(void);
 	ConnEvent			handleWrite(void);
 
-	ConnEvent			buildResponse(void);
+	ConnEvent			buildResponse(const ResponsePlan &plan);
 
 	time_t				timeoutFromState(void);
 

@@ -6,13 +6,15 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/17 14:55:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 15:00:24 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 16:32:33 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "convertUtils.hpp"
+#include <cstddef>
 #include <sstream>
 #include <string>
+
+#include "convertUtils.hpp"
 
 namespace convert {
 
