@@ -179,6 +179,7 @@ ConnEvent	ClientConnection::handleWrite(void)
 					return ConnEvent::close();
 
 				_req.reset();
+				_transac.reset();
 				delete _resp;
 				_resp = 0;
 				_state = CS_WAIT_REQUEST;

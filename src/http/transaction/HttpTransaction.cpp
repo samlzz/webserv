@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 11:48:06 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 18:39:23 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:01:47 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,11 @@ const Config::Server::Location	*
 	if (_route.isSome())
 		return (*_route).location;
 	return NULL;
+}
+
+void	HttpTransaction::reset(void)
+{
+	_route.reset();
 }
 
 // ============================================================================
@@ -138,6 +143,7 @@ Optionnal<ResponsePlan>	HttpTransaction::onHeadersComplete(HttpRequest &req)
 				return ErrorBuilder::build(http::SC_BAD_REQUEST, r.location);
 			if (clNb > r.location->maxBodySize)
 				return ErrorBuilder::build(http::SC_CONTENT_TOO_LARGE, r.location);
+			req.setContentLength(clNb);
 			if (clNb == 0)
 				needBody = false;
 		}

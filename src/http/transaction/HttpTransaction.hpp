@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 11:24:59 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 18:38:43 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 21:01:23 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,8 @@ public:
 	ResponsePlan			onParsingError(const HttpRequest &req);
 	Optionnal<ResponsePlan>	onHeadersComplete(HttpRequest &req);
 	ResponsePlan			onBodyComplete(const HttpRequest &req) const;
+
+	void					reset(void);
 
 	// ========================================================================
 	// Accessors
