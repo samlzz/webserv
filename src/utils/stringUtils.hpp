@@ -6,15 +6,16 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 02:35:19 by achu              #+#    #+#             */
-/*   Updated: 2026/01/29 16:16:00 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 15:51:34 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __STRING_UTILS_HPP__
-#define __STRING_UTILS_HPP__
+# define __STRING_UTILS_HPP__
 
-#include <sstream>
-#include <string>
+# include <algorithm>
+# include <sstream>
+# include <string>
 
 namespace str
 {
@@ -41,6 +42,22 @@ inline std::string trim(const std::string& s)
 		end--;
 
 	return s.substr(start, end - start);
+}
+
+namespace {
+
+char	_toLowerChar(char c)
+{
+	return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+}
+}
+
+inline std::string	&lowerCase(std::string &s)
+{
+	std::transform(
+		s.begin(), s.end(), s.begin(),
+		_toLowerChar);
+	return s;
 }
 
 } // namespace utils
