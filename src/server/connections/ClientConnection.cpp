@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/19 20:26:47 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 13:28:31 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@
 #include "http/routing/Router.hpp"
 #include "server/AddrInfo.hpp"
 #include "server/ServerCtx.hpp"
+#include "utils/Optionnal.hpp"
 
 // ============================================================================
 // Construction / Destruction
@@ -52,17 +53,19 @@ static AddrInfo	_getLocalInfo(int sockfd, const Config::Server &conf)
 
 ClientConnection::ClientConnection(
 							int cliSockFd,
-							const ServerCtx &serverCtx,
+							ServerCtx &serverCtx,
 							const struct sockaddr_storage &remote
 						)
-	: AConnection(cliSockFd), _serv(serverCtx)
-	, _remote(AddrInfo(remote))
-	, _local(_getLocalInfo(cliSockFd, serverCtx.config))
-	, _req(_serv.config.maxBodySize), _resp(0)
-	, _offset(0), _cgiRead(0)
+	: AConnection(cliSockFd)
 	, _shouldRefresh(false)
-	, _state(CS_WAIT_FIRST_BYTE)
 	, _tsLastActivity(std::time(0))
+	, _state(CS_WAIT_FIRST_BYTE)
+	, _req(serverCtx.config.maxBodySize)
+	, _recvBuffer()
+	, _transac(serverCtx, remote, _getLocalInfo(cliSockFd, serverCtx.config))
+	, _cgiRead(0)
+	, _resp(0)
+	, _sendOffset(0)
 {
 	setFdFlags();
 }
@@ -76,13 +79,8 @@ ClientConnection::~ClientConnection(void)
 // Private members methods
 // ============================================================================
 
-ConnEvent	ClientConnection::buildResponse(void)
+ConnEvent	ClientConnection::buildResponse(const ResponsePlan &plan)
 {
-	routing::Context	route = routing::resolve(_req, _serv);
-	route.local = &_local;
-	route.remote = &_remote;
-
-	ResponsePlan		plan = _serv.dispatcher.dispatch(_req, route);
 	INeedsNotifier		*needs = dynamic_cast<INeedsNotifier *>(plan.body);
 
 	if (needs)
@@ -91,7 +89,7 @@ ConnEvent	ClientConnection::buildResponse(void)
 		_cgiRead = plan.event.conn;
 
 	try {
-		_resp = new HttpResponse(plan, _req, route);
+		_resp = new HttpResponse(plan, _req);
 	}
 	catch (...) {
 		if (_cgiRead)
@@ -102,6 +100,8 @@ ConnEvent	ClientConnection::buildResponse(void)
 		}
 		throw;
 	}
+	_state = CS_WAIT_RESPONSE;
+	_events = POLLOUT;
 	return plan.event;
 }
 
@@ -116,18 +116,29 @@ ConnEvent	ClientConnection::handleRead(void)
 
 	if (n < 0)
 		return ConnEvent::close();
+	_recvBuffer.insert(_recvBuffer.end(), buf, buf + n);
 
 	_tsLastActivity = std::time(0);
 	if (_state == CS_WAIT_FIRST_BYTE)
 		_state = CS_WAIT_REQUEST;
 
-	_req.feed(buf, static_cast<size_t>(n));
-	if (_req.isDone())
+	size_t	parsed = _req.feed(_recvBuffer.data(), _recvBuffer.size());
+	if (parsed)
+		_recvBuffer.erase(_recvBuffer.begin(), _recvBuffer.begin() + parsed);
+
+	if (_req.isParsingError())
+		return buildResponse(_transac.onParsingError(_req));
+
+	if (_req.isHeadersComplete() && !_transac.isHeadersValidated())
 	{
-		_state = CS_WAIT_RESPONSE;
-		_events = POLLOUT;
-		return buildResponse();
+		Optionnal<ResponsePlan>	maybe = _transac.onHeadersComplete(_req);
+		if (maybe)
+			return buildResponse(*maybe);
 	}
+
+	if (_req.isBodyComplete())
+		return buildResponse(_transac.onBodyComplete(_req));
+
 	return ConnEvent::none();
 }
 
@@ -145,19 +156,19 @@ ConnEvent	ClientConnection::handleWrite(void)
 		return (stream.pop(), ConnEvent::none());
 	// ? _offset must always be strictly less than buf.size()
 	ssize_t n = send(_fd,
-					buf.data() + _offset,
-					buf.size() - _offset,
+					buf.data() + _sendOffset,
+					buf.size() - _sendOffset,
 					0);
 	if (n <= 0) // ? so n should never be 0
 		return ConnEvent::close();
 
 	_tsLastActivity = std::time(0);
-	_offset += static_cast<size_t>(n);
+	_sendOffset += static_cast<size_t>(n);
 
-	if (_offset == buf.size()) // ? all curent buffer was sent
+	if (_sendOffset == buf.size()) // ? all curent buffer was sent
 	{
 		stream.pop();
-		_offset = 0;
+		_sendOffset = 0;
 
 		if (!stream.hasBuffer())
 		{
