@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/02/20 21:00:53 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 22:45:38 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,6 +140,7 @@ public:
 
 	http::e_status_code		getStatusCode() const;
 	const http::t_headers	&getHeaders() const;
+	bool					hasBody() const;
 	const t_bytes			&getBody() const;
 	Cookies					&getCookies() const;
 
