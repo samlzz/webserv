@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 11:48:06 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 17:25:06 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 18:31:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,7 +136,7 @@ Optionnal<ResponsePlan>	HttpTransaction::onHeadersComplete(const HttpRequest &re
 			size_t		clNb;
 			if (!_parseContentLength(req.getField("Content-Length"), clNb))
 				return ErrorBuilder::build(http::SC_BAD_REQUEST, r.location);
-			if (clNb > _ctx.config.maxBodySize)
+			if (clNb > r.location->maxBodySize)
 				return ErrorBuilder::build(http::SC_CONTENT_TOO_LARGE, r.location);
 			if (clNb == 0)
 				needBody = false;

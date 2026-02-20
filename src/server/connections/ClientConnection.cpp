@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/29 09:55:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 17:15:54 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 18:29:16 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ ClientConnection::ClientConnection(
 	, _shouldRefresh(false)
 	, _tsLastActivity(std::time(0))
 	, _state(CS_WAIT_FIRST_BYTE)
-	, _req(serverCtx.config.maxBodySize)
+	, _req()
 	, _recvBuffer()
 	, _transac(serverCtx, remote, _getLocalInfo(cliSockFd, serverCtx.config))
 	, _cgiRead(0)
