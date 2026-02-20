@@ -129,6 +129,8 @@ ResponsePlan	HttpDispatcher::dispatch(
 		)
 			cookies.setCookie(key, queryPart.substr(pos + 1));
 	}
+	
+	plan.addStandardHeaders();
 	plan.headers["Set-Cookie"] = cookies.buildSetCookieHeaders();
 	plan.headers["Connection"] = "keep-alive";
 
