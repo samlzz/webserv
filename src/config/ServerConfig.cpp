@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/07 21:09:01 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/07 18:00:43 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 18:23:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,6 @@ const char				*Config::ServerDefaults::defaultErrPage = "/errors/default.html";
 Config::Server::Server(const std::string &stringHost)
 	: hostStr(stringHost), host()
 	, port(0)
-	, maxBodySize(0)
 	, locations()
 {}
 
