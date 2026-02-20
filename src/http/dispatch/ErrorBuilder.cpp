@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:49:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 14:02:29 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 22:45:29 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,7 @@ ResponsePlan	ErrorBuilder::buildDefault(http::e_status_code status)
 	ResponsePlan		plan;
 
 	plan.status = status;
+	plan.addStandardHeaders();
 	plan.headers["Content-Type"] = http::Data::getMimeType("html");
 	plan.headers["Content-Length"] = str::toString(body.length());
 	plan.body = new MemoryBodySource(body);
