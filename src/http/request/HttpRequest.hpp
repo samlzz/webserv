@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/02/19 20:26:03 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 11:04:35 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,19 +107,24 @@ private:
 	size_t				_transferLength;
 	size_t				_contentLength;
 
-	void	setError(const http::e_status_code pCode);
+	size_t				setError(
+							const http::e_status_code pCode,
+							size_t idx);
 
 public:
 	HttpRequest(size_t clientMaxBodySize);
 	~HttpRequest(void);
 
 	// ======== Lifecycle ========
-	virtual void		feed(char *pBuffer, size_t pSize);
+	virtual size_t		feed(char *pBuffer, size_t pSize);
 	virtual void		reset();
 
+	virtual void		checkTimeout(time_t now);
+
 	// ====== Request state ======
-	virtual bool		isDone() const;
-	virtual bool		isError() const;
+	virtual bool		isHeadersComplete() const;
+	virtual bool		isBodyComplete() const;
+	virtual bool		isParsingError() const;
 
 	// ===== Getter / Setter =====
 	http::e_method			getMethod() const;
@@ -144,7 +149,6 @@ public:
 	bool				hasField(const std::string& pKey) const;
 	std::string			getField(const std::string& pKey) const;
 
-	void				checkTimeout(time_t now);
 };
 
 std::ostream&		operator<<(std::ostream& pOut, const HttpRequest& pRequest);
