@@ -6,7 +6,7 @@
 /*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/20 15:13:19 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/20 18:12:16 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,7 @@
 //#****************************************************************************#
 #pragma region Construct & Destruct
 
-HttpRequest::HttpRequest(size_t clientMaxBodySize)
-	: _maxBodySize(clientMaxBodySize) {
+HttpRequest::HttpRequest(void) {
 	reset();
 }
 
@@ -81,11 +80,12 @@ std::string				HttpRequest::getHTTPLine() const
 	iss << " HTTP/" << _request.verMaj << '.' << _request.verMin;
 	return iss.str();
 }
-
 http::e_status_code		HttpRequest::getStatusCode() const	{ return (_code);                 };
 const http::t_headers	&HttpRequest::getHeaders() const 	{ return (_request.headers);      };
 const t_bytes			&HttpRequest::getBody() const		{ return (_request.body);         };
-Cookies					&HttpRequest::getCookies() const	{ return (_cookies);              };
+Cookies					&HttpRequest::getCookies() const	{ return (_cookies);              }
+
+void	HttpRequest::setBodySize(size_t pMaxSize) {_maxBodySize = pMaxSize;}
 
 void	HttpRequest::setField(const std::string& pKey, const std::string& pValue) {
 	_request.headers[pKey] = pValue;
@@ -505,6 +505,8 @@ void	HttpRequest::reset(void)
 	_totalChunkLength = 0;
 	_transferLength = 0;
 	_contentLength = 0;
+
+	_maxBodySize = 0;
 
 	_tsStart = 0;
 	_buffer.clear();

@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/21 19:24:52 by achu              #+#    #+#             */
-/*   Updated: 2026/02/20 11:00:52 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 18:27:14 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ public:
 	// Indicates whether the request has occured an error inside the parser
 	virtual bool		isParsingError() const = 0;
 
+	virtual void		setBodySize(size_t pMaxSize) = 0;
 };
 
 #endif

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/02/20 11:04:35 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 18:11:11 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,7 +112,7 @@ private:
 							size_t idx);
 
 public:
-	HttpRequest(size_t clientMaxBodySize);
+	HttpRequest(void);
 	~HttpRequest(void);
 
 	// ======== Lifecycle ========
@@ -143,6 +143,8 @@ public:
 	const http::t_headers	&getHeaders() const;
 	const t_bytes			&getBody() const;
 	Cookies					&getCookies() const;
+
+	virtual void	setBodySize(size_t pMaxSize);
 
 	// ======= Header Utils =======
 	void				setField(const std::string& pKey, const std::string& pValue);
