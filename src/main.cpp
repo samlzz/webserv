@@ -31,7 +31,8 @@
 #include "server/connections/ServerConnection.hpp"
 #include "ftpp/FtppException.hpp"
 
-#define ERR_USAGE	"Usage: webserv <configuration file>"
+#define ERR_USAGE		"Usage: webserv [configuration file]"
+#define DEFAULT_CONFIG	"assets/webserv.conf"
 
 extern "C" void signalHandler(int)
 {
@@ -51,16 +52,16 @@ static inline void	_configLogging(void)
 
 int main(int ac, char **av)
 {
-	if (ac != 2)
+	_configLogging();
+	if (ac > 2)
 	{
 		ft_log::log(WS_LOG, ft_log::LOG_ERROR) << ERR_USAGE << std::endl;
 		return 2;
 	}
 	srand(std::time(0));
-	_configLogging();
 
 	try {
-		Config	conf(av[1]);
+		Config	conf(ac == 2 ? av[1] : DEFAULT_CONFIG);
 #ifdef WS_CONFIG_DEBUG
 		conf.print(ft_log::log(WS_LOG_CONFIG, ft_log::LOG_DEBUG));
 #endif
