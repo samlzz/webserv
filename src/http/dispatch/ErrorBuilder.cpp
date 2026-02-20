@@ -6,10 +6,11 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:49:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 20:01:13 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 14:02:29 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <cstddef>
 #include <fcntl.h>
 #include <string>
 #include <unistd.h>
@@ -17,13 +18,14 @@
 #include "config/Config.hpp"
 #include "ErrorBuilder.hpp"
 #include "http/HttpData.hpp"
+#include "http/HttpTypes.hpp"
 #include "http/handlers/bodySrcs/FileBodySource.hpp"
 #include "http/handlers/bodySrcs/MemoryBodySource.hpp"
 #include "http/response/ResponsePlan.hpp"
 #include "utils/fileSystemUtils.hpp"
 #include "utils/stringUtils.hpp"
 
-ResponsePlan	ErrorBuilder::build(
+ResponsePlan	ErrorBuilder::getResponsePlan(
 	http::e_status_code status,
 	const Config::Server::Location *location
 )
@@ -40,6 +42,27 @@ ResponsePlan	ErrorBuilder::build(
 			return buildFromErrorPage(status, location->defaultErrPage, location->root);
 	}
 	return buildDefault(status);
+}
+
+ResponsePlan	ErrorBuilder::build(
+	http::e_status_code status,
+	const Config::Server::Location *location
+)
+{
+	ResponsePlan	result(getResponsePlan(status, location));
+
+	if (status == http::SC_METHOD_NOT_ALLOWED)
+	{
+		std::string	allow;
+		for (size_t i = 0; i < location->methods.size(); ++i)
+		{
+			allow += str::toString(location->methods[i]);
+			if (i < location->methods.size() - 1)
+				allow += ", ";
+		}
+		result.headers["Allow"] = allow;
+	}
+	return result;
 }
 
 ResponsePlan	ErrorBuilder::buildDefault(http::e_status_code status)
