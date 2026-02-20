@@ -44,6 +44,7 @@ FILES =	main.cpp \
 		http/request/HttpRequest.cpp \
 		http/response/HttpResponse.cpp \
 		http/routing/Router.cpp \
+		http/transaction/HttpTransaction.cpp \
 		server/AddrInfo.cpp \
 		server/Reactor.cpp \
 		server/connections/AConnection.cpp \
