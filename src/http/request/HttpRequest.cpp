@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/20 11:11:10 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 15:13:19 by achu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,14 +126,14 @@ std::string		HttpRequest::getField(const std::string& pKey) const
 /// @return Return the number of byte size_t treated in the function
 size_t	HttpRequest::feed(char *pBuffer, size_t pSize)
 {
-	char	ch;
+	unsigned char	ch;
 
 	if (pSize == 0)
 		return setError(http::SC_BAD_REQUEST, 0);
 
-	for (size_t i = 0; i < pSize; ++i)
+	for (size_t i = 0; i < pSize; i++)
 	{
-		ch = pBuffer[i];
+		ch = static_cast<unsigned char>(pBuffer[i]);
 		switch (CURRENT_STATE()) {
 		case LINE_METHOD: {
 			_tsStart = std::time(0);
@@ -372,24 +372,10 @@ size_t	HttpRequest::feed(char *pBuffer, size_t pSize)
 		}
 
 		case BODY_START: {
-			if (getMethod() == http::MTH_GET || getMethod() == http::MTH_HEAD || getMethod() == http::MTH_DELETE) {
-				UPDATE_STATE(PARSING_DONE);
-				break;
-			}
-			if (hasField("Transfer-Encoding")) {
-				if (getField("Transfer-Encoding") != "chunked")
-					return setError(http::SC_NOT_IMPLEMENTED, i);
+			if (hasField("Transfer-Encoding"))
 				UPDATE_STATE(BODY_TRANSFER_HEXA);
-			}
-			else if (hasField("Content-Length")) {
-				_buffer = getField("Content-Length");
-				if (!convert::isDec(_buffer))
-					return setError(http::SC_BAD_REQUEST, i);
-				_contentLength = std::atoi(_buffer.c_str());
-				if (_contentLength > _maxBodySize)
-					return setError(http::SC_CONTENT_TOO_LARGE, i);
+			else if (hasField("Content-Length"))
 				UPDATE_STATE(BODY_CONTENT);
-			}
 			else
 				return setError(http::SC_LENGTH_REQUIRED, i);
 
@@ -422,9 +408,8 @@ size_t	HttpRequest::feed(char *pBuffer, size_t pSize)
 		case BODY_TRANSFER_HEXA_DONE:
 			if (ch != '\n') return setError(http::SC_BAD_REQUEST, i);
 			UPDATE_STATE(BODY_TRANSFER_DATA);
-			if (_transferLength) // ? if we have data, pass on first data char for next step
+			if (_transferLength)
 				break;
-			// ? else stay on curr char to be on \r in 2 step
 			__attribute__ ((fallthrough));
 
 		case BODY_TRANSFER_DATA: {
