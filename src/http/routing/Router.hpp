@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/26 15:17:51 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/10 14:19:31 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 11:58:11 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,14 +17,13 @@
 
 # include "config/Config.hpp"
 # include "http/Sessions.hpp"
-# include "server/AddrInfo.hpp"
 
 // ============================================================================
 // Forward declarations
 // ============================================================================
-class HttpRequest;
-struct ServerCtx;
-struct Session;
+class Cookies;
+struct AddrInfo;
+
 // ============================================================================
 // Routes resolving
 // ============================================================================
@@ -39,12 +38,12 @@ struct Context
 	const AddrInfo						*local;
 	const AddrInfo						*remote;
 
-	Context(const ServerCtx &serv);
-private:
 	Context();
 };
 
-Context	resolve(const HttpRequest &req, const ServerCtx &serv);
+Context	resolve(const std::string &uri,
+				const Config::Server &config,
+				Cookies *store);
 
 } // namespace routing
 

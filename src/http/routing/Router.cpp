@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 12:00:19 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/19 22:29:22 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 11:58:31 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,9 +16,8 @@
 #include <vector>
 
 #include "Router.hpp"
+#include "config/Config.hpp"
 #include "http/request/Cookies.hpp"
-#include "http/request/HttpRequest.hpp"
-#include "server/ServerCtx.hpp"
 #include "utils/fileSystemUtils.hpp"
 
 namespace routing
@@ -105,51 +104,35 @@ static inline std::string	_uriToPath(const std::string &uri,
 	return relative;
 }
 
-Context	resolve(const HttpRequest &req,
-				const ServerCtx &serv)
+Context	resolve(const std::string &uri, const Config::Server &config, Cookies *store)
 {
-	Context ctx(serv);
+	Context ctx;
 
-	std::string uri = req.getPath(); // without query and fragment
-	uri = _normalizeUri(uri);
+	ctx.location = config.findLocation(uri);
+	if (!ctx.location)
+		return ctx;
 
-	ctx.location = serv.config.findLocation(uri);
-	if (ctx.location)
+	const std::string	&lp = ctx.location->path;
+	ctx.normalizedUri = _uriToPath(_normalizeUri(uri), lp);
+
+	if (!store)
+		return ctx;
+
+	// ? Serve files dynamically from cookies
+	const std::vector<std::string>	&cookiesVary = ctx.location->cookiesVary;
+	for (size_t i = 0; i < cookiesVary.size(); ++i)
 	{
-		const std::string	&lp = ctx.location->path;
-
-		ctx.normalizedPath = _uriToPath(uri, lp);
-
-		// ? Serve files dynamically from cookies 
-		const std::vector<std::string>	&cookiesVary = ctx.location->cookiesVary;
-		for (size_t i = 0; i < cookiesVary.size(); ++i)
+		std::string cookieValue = store->getCookie(cookiesVary[i]);
+		if (cookieValue.empty())
+			continue;
+		std::string	newPath = _prefixExtension(
+					ctx.normalizedUri, "_" + cookieValue);
+		if (fs::isExist(ctx.location->root + newPath))
 		{
-			std::string cookieValue = req.getCookies().getCookie(cookiesVary[i]);
-			if (cookieValue.empty())
-				continue;
-			std::string	newPath = _prefixExtension(
-						ctx.normalizedPath, "_" + cookieValue);
-			if (fs::isExist(ctx.location->root + newPath))
-			{
-				ctx.normalizedPath = newPath;
-				break;
-			}
+			ctx.normalizedUri = newPath;
+			break;
 		}
 	}
-
-	// manage sessions
-	Cookies		&cookies = req.getCookies();
-	std::string	sessionId = cookies.getCookie("sessionId");
-
-	serv.sessions.clearExpiredSessions(SESSION_TIMEOUT);
-	if (sessionId.empty() || !serv.sessions.sessionExists(sessionId))
-	{
-		sessionId = serv.sessions.createSession("guest");
-		cookies.setCookie("sessionId", sessionId);
-	}
-	SessionsManager::Session *session = &serv.sessions.getSession(sessionId);
-	session->updateActivity();
-	ctx.currSession = session;
 
 	return ctx;
 }
