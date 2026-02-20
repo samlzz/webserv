@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:14 by achu              #+#    #+#             */
-/*   Updated: 2026/02/20 18:11:11 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/20 18:42:21 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,7 +103,6 @@ private:
 	std::string			_temp;
 
 	// ====== Body Consume ======
-	size_t				_totalChunkLength;
 	size_t				_transferLength;
 	size_t				_contentLength;
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: achu <achu@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/20 18:12:16 by achu             ###   ########.fr       */
+/*   Updated: 2026/02/20 18:42:07 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -368,7 +368,7 @@ size_t	HttpRequest::feed(char *pBuffer, size_t pSize)
 				return setError(http::SC_BAD_REQUEST, i);
 			_cookies.parseCookies(_request.headers);
 			UPDATE_STATE(BODY_START);
-			return i; // TODO: check header parsing stop
+			return i;
 		}
 
 		case BODY_START: {
@@ -393,8 +393,7 @@ size_t	HttpRequest::feed(char *pBuffer, size_t pSize)
 				return setError(http::SC_BAD_REQUEST, i);
 
 			_transferLength = convert::htod(_buffer);
-			_totalChunkLength += _transferLength;
-			if (_totalChunkLength > _maxBodySize)
+			if (_maxBodySize && _transferLength > _maxBodySize)
 				return setError(http::SC_CONTENT_TOO_LARGE, i);
 			UPDATE_STATE(BODY_TRANSFER_HEXA_ALMOST_DONE);
 			__attribute__ ((fallthrough));
@@ -502,7 +501,6 @@ void	HttpRequest::reset(void)
 	_request.headers.clear();
 	_request.body.clear();
 
-	_totalChunkLength = 0;
 	_transferLength = 0;
 	_contentLength = 0;
 
