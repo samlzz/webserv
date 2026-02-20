@@ -20,7 +20,10 @@ std::string	decode(const std::string& encoded)
 				continue;
 			}
 		}
-		path.push_back(encoded[i]);
+		if (encoded[i] == '+')
+			path.push_back(' ');
+		else
+			path.push_back(encoded[i]);
 	}
 	return path;
 }
