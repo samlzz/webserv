@@ -6,11 +6,10 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 12:19:40 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/19 22:37:14 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 13:02:24 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <sstream>
 #include <string>
 
 #include "HttpDispatcher.hpp"
@@ -51,7 +50,7 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 	http::e_method	method = req.getMethod();
 	if (method == http::MTH_GET || method == http::MTH_HEAD || method == http::MTH_POST)
 	{
-		std::string	cgiExt = path::subExt(path::subPath(route.normalizedPath));
+		std::string	cgiExt = path::subExt(path::subPath(route.normalizedUri));
 		if (loca.cgiExts.find(cgiExt) != loca.cgiExts.end())
 			return &_cgiHandler;
 	}
@@ -75,40 +74,6 @@ const IHttpHandler	*HttpDispatcher::findHandler(
 	return NULL;
 }
 
-ResponsePlan	HttpDispatcher::findPlan(
-	const HttpRequest &req, const routing::Context &route
-) const
-{
-	if (!route.location)
-		return ErrorBuilder::build(
-			http::SC_NOT_FOUND,
-			NULL
-		);
-
-	if (req.isError())
-		return ErrorBuilder::build(
-			req.getStatusCode(),
-			route.location
-		);
-
-	const Config::Server::Location& loca = *route.location;
-
-	if (!loca.isMethodAllowed(req.getMethod()))
-		return ErrorBuilder::build(
-			http::SC_METHOD_NOT_ALLOWED,
-			route.location
-		);
-
-	const IHttpHandler	*handler = findHandler(req, route);
-	if (!handler)
-		return ErrorBuilder::build(
-			http::SC_NOT_IMPLEMENTED,
-			route.location
-		);
-
-	return handler->handle(req, route);
-}
-
 static inline bool	_needToCloseConnection(http::e_status_code err)
 {
 	return (err == 400 || err == 408 || err == 411 || err == 413 || err == 414
@@ -119,30 +84,19 @@ ResponsePlan	HttpDispatcher::dispatch(
 	const HttpRequest &req, const routing::Context &route
 ) const
 {
-	ResponsePlan		plan(findPlan(req, route));
+	const IHttpHandler	*handler = findHandler(req, route);
+	if (!handler)
+		return ErrorBuilder::build(http::SC_NOT_IMPLEMENTED, route.location);
+	ResponsePlan		plan = handler->handle(req, route);
+
 	if (req.getMethod() == http::MTH_HEAD && plan.body)
 	{
 		delete plan.body;
 		plan.body = 0;
 	}
 
-	// ? Set Cookies from query
-	Cookies				&cookies = req.getCookies();
-	std::istringstream	queryIss(req.getQuery());
-	std::string			queryPart;
-	
-	while (std::getline(queryIss, queryPart, '&'))
-	{
-		size_t		pos = queryPart.find('=');
-		std::string	key = queryPart.substr(0, pos);
-
-		if (pos != std::string::npos
-			&& route.location
-			&& route.location->isCookiesSet(key)
-		)
-			cookies.setCookie(key, queryPart.substr(pos + 1));
-	}
-	plan.headers["Set-Cookie"] = cookies.buildSetCookieHeaders();
+	// ? Set Cookies
+	plan.headers["Set-Cookie"] = req.getCookies().buildSetCookieHeaders();
 
 	// ? Decide connection lifetime
 	if (_needToCloseConnection(plan.status)
