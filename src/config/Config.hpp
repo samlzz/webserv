@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/05 21:08:53 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 11:28:49 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 18:18:28 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,8 +65,8 @@ public:
 		struct Location
 		{
 			std::string					path;
-
 			std::vector<http::e_method>	methods;
+			size_t						maxBodySize;
 			std::string					root;
 			std::string					index;
 			bool						autoindex;
@@ -93,7 +93,6 @@ public:
 		const std::string		hostStr;
 		struct in_addr			host;
 		uint16_t				port; // According to RFC 793, the port is a 16 bit unsigned int.
-		size_t					maxBodySize;
 
 		/* Location blocks */
 		std::vector<Location>	locations;

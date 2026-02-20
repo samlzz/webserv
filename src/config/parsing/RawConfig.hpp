@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 16:28:10 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 11:29:33 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 18:18:20 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@ struct RawServer
 
 		/* Optionnal configuration */
 		std::vector<http::e_method>		methods;
+		Optionnal<size_t>				maxBodySize;
 		Optionnal<std::string>			root;
 		Optionnal<std::string>			index;
 		Optionnal<bool>					autoindex;
@@ -66,10 +67,10 @@ struct RawServer
 
 	Optionnal<std::string>		host;
 	Optionnal<uint16_t>			port;
-	Optionnal<size_t>			maxBodySize;
 
 	/* Default values for location blocks */
 	std::vector<http::e_method>	d_methods;
+	Optionnal<size_t>			d_maxBodySize;
 	Optionnal<std::string>		d_root;
 	Optionnal<std::string>		d_index;
 	Optionnal<bool>				d_autoindex;

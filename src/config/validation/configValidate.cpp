@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/10 22:28:48 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/17 15:26:57 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 18:21:07 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,6 +165,8 @@ static void	validateLocation(const Config::Server::Location &loc)
 		"location path"
 	);
 	validateMethods(loc);
+	if (loc.maxBodySize == 0 || loc.maxBodySize > MAX_MBODYSIZE)
+		throw LocationError(loc.path, "invalid client_max_body_size");
 	validatePathGeneric(loc.root,
 		PR_NO_DOTDOT | PR_MUST_EXIST | PR_MUST_DIR,
 		"root"
@@ -190,8 +192,6 @@ void	validateServerBasics(const Config::Server &s)
 {
 	if (s.port == 0)
 		throw ServerError(s.host, s.port, "port cannot be 0");
-	if (s.maxBodySize == 0 || s.maxBodySize > MAX_MBODYSIZE)
-		throw ServerError(s.host, s.port, "invalid client_max_body_size");
 }
 
 static inline std::string	_normalizePath(const std::string &path)
