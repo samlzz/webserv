@@ -55,9 +55,9 @@ server_directive <- (listen / methods / root / index / autoindex / error_page
 @location          <- 'location' __ path:~path _ '{' _ location_body _ '}' _
 
 location_body      <- ~(location_directive / fatal_directive)+
-location_directive <- methods / root / index / autoindex / error_page 
-                   / cgi / return_redirect / upload / session_login
-				   / set_cookie / vary_cookie
+location_directive <- methods / root / index / autoindex / error_page
+                   / client_max_body_size / cgi / return_redirect / upload
+				   / session_login / set_cookie / vary_cookie
 
 # ============================================================================
 # Singles Directives
