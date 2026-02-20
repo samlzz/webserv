@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:30:32 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 17:15:30 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 18:36:38 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <sstream>
 #include <stdint.h>
 
+#include "config/Config.hpp"
 #include "http/HttpData.hpp"
 #include "http/transaction/HttpTransaction.hpp"
 #include "HttpResponse.hpp"
@@ -59,6 +60,12 @@ const HttpRequest	&HttpResponse::DecisionContext::getReq(void) const
 const ResponsePlan	HttpResponse::DecisionContext::getPlan(void) const
 {
 	return _transaction.onBodyComplete(_request);
+}
+
+const Config::Server::Location	*
+	HttpResponse::DecisionContext::getLocation(void) const
+{
+	return _transaction.getLocation();
 }
 
 // ============================================================================

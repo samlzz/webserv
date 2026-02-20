@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 13:03:18 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 17:15:01 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 18:36:50 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 # include <ostream>
 # include <stdint.h>
 
-#include "config/Config.hpp"
+# include "config/Config.hpp"
 # include "http/HttpTypes.hpp"
 # include "http/request/HttpRequest.hpp"
 # include "http/response/BuffStream.hpp"
