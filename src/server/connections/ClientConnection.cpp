@@ -192,8 +192,16 @@ ConnEvent	ClientConnection::handleWrite(void)
 
 				_req.reset();
 				_transac.reset();
+
+				if (_recvOffset > 0)
+				{
+					_recvBuffer.erase(_recvBuffer.begin(), _recvBuffer.begin() + _recvOffset);
+					_recvOffset = 0;
+				}
+
 				delete _resp;
 				_resp = 0;
+
 				_state = CS_WAIT_REQUEST;
 				_events = POLLIN;
 			}
