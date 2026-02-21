@@ -44,6 +44,12 @@ ResponsePlan	ErrorBuilder::getResponsePlan(
 	return buildDefault(status);
 }
 
+static inline bool	_needToCloseConnection(http::e_status_code err)
+{
+	return (err == 400 || err == 408 || err == 411 || err == 413 || err == 414
+			|| err == 431 || err >= 500);
+}
+
 ResponsePlan	ErrorBuilder::build(
 	http::e_status_code status,
 	const Config::Server::Location *location
@@ -62,6 +68,8 @@ ResponsePlan	ErrorBuilder::build(
 		}
 		result.headers["Allow"] = allow;
 	}
+	if (_needToCloseConnection(status))
+		result.headers["Connection"] = "close";
 	return result;
 }
 
