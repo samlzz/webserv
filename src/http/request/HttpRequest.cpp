@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 15:05:12 by achu              #+#    #+#             */
-/*   Updated: 2026/02/20 21:23:29 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 22:45:33 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,13 @@ std::string				HttpRequest::getHTTPLine() const
 }
 http::e_status_code		HttpRequest::getStatusCode() const	{ return (_code);                 };
 const http::t_headers	&HttpRequest::getHeaders() const 	{ return (_request.headers);      };
+bool					HttpRequest::hasBody() const		{
+	return (
+		hasField("Transfer-Encoding")
+		|| (hasField("Content-Length")
+			&& getField("Content-Length") != "0")
+	);
+}
 const t_bytes			&HttpRequest::getBody() const		{ return (_request.body);         };
 Cookies					&HttpRequest::getCookies() const	{ return (_cookies);              };
 time_t					HttpRequest::getStartTs() const		{ return (_tsStart);              };

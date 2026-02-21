@@ -6,7 +6,7 @@
 /*   By: sliziard <sliziard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 20:49:38 by sliziard          #+#    #+#             */
-/*   Updated: 2026/02/20 21:22:43 by sliziard         ###   ########.fr       */
+/*   Updated: 2026/02/20 22:45:29 by sliziard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,12 @@ ResponsePlan	ErrorBuilder::getResponsePlan(
 	return buildDefault(status);
 }
 
+static inline bool	_needToCloseConnection(http::e_status_code err)
+{
+	return (err == 400 || err == 408 || err == 411 || err == 413 || err == 414
+			|| err == 431 || err >= 500);
+}
+
 ResponsePlan	ErrorBuilder::build(
 	http::e_status_code status,
 	const Config::Server::Location *location
@@ -78,6 +84,8 @@ ResponsePlan	ErrorBuilder::build(
 		}
 		result.headers["Allow"] = allow;
 	}
+	if (_needToCloseConnection(status))
+		result.headers["Connection"] = "close";
 	return result;
 }
 
@@ -98,6 +106,7 @@ ResponsePlan	ErrorBuilder::buildDefault(http::e_status_code status)
 	ResponsePlan		plan;
 
 	plan.status = status;
+	plan.addStandardHeaders();
 	plan.headers["Content-Type"] = http::Data::getMimeType("html");
 	plan.headers["Content-Length"] = str::toString(body.length());
 	plan.body = new MemoryBodySource(body);

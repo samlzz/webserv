@@ -22,7 +22,7 @@
 // Server defaults values
 // ============================================================================
 const char				*Config::ServerDefaults::host = "0.0.0.0";
-const uint16_t			Config::ServerDefaults::port = 80;
+const uint16_t			Config::ServerDefaults::port = 8080;
 const size_t			Config::ServerDefaults::maxBodySize = 1 << 20; // 1MB
 
 const http::e_method	Config::ServerDefaults::methods[3] = 

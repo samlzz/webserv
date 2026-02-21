@@ -5,4 +5,4 @@ Host: localhost:$PORT\r
 Content-Type: application/octet-stream\r
 Content-Length: %d\r
 \r
-" $(stat -c%s test/bin/data.bin); cat test/bin/data.bin) | nc localhost $PORT
+" $(stat -c%s bin/data.bin); cat bin/data.bin) | nc localhost $PORT
