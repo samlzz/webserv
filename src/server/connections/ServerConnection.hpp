@@ -18,8 +18,8 @@
 # include "http/dispatch/HttpDispatcher.hpp"
 # include "server/ServerCtx.hpp"
 
-# ifndef SERV_LISTEN_QUEUE
-#  define LISTEN_QUEUE	100
+# ifndef LISTEN_QUEUE
+#  define LISTEN_QUEUE	1024
 # endif
 
 class ServerConnection: public AConnection {
