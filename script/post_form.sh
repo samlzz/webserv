@@ -5,4 +5,4 @@ Host: localhost:$PORT\r
 Content-Type: application/x-www-form-urlencoded\r
 Content-Length: %d\r
 \r
-" $(stat -c%s test/bin/form.bin); cat test/bin/form.bin) | nc localhost $PORT
+" $(stat -c%s bin/form.bin); cat bin/form.bin) | nc localhost $PORT
